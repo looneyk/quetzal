@@ -1,0 +1,144 @@
+
+Common mathematical constructs and algorithms
+--------------------------------------------------------------------------------
+
+math: angles in radians
+geometry: triangles, but no angles
+model: angles in turns
+
+
+move change_of_basis from transformation_matrix to Matrix, ...
+
+
+in Vector, see if any more floating_point.hpp functionality should be moved to VectorTraits
+
+is matrix_alignment2 really less accurate?
+
+make sure all matrix pre-multiplication
+
+normalize won't work for homogeneous vectors
+
+
+http://www.cplusplus.com/reference/cmath/fpclassify/
+https://gregstoll.com/~gregstoll/floattohex/
+https://en.wikipedia.org/wiki/Single-precision_floating-point_format
+https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+https://bitbashing.io/comparing-floats.html
+https://www.boost.org/doc/libs/1_63_0/libs/math/doc/html/math_toolkit/float_comparison.html
+https://en.wikipedia.org/wiki/Machine_epsilon
+
+float_eq0 is fine
+*float_eq needs scaling, revisit algorithm and pages above
+
+
+instead of using xm, use sse
+
+
+replace &v.rep() with function that calls Traits::data(rep)
+VectorXMTraits, math_xm, will this help with using xm functionality in regular Vector?
+Matrix should take Traits
+vector and matrix traits implement basic math operations
+
+
+see if there is a better way to handle geometry distance and intersection 2D and 3D versions (perp, cross?)
+segment points -> endpoints
+ray point -> initial point
+
+
+VectorTraits is the array based traits template parameter, create something else for each of the XMFLOAT types( VectorX3Traits, XMFLOAT3 storage type)
+the Vector traits class will need not just element access, but also each of the basic XMFLOAT operations, addition, multiplication, dot, ...
+can the current VectorTraits set suffice?
+will need matrix counterparts too
+
+
+keep reduced traits limited to vector traits
+
+
+Matrix
+inverse and transpose should be chainable (other operations?)
+member transpose and vector *= operations can only be applied to/with square matrices
+
+
+instead of float_gt and vector_gt, just gt(), fp_gt() specialized for appropriate types; similar to std::begin()
+decide how to deal with z, y, x priority (or) comparison with all component (and) comparison
+if fp relational operators are defined, then overload <, =, > with exact comparison?
+
+
+matrix default constructor produces identity matrix? no, although it's easier to create 
+TransformationMatrix?
+
+member operations should not change matrix size, limit to square matrices
+outside functions can produce results of different size than original
+
+math_util -> matrix_util?
+
+vector conversion constructors/assignment/operators to next lower and higher dimension, probable ambiguity, explicit?
+
+
+deal with math_util, pi, ...
+need better handling of floating point issues
+
+more DirectX math, provision for chained operations to minimize conversions
+
+activate or implement DAZ, FTZ
+
+is there a way to ensure that sin and cos are symmetrical? is that even an issue?
+for cos shift pi..2pi to pi..0
+for sin ...
+even so, calculations involving pi will probably throw things off anyway
+
+instead of assuming relationships like that, keep lists of "unique" position, normal, and texcoord values and use the stored one if float_eq, and store setting subnormal to 0
+
+
+add static zero to Vector, explicitly returns default initialized
+
+
+lump (r, azimuth, z) into cylindrical coordinate class
+just a vector with x, y, z interpreted differently?
+assignment between the two classes can perform the conversion
+
+
+In Random, second template parameter for engine?
+
+
+// J:\Q\User\Keith\dev\library3\d3d11\Luna 11\Code\Common\MathHelper.h
+// J:\Q\User\Keith\dev\library3\d3d11\Luna 11\Code\Common\MathHelper.cpp
+
+//------------------------------------------------------------------------------
+XMMATRIX quetzal::model::InverseTranspose(CXMMATRIX M)
+{
+    // Inverse-transpose is just applied to normals.
+    // So zero out translation row so that it doesn't get into our inverse-transpose calculation
+    // we don't want the inverse-transpose of the translation.
+    XMMATRIX A = M;
+    A.r[3] = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    auto det = determinant(A);
+    return transpose(inverse(&det, A));
+}
+
+
+angle = atan2(length(cross(a, b)), dot(a, b))
+
+Which has the advantages of robustness and of not requiring that the input vectors be unit length.
+
+Put together, you get something like this (pseudocode, untested):
+
+vector3 c = cross(a, b);
+float l = length(c);
+if (l > epsilon)
+{
+    axis = c / l;
+    angle = atan2(l, dot(a, b));
+}
+else if (dot(a, b) > 0f)
+{
+    // Nearly positively aligned; skip rotation, or compute axis and angle using other means
+}
+else
+{
+    // Nearly negatively aligned; axis is any vector perpendicular to either vector, and angle is 180 degrees
+}
+
+
+C = B x A (the cross-product of B and A). C is the axis of rotation, and arcsin(|C|) is the necessary rotation angle.

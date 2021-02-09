@@ -1,0 +1,15 @@
+
+http://paulbourke.net/
+
+
+Handle the case where an existing group is being specified in the context of a different material
+see notes in read_obj and write_obj in model/obj_io.hpp
+
+set_material(s) may need to do caching, not just writing
+
+how to write material with no group? blank group/surface name?
+
+Writer may need to cache material for the above, actual write with o or g
+
+
+Mesh materials property is a space separated list of materials files, same as for mtllib

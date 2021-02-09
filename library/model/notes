@@ -1,0 +1,375 @@
+
+Model construction and manipulation at a more semantic level
+--------------------------------------------------------------------------------
+
+*trinket_box is really interesting with nz = 1 and r1 = 1.1
+r1 = 1.2 is pretty flat, but spikes are still too prominent
+r1 = 1.1 is probably as far as I'd want to go due to spike height
+
+
+1.2 * (1 - v / (2 * pi)) * cos(3 * v) * (1 + cos(u)) + 3 * cos(3 * v)
+1.2 * (1 - v / (2 * pi)) * sin(3 * v) * (1 + cos(u)) + 3 * sin(3 * v)
+1.2 * (1 - v / (2 * pi)) * sin(u) + 9 * v / (4 * pi)
+
+
+**calculations for 3D printed models should use double
+
+
+icosahedron vertices should match dodecahedron normals
+
+
+decide on create_face(..., normal) or create_face(..., {normal})
+create_surface same
+
+
+trinket_box is a perfect application for boolean difference, but not ready yet
+
+
+hexagonal chess pieces, Staunton, Weil, ...
+sandcastle
+hexagonal tower, hexagonal bricks
+apply depth pattern just like a regular texture
+algorithms to convert solid body descriptions to mesh
+Apply a spirograph spiral to spike
+
+
+helix_cone -> helix_pyramid
+
+consider making all free functions static members of class<M> so that value_type<M> can be done away with?
+
+
+*when calculating textures, not just dimension reduction, but align one edge with x-axis (see pdf)
+
+
+make sure that all surfaces are assigned normals
+no, not all surfaces have a meaningful normal
+but an orientation like submesh might be useful
+no, they would inherit orientation from their submesh
+
+
+faces/surfaces can have Orientation instead of Normal
+Orientation should have alternative function to up: normal to be consistent
+and in this case front is probably more useful than right
+front, or Orientation in general, is useful for grain direction in stained glass
+on the other hand, front and right could be determined from texture coordinates (-y and x respectively)
+or vice versa
+can't necessarily count on consistent texture coordinates though
+
+
+star6 has texcoord differences
+
+
+change oriented polygon to just a polygon and a normal?
+
+polygon_normal function analogous to face_normal
+
+should extrusion be single surface or per side?
+bSurfacesDistinct flag?
+*extend polygon so that each vertex has a cusp flag or surface name, these determine surface borders
+
+
+polygon extensions
+    separate, template parameter, subclass, ...?
+face attributes: normal, orientation (normal and right)
+    attributes could be extended for these
+vertex attributes: cusp flag
+
+
+*there are issues when trying to assign polygon to derived oriented polygon
+using vertices now, but shouldn't rely on internal details
+
+
+**transform and transform_position would be better off specialized rather than use if constexpr but by template base type only
+    don't specialize function templates
+*see if they can be overloaded using traits and base type instead of direct template parameter
+*need some way to differentiate, or use enable_if
+*neither, just create a FaceIterator for both Mesh and Submesh (and Surface) and both functions can use that in place of any differentiation
+
+
+geometry and primitives have opposite radius, nAziumth parameter ordering
+
+
+texcoord, tangent, and bitangent can be used for semantic "axis" information that could be used in manipulating/splitting surfaces, for example, bending and or splitting them
+surfaces (and faces?) should allow for the inclusion of tangent and bitangent vectors, NormalTangent, NormalTangentBitangent
+a reason to keep surface/face properties, aside from symmetry
+
+
+consider removing create_ prefixes
+makes perfect sense if submesh assignment is made in the call
+
+primitive functions with traits template parameter rather than mesh?
+
+
+functions should be able to take 2D or 3D polygons
+
+
+*continue work on contour cylinder, sphere
+same texture coordinate issue with swept volume, function versions
+
+*add extents to polygon version of create_band and connect_band
+no, provide polyline version instead
+that handles range, but still need end treatment
+should both use the same data structure with a closed flag?
+
+add bSurfacesDistinct to swept_volume (normals cross(orientation, edge))
+add body surface name parameter, already have variable
+
+interesting effect when r and z swapped in contour_function_test_3
+*experiment with that
+
+use new functions in spocktahedron, urchin, ...
+
+urchin with helix_cone 4 only producing 4 at very top, widen top range
+
+**contour and function sphere
+    test contour
+    spherical harmonics currently test single parameter and can easily test two parameter functions
+
+*function to apply fillet, bevel, ... to edge between two surfaces
+
+*last remaining termination handling, sphere ends center
+
+
+face normals should generally be calculated when face is created
+should not have to call calculate_normals...
+but calculate_normals should produce the same results
+
+calculate_face_normal calculate face normal and assign it to vertices
+set_face_normal assign face normal to vertices
+
+
+*consider use of aliased vectors of types (Path) vs fully fleshed out classes
+
+
+Curve should have type (linear, spline, ...) and be parametric over 0..1
+vs. Polyline whose points are indexed
+Path should allow for either curve or polyline
+polyline is the raw form of curve: curve.points()
+Curve based on Polyline, but may have weighted points
+
+contour using Polyline or Curve, Curve would be best, but point access difference would need to be resolved
+independent functions for functionality that uses Polyline and Curve since internal looping constructs are different
+
+OrientedPoint
+OrientedPoints (Path)
+
+Polygon
+OrientedPolygon composite
+this needed for mosely snowflake
+
+
+if coordinate is < epsilon, just convert it to 0?
+final assignment or every operation?
+
+
+*use turns in more places
+start with model, then see about using turns in math_util
+are there any other radian angle parameters now?
+spikosahedron transform parameters
+what about rotation matrices?
+
+*use interval for additional ranges in primitives_util?
+    create_apex_cusp z
+    create_base_cusp z
+    create_band r, z
+    connect functions even though the 0 value will not be used?
+also ensure that {x, x} notation is fully supported
+
+make sure parameter ordering is consistent
+    that is a problem since then extentZ would follow extentAzimuth, but extentZ is more useful
+    antiprism is fine, no extentAzimuth, but then would be inconsistent
+swap major and minor in torus so that extents are consistent with other forms?
+
+
+run all validations on all primitives
+run all validations on all test models
+run all validations on all finished products
+
+use validate(mesh) instead of mesh.check()
+move check functions out of components
+with validation delegated to properties, is brep free of property references in validation?
+surface level normal and texture checks in model
+
+
+*scaling not properly handling normals
+see glass_form tetra_cradle_flat, last face
+
+
+**allow azimuth revolutions in cylinder, sphere, torus
+bands already support it, just need front end
+consider moving/merging helix_cone
+
+*for all primitives, separate front ends for simple and complex usages
+consider a better way to handle all the parameters needed for primitives
+
+
+make sure that there is a distinct split (documented and by file) between functions that work on proper meshes and those that are part of the construction process (primitives_util for example)
+other distinct splits (brep/model, connectivity/attributes), ...
+
+
+primitive create functions should return mesh?
+cleaner interface and more flexibility
+can't currently since geometric elements have a mesh pointer
+return smart pointer instead of object, solves mesh pointer problem
+
+
+add end treatments that can be applied following primitive creation
+round, conic, ...
+
+*decide on fate of extentZ
+is it used other than default anywhere? no, but allows for surface names
+don't check or assert extentZ flat so that partial primitives can be used in creating other primitives
+
+primitives end extent default should be flat, but side center?
+
+cylinder/torus ends (top/bottom): open, closed flat
+sphere top/bottom (elevation): open, closed flat, closed center point connection (conical)
+cylinder/sphere/torus side (azimuth): open, closed flat, closed vertical center line connection
+
+
+undulate not doing anything except messing with manifold
+
+
+Referring to the calculation of radii so that spikosahedron level 1 faces effectively form an extension of bottom face:
+bottom level, make sure they are flat ...
+calculate the radius ratio that produces this ...
+only need to be flat for printing, actual may be more interesting if slightly downward ...
+external function to calculate the proper radius ratio
+cout << (z1 * sin(theta0) / r1) << endl;
+cout << "\t" << theta0 << "\t" << theta1 << "\t" << theta2 << endl;
+value_type rr = r1 + z1 * normal.z;
+cout << "\t" << r << "\t" << rr << endl;
+
+
+OrientedPoint transform function with one and two matrices as in transforms
+matrixOrientation, matrixRotation, ...?
+(matrixPosition, matrixNormal
+
+
+rename contour_cylinder to turned volume, lathe, ...
+EXTRUSION, SWEEP, REVOLVE, LOFT
+
+
+sphere open side closure requires more complex triangulation of non-planar surface
+same for cylinder with neither ends nor side closed (add constrained edges at the folds before triangulation in this case)
+cdt algorithm can't handle non-planar surfaces that can't be cleanly projected onto a plane
+implement a more comprehensive surface-plane mapping, better than simple projection
+
+
+partial azimuth could potentially be done using polygon and path
+but termination surface id's would need to be applied
+
+
+move conditional code (create and connect alternatives) into primitives_util (so band can call apex/base)?
+primitives then use simple loop
+
+
+Input/ForwardIterator is an iterator category/concept, so ultimately replace it with something else
+use InputIterator/OutputIterator if appropriate (less restrictive type) in descriptions
+
+
+restore ordering of cube faces in brep_test
+do I even want to keep around meshes without 1 to 1 vertex/halfedge relationship?
+
+
+add exception handling to model mains
+
+
+
+
+Models
+
+lamp test
+with reversed dx/direction, polygon is now wound in reverse
+to create glass plans
+*given a 2d surface, extrude all faces in both directions
+at intersection lines, clip off what lies beyond
+
+alternating inner and outer angles
+need to pivot second set at calculated intersection heights
+
+look at how a lower and upper third would overlap
+
+
+menger sponge, mosely snowflake
+general algorithm given procedure/layout to position next level cells
+allow for different cell sizes too (not just 3)
+
+now do it using subtractive volumes rather than additive with interior face removal
+
+what is the highest recursion level before menger sponge details are too small to print?
+6..7
+
+
+clip_test
+*fix normals for polyhedra, check others
+
+
+cage
+implement nBars
+platform center, possibly use antiprism
+support bars with n sides, at least 4
+
+swirl angle not linear, damped sinusoid, helical, ...
+
+*bad normals causing triangulation to fail (infinite loop)
+tuskification is doing improper things with normals
+
+
+
+
+Primitives
+
+disk
+created with cylinder with rBottom > rTop, zBottom and zTop 0, open bottom
+annulus, disk-like with inside and outside radii, like disk but with rTop > 0
+use ExtentZ::None
+
+
+box
+*zLower, zUpper or intervals for box dimensions?
+also nx, ny, nz?
+
+    
+torus
+rMajor0, rMajor1: spiral forms
+rMinor0, rMinor1: horn forms
+azimuthMinor0, azimuthMinor1: twist
+
+torus has same topology as cylinder except when major axis is full circle
+
+
+contour cylinder
+handle r == 0 case in both face and normal generation
+decide whether to allow multiple 0 radii in succession and if so, handle that case
+
+
+geodesic arbitary tessellation
+splitting into final divisions, use angular rather than linear interpolation between original vertex positions
+
+
+swept_volume
+reconsider use of OrientedPolygon
+no current need
+but can the orientation be removed all the way down to polygon_vertices?
+polygon orientation could be built into path
+then a 2D polygon with default orientation could be used there
+
+
+
+
+Usage/Guidelines
+
+right handed coordinate system
+z-axis up
+ccw winding order
+outward directed normals
+normals continuous within surfaces, discontinuous at edges
+
+functions here should generally take object references themselves rather than halfedge ids
+
+vertex_values may have an extra point relative to polygon depending on application
+
+allow for different algorithms when triangulating non-planar faces: delaunay, concave or convex
+
+only place that overlapping vertex could even be shared is with disk, even multiple vertices at apex of smooth cone may have different normals

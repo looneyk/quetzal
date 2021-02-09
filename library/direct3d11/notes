@@ -1,0 +1,148 @@
+
+*deal with EffectBasic lighting
+
+// Effect
+if (!pEffect)
+{
+    auto pEffectDefault = std::make_shared<direct3d11::EffectBasic>(renderer);
+    pEffectDefault->EnableDefaultLighting();
+    pEffectDefault->SetLightingEnabled(true);
+
+    pEffect = pEffectDefault;
+}
+
+
+move create_input_layout, index_format, ... to Renderer or other grouping?
+
+rendertarget
+    texturetarget
+    windowtarget
+where context is needed, don't use renderer, but maybe context abstraction, Renderer::Device and Renderer::Context? and standalone Context
+
+
+where tangents have 4 elements, should w be 0 or 1? normalization?
+positions 1, vectors 0? so tangent 0?
+
+
+vertex layout selector?
+VertexLayoutFactory registers each vertex layout
+registration initializes input layout
+only Vertex* is exposed
+instead of map, defined codes into an array?
+
+checked_create for input layout member of vertex classes?
+only if a single layout is created irrespective of shader bytecode, or shader bytecode is tracked
+
+
+As is is fine as long as no need for Vertex base class, Vertex factory, ...
+
+    //--------------------------------------------------------------------------
+    class Vertex
+    {
+        ...
+        virtual size_t stride() const = 0;
+    };
+
+    //--------------------------------------------------------------------------
+    template<class T>
+    class VertexDescriptor : public Vertex
+    {
+    public:
+
+        virtual size_t stride() const = 0;
+
+        static void init(ID3D11Device* pDevice);
+        static ID3D11InputLayout* input_layout();
+
+    private:
+
+        static ID3D11InputLayout* m_pInputLayout;
+    };
+
+    //--------------------------------------------------------------------------
+    class Vertex3 : public VertexDescriptor<Vertex3>
+    {
+    public:
+
+        XMFLOAT3 position;
+        XMFLOAT3 normal;
+        XMFLOAT2 texture;
+
+        virtual size_t stride() const; // = Vertex3::stride();
+
+    private:
+
+    };
+
+
+shaders have an input vertex format, but does that map to what the program provides according to the input layout?
+
+input layout a field in shader class instead?
+how to link vertex type and shader?
+
+shader object has input layout, not vertex
+loading shader also creates this
+
+vertex should have all components that shader input layout requires
+must they be exact or even in sequence, or are they mapped according to semantics?
+
+
+should be d3d, not dx
+
+
+update(float dt) or update(double t)
+don't use absolute time, at least as encoded in a floating point number
+m_tPrev?
+
+
+Application should be independent of dx? see framework
+
+base::Application (interface)
+    dx::Application (9, 10, 11, ...)
+    opengl::Application
+
+
+Keyboard singleton?
+
+
+while (user doesn't exit)
+  check for user input
+  run AI
+  move enemies
+  resolve collisions
+  draw graphics
+  play sounds
+end while
+
+
+
+Initialize()
+LoadGraphicsContent()
+while (stillPlaying)
+{
+     Update()
+     Draw()
+}
+UnloadGraphicsContent()
+
+
+
+Game
+public
+    run
+protected
+    update
+    draw/render
+
+init
+final
+
+on activate
+on deactivate
+
+
+view matrix 3d
+https://www.3dgep.com/understanding-the-view-matrix/
+http://www.codinglabs.net/article_world_view_projection_matrix.aspx
+https://www.gamedev.net/articles/programming/graphics/directx-11-c-game-camera-r2978/
+https://gamedev.stackexchange.com/questions/178643/the-view-matrix-finally-explained

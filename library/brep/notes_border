@@ -1,0 +1,32 @@
+
+Having border halfedges allows for the construction of virtual faces, something to build on
+With that, the existing primitives_util building blocks can remain unchanged
+Don’t change building block halfedge layout
+open border virtual faces have first prev and last next ids null
+    virtual faces always closed?
+    the extra edge probably doesn't matter but will need to be deleted if virtual face halfedges are repurposed
+    this represents a missing face, very different from a hole (and with opposite winding order)
+    adjacent virtual/missing faces (ends and side for example)?
+    or just never allow the none option for ends/side
+    yes, since if left open there is no way to reference the missing faces anyway
+this then makes it worth closing off open areas when creating polygon/vertex values
+always start with a closed figure
+fine for base, but bands need to keep track of as many as 3 surfaces and where they need to be applied
+
+
+explicit border halfedges, flag bit, no need for vertex halfedge list, no special iteration, halfedges always in pairs
+should be no border halfedges once constructed? only an internal issue?
+if so, then no explicit border flag
+
+specific border halfedges rather than null partner ids 
+    halfedge iterators will then always be good (but still no guarantee during construction)
+    create border face just repurposes the existing border halfedges
+    border halfedges ignored in file write? reconstructed on read? 
+primitive util halfedges grouped by face rather than band
+    keep as is, that way exposed end halfedges are sequential
+    (border halfedges would be sequential, so that would indicate other edge sets be the same; not separate layouts)
+
+border halfedges seem like they might be a good idea, but added complexities make them impractical
+
+would be nice to have border iterator, but no object to provide one
+anyway, when border halfedges are accessed, it is often in the context of building, thus invalidating iterators

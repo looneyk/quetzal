@@ -1,0 +1,126 @@
+
+element_value and attribute value, template function with type conversion and default values if not present
+
+
+add_element and insert_element should return value analogous to stl
+
+
+for consistency, now that Element has parent function exposed, document element should either be shared_ptr or add_element, ... should return Element* instead
+
+Node is not used, but is in place in Declaration
+Parser is not used, needs work
+
+
+separate file for io operators?
+
+
+node
+    name
+attribute
+    value
+element
+    value
+    attributes
+    elements
+declaration
+    version
+    encoding
+    standalone
+comment
+    value
+cdata
+    value
+processing_instruction (stylesheet: <?xml-stylesheet type="text/xsl" href="uri.xsl"?>)
+    target
+    text
+
+
+Node
+    Declaration
+    Element
+    ProcessingInstruction
+    Comment
+    CDATA
+
+
+alternative parser token types
+
+LeftAngle
+RightAngle
+LeftEnd
+RightEnd
+LeftPI
+RightPI
+LeftComment
+RightComment
+QuotedText
+ElementId
+AttributeId
+AttributeValue
+
+start_tag_prefix,
+end_tag_prefix,
+processing_instruction_tag_prefix,
+comment_prefix,
+tag_suffix,
+empty_element_tag_suffix,
+processing_instruction_tag_suffix,
+comment_suffix,
+equals,
+quote,
+text
+
+<
+>
+</(element_name)
+/>
+<?xml
+<?
+?>
+<!--
+-->
+<!DOCTYPE
+<![CDATA[
+
+&amp;
+&lt;
+&gt;
+&quot;
+&apos;
+as required
+
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+element id: [a-zA-Z_][a-zA-Z_0-9.\-]
+attribute id: [a-zA-Z_][a-zA-Z_0-9.\-:]
+
+Element names cannot start with the letters xml (or XML, or Xml, etc)
+
+get token context
+normal (skip ws)
+element name (must immediately follow <)
+element_value (literal until end tag)
+quoted (literal until end quote)
+
+as with elements, text must immediately follow <?
+<![CDATA[...]]>
+notations?
+
+
+XML
+
+<
+    string (element name
+        skip ws
+        string (attribute start)
+            skip ws
+            =
+            " (missing =)
+                string
+                "
+                
+            . 
+        /
+    / beginning of end tag, expected start tag
+. expected beginning of start tag

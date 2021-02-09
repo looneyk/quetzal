@@ -1,0 +1,1153 @@
+
+Implementation of mesh using a halfedge data structure
+--------------------------------------------------------------------------------
+
+see what happens if I remove halfedge attributes
+since there is no override functionality, no vertex sharing
+does override even make sense? revisit this
+
+
+*each end of a seam is a "surface vertex", that is another very useful concept when working with seams ...
+*ability to treat multiple seams as a unit (all seams for a particular surface?)
+what happens to seams when something like a fillet or rounding is applied?
+    retain virtual seams?
+    fillet/rounding is its own surface, so new seams are created
+
+surface.set_regenerate_seams() needs to be called by user if surface face content changes other than by add_face/remove_face
+generate_seams needs testing
+seam names not currently supported
+
+
+be able to handle surfaces that are not fully connected, border seams should not cause issues
+submeshes similarly
+
+
+extract Polygon matrix operations to be more general
+define point set object that polygon, polyline use or are based on
+use this in load functions as well
+really want to use vertices, but points is more general, for use in load and transformation
+
+would be nice if path could also take advantage of this
+path should at least exactly parallel polyline?
+
+*Points
+Polygon : Points
+Polyline : Points
+
+
+helix_cone test bed for face attributes?
+
+spiral instead of diminishing helix?
+
+use faces_attributes_type afs0 where avs1 is used
+face_attributes, apply in create_helix_cone with polygon
+
+standardize parameter ordering
+vertices_attributes
+primitives_util
+primitives
+
+
+helix cone smooth vertex normals should use this formula too
+
+formula for normal to helix curve
+https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/curves/normal.html
+
+helix cone normals should be outward perpendicular to helical tangent that passes through the center of faces
+make sure that triangulation will preserve normals in this case
+
+r = dr * cos(Pi / n) // inner radius of layer polygon
+a = 2Pi * revs
+t = [0, 1]
+theta = a * t
+
+X = (x, y, z)
+x = r * (1 - t) * cos(a * t) = r cos(a t) - r t cos(a t)
+y = r * (1 - t) * sin(a * t) = r sin(a t) - r t sin(a t)
+z = dz * t
+
+T = X'
+Tx = -r a (1 - t) sin(a t) - r cos(a t)
+Ty = r a (1 - t) cos(a t) - r sin(a t)
+Tz = dz
+
+Bx = -r * cos(a * t)
+By = -r * sin(a * t)
+Bz = dz
+
+N = cross(T, B)
+
+t = (2 * i + 1) / 2 * n 
+
+the above does not account for dr/dt, the layer shift?
+(spiral osculating circle not centered?)
+
+https://tutorial.math.lamar.edu/classes/calcii/TangentNormalVectors.aspx
+https://mathworld.wolfram.com/BinormalVector.html
+
+
+wavefront_obj
+up to clients to make sure that objects and groups are interleaved properly
+for example, an o without a successive g is undefined behavior
+
+*write_obj: make sure that all faces are written even if they are not explicitly part of submesh and/or surface, use defaults
+
+
+lerp and rerp (rotational interpolation, with given or implied axis)
+
+spikosahedron but with arbitrary polyhedron
+
+
+append that merges submeshes into one
+
+
+maybe submesh just has orientation and has metadata for user defined things
+same could be said for face/surface normal
+but vertex attributes are a different story
+
+normals indicate outward, orientation indicates upward
+surfaces can have both
+
+
+general properties (name, value) in addition to attributes
+just build into attributes so it's accessibly everywhere without modification?
+
+
+general submesh metadata, bottom, top surfaces, ...
+Orientation? merge? does submesh_attributes_type have to be an Attributes?
+probably not, generalize if necessary so that it can be used for things like camera as well
+
+
+texcoords?
+obj_io, primitives, wavefront_obj
+
+
+*back to mesh_boolean
+remove dimension reducer from intersects_coplanar
+
+
+Surface and Submesh functions perform limited changes and do not leave the object in a consistent state
+    intended as building blocks
+Mesh contains both types, need to clearly delineate which type each of them are
+    Mesh should probably always be in a consistent state between calls
+
+
+really need to work on interpolate texcoord accuracy
+
+
+assert when values used directly or dereferenced, not when simply passed to other functions
+
+
+*finish merging functions that can now take mesh/submesh/surface (more?)
+*transform and transform_positions maybe should be separate, rely on type deduction rather than if constexpr, cleaner
+if the current implementation loops through faces and gets vertices from that, then no need for separate
+*invert
+    has the issue where the specialization takes same template and regular parameters
+    probably why I did the constexpr if
+
+
+*check that vertex_store and vertices, ... are used correctly
+deal with idHalfedgeOrig loops, elements/iterators should support arbitrary begin and end points
+
+need mesh.face_ids?
+need mesh vertex/halfedge allocation/expansion (primitives?)
+
+deal with resizing halfedges and vertices in primitives as they pre-allocate blocks to work with
+mesh_util may need minor work, may be the only place where full access is necessary
+    next halfedge id (halfedge_store_count)
+    ability to iterate through only original faces as new ones added
+    vertices: prepare_face_vertices (move)
+
+container reallocation does not invalidate id or size_t based iterators but can still invalidate references
+pack invalidates everything
+
+The range of id is [0, store_count)
+store_count is the next available id
+
+
+dimension reducer: projection
+
+
+get all apps working again
+
+good: dev_20200613 and as updated with dev_20200619
+good: dev_20200703 with unchanged libraries from 20200627, before and after iterator merging
+
+
+primitive flags instead of separate boolean fields?
+then they can be ored and the semantic values make them more readable
+currently only orientation (bVertex, but could then handle both face and edge), SurfacesDistinct, and Linear
+
+still don't like either term, bSmooth or bAngular
+indicate whether all faces should be created as part of a single/whole/complete surface or in separate/independent/distinct surfaces
+*SurfaceIntegral, SurfacesDistinct
+for now start with bSurfacesDistinct
+
+
+use create_h_v in connect, not directly
+
+
+move brep attributes functionality, at least texcoord, to model/mesh_attributes.hpp, Attributes.hpp
+
+
+check that DimensionReducer will preserve winding order around normal
+DimensionReducer prefers z-axis, then y-axis up; supply texture up vector (tangent) to select that or symmetric (just a change in reduce_y)
+
+
+if every face is part of a surface and every surface is part of a submesh:
+assertions replace special handling, simpler code
+would need to:
+    enforce that submeshes and surfaces are provided
+    create if not (cad appropriate naming)
+
+
+some things should conceptionally apply to vertices, but halfedges are used since they are the primary data structure
+
+
+Halfedge<typename Traits, typename M = Mesh<Traits>>
+Halfedge<typename Traits, typename MT = MeshTraits<Traits>, typename M = Mesh<MT>>
+apart from Traits, there should be no set classes
+
+document Traits, where vector, where mesh, ...
+define responsibilities more clearly
+
+
+*
+seam: set of halfedges where two surfaces meet
+generate as needed on the fly
+not difficult with surface periphery iterator (rename)
+
+rather than introducing another term such as periphery for outside surface edges
+be strict about distinction between edge and halfedge
+edge includes both border and seam halfedges and references a group of halfedges of the same type and orientation
+but then: border halfedge, seam halfedge, edge halfedge?
+face has halfedges, surfaces have edges (although they are still halfedges)?
+
+for surface, all should support disjoint sections, iterators for each
+edge: all halfedges
+seam_edge: halfedges adjacent to another surface
+border_edge: halfedges with no partner
+
+border iterators
+    start with single for submesh, usable here and now
+rename halfedges() in surface for this purpose
+surfaces should support border edges, generally will only have one
+submesh can have multiple, but support single for now, analogous to face holes, think about generalizing this
+named edges to support direct access when multiple supported
+the concept of a boundary, edge, perimeter, periphery, ...; generalized and expanded border?
+
+surface border list, something similar to face holes and adjacent surfaces/sections
+requires border halfedge iterator
+
+
+draw out math for fillet and round
+given radius
+need function for distance of vertex to periphery
+
+
+compare and backup
+see if I may want to back out some
+
+**looks like Intersect no good for 2D with its inclusion of plane
+    removed for now
+    the problem is probably a mismatch, a 3D being used in 2D context
+    use assert instead of static_assert to more easily see data types
+
+Instead of Locus enum, each form has contains, ... functions
+Locus as a base class?
+
+wtf is wrong with intersect.hpp line 303? and why does 302 work? related to above?
+
+
+consider intersects that returns [s, t] when only endpoint info is needed but not full intersection (need to compare point values now)
+
+see if it would be practical to use CRTP for mixin DX functionality
+
+intersection_test
+
+intersects
+(point line)
+(point ray)
+point segment
+point plane
+point polygon
+ray segment
+(ray plane)
+ray polygon
+(segment plane)
+
+intersection
+point polygon
+line plane
+ray plane
+segment segment
+segment plane
+segment polygon
+
+
+spatial relation
+arrangement
+
+
+lerp with i and n?
+
+function to track duplicate positions, normals, and texcoords
+
+check top and bottom band sphere texcoord
+u, v are different in sphere and torus
+
+*test interior/exterior
+try octahedron in cube with o points on c faces
+
+
+what about an inclusion that surrounds a void?
+russian dolls, same handling as faces and holes, just a series of distinct layers instead of rings
+
+
+Iterators
+
+*look for places where iterators can be used instead of id based loops
+
+vertex halfedge iterators should be able to handle border edges (face halfedge iterators are not affected by border halfedges)
+intialize with halfedge adjacent to border, iterate to border
+possible now, but only if there is no more than one border
+could Elements be used for border faces as is with the proper first/last/forward/reverse functions?
+sure, but they are only applicable to border edges, so how to make them selectively available?
+border_halfedges(idHalfedge) which returns Halfedges initialized with border forward/reverse functions, available from Mesh
+border detection and creation/return of appropriate type of iterator?
+
+same for hole iterators
+hole (and border) iterators need halfedge id on initialization (which hole, border not part of any object
+
+since surface and submesh will have face and surface iterators, change mesh to return iterators instead of accessing by id (simply current but filtering out deleted)?
+could be done using ElementsIndexed with more complex advance function
+implications?
+*part of this would be to support the ability to use mesh, submesh, and surface in the same template functions (without having to check for the deleted special case for mesh only)
+
+make sure that ElementsXxx properly handle first and last for empty containers
+
+what about rotational iterator rather than fixed
+face.halfedges(id0)
+face.halfedges(id0, id1)
+
+
+*order_face_halfedges
+*not only do we need to handle all intersections in the same face, but also edges intersecting multiple faces
+
+multiple intersections in the same face
+face change in the same submesh
+edges intersecting multiple faces
+
+when intersection sets are implemented, connect for each set
+
+Instead of lumping all disjoint submeshes into the same final submesh, use distinct names: name_0, ...
+
+*inclusion needs interior(submesh, vertex) (3D ray intersection count)
+what about the case where a submesh is not monolithic and one part is included and another not?
+should multi-part submeshes be allowed by definition?
+
+
+need to rename surfaces of secondary submesh, renamer function parameter?
+just leave it to caller to rename surfaces
+
+
+for surfaces/submeshes, use merge in addition to or in place of rename?
+
+
+look at local functions in headers, see if they can become lambdas, otherwise wrap in their own namespace, ...
+namespace internal, detail
+
+document cylindrical and spherical coordinate systems
+does to_spherical have the angular dimensions in the right order?
+
+
+change from idHalfedge to idVertex where it makes more sense
+split_face makes more sense connecting vertices, ...
+the halfedge is the primary unit here, vertices could be shared
+
+
+submesh surface index uses just surface name
+mesh surface index uses submesh/surface
+
+
+*menger sponge has bad texcoords, clip in general?
+*torus side normals need to take into account that ends are connected, not an issue if calculated after connection?
+*when updating texcoords for sphere side, just update x, y is ok
+*move calculate texcoords out of brep, to model with calculate normals
+*when calculating normals and texcoords, check for holes in each face
+*calculate spherical texcoords, geodesic_sphere_6_spherical bad texcoords, allow <0 and >1 for faces spanning seam faces
+
+test calculate_surface_normals produce identical results
+test calculate_surface_texcoords produce identical results
+test cylinder/prism/cone/pyramid side texcoords exactly match adjoining/opposite body edges
+test prism/pyramid all body surfaces have exactly same texcoords
+
+
+when calculating texcoords, consider using the projection of -normal as the up (-y) vector
+(clip_test texcoords have changed)
+
+
+boolean operations
+extrude from sketch
+revolve: rotational extrusion
+move extrude out of primitives, with revolve
+
+
+consider using t 0..1 instead of i, n (everywhere)
+i, n is a bit more acurate (but within ulp), but 0..1 would be easier for outside users and allow it to be more consistent since outside users might not have i, but might have t
+prefer to use consistently calculated values rather than copying?
+
+
+create_ functions should return submesh id, check that there is no lookup involved to do this
+because of append, would need to either look up or unsafely assume that it is the last added
+
+
+create_border_surface that does create_border_face and calculate_surface_texcoord (normals?)
+
+
+calculate_surface_normals should be able to handle meshes with borders (adjust vertex halfedge iterator)
+there should be distinct vertex halfedge iterators where multiple surfaces with borders come together at a point
+*or a way to get a custom iterator for a particular surface at a vertex
+
+extrusion needs bSurfacesDistinct so that proper surfaces/normals can be created
+ideally identifying groups of segments in a polygon/hole that belong to distinct surfaces
+
+ability to identify curve segments of a polygon
+defines surface creation during extrusion
+add curve and edge classes to geometry
+edge inclusion
+
+
+curved surfaces should simply not have a normal, probably only used with DimensionReducer, resolve that
+
+in calculate_surface_normals, weirdness results from non-planar faces
+normals are calculated as if each vertex angle were not split by triangulation
+calculating surface normals after triangulation is only somewhat helpful, but also ambiguous (diagonal choice)
+normals should really be generated from original surface function and transformed the same as position
+*update helix_cone, cylinder, sphere, anything that allows for different beginning and ending azimuth
+*in addition to distinct surfaces, need another flag to tell primitives_util whether there is an azimuth shift between levels, bRotated
+
+*in this case, recalculate normals, and surface normal has no meaning
+*then get rid of explicit calls to calculate_surface_normals
+instead of simply triangulating rotated surfaces, increase level of detail first
+
+don't triangulate rotated surfaces first, leave triangulation/subdivision to caller
+
+subdivide_surface
+subdivide_face (calls one below)
+subdivide_quad
+subdivide_triangle (triangulate_rows)
+subdivision algorithm for arbitrary polygon
+
+
+*check all add_x, remove_x, add_x_y
+
+element.remove_ is strictly a local removal
+mesh.remove_ is throughout the mesh
+
+detach_face/surface/submesh disconnects the element, but does not delete it
+remove_face/surface/submesh deletes the element and any containing elements if that results in them being empty
+delete_face/surface/submesh does a remove and in addition deletes all contained elements
+
+
+wherever surface/submesh deleted is checked, if !deleted, then assert !empty
+
+
+**use add_vertex, just mesh_boolean left, needs to be reworked
+*use add_halfedge
+halfedges, vertices, faces, ... should be accessed only as containers, not addressed by id except internal to Mesh
+
+add functions link at the face, surface, submesh level, but not with halfedges
+compare the current add_xxx functions in mesh to their link counterparts
+
+
+vertex, halfedge, face, surface, submesh order
+or halfedge, vertex, face, ...
+
+
+mesh.append prefix not implemented
+
+
+*in clip_test, clipped face is deleted, but I bet not clipped surface
+
+
+add an accurate DimensionReducer that performs rotation rather than just collapsing in most axial dimansion
+current is fine for calculating texture coordinates for a planar face
+would be better in to_polygon, for example
+two algorithms interchangeable, appropriate one can be used
+
+
+*menger sponge, mosely snowflake, after clip
+texture direction validation failures
+duplicate texture coordinates and normals
+
+
+unlink_face, ... instead of remove_face_inclusions, but manages only links
+link_face, link_surface?
+*see how new add/remove correspond to unused link/unlink
+
+
+mesh component copy/assignment operators cannot be default so that at the very least a common mesh can be asserted
+need to set mesh on component copy/assignment
+this possibility should be handled though
+
+
+weld face/surface could be done using face partners
+
+
+Mesh add_x_y/remove_x_y handle only the linkage between x and y, but handle it completely
+other functions to handle cascading add/remove, _ex?
+
+
+problem with stand is that the torus hole is not being associated with torus exterior, but with strut
+    still?
+    check that this is really the case first
+fix the search first, then check that interior and exterior are part of the same submesh
+
+inclusion test is fixed, but submesh identity needs to be checked (BorderFace contains?)
+
+
+Mesh, Submesh, Surface should have the same interface?
+
+primitives, ... need submesh in faces.emplace_back, ...
+    remove default parameters and compile, see about permanently
+add_surface_face ...
+
+append doesn't need prefix anymore since things appended should be submeshes with names
+no, but it should be passed a submesh name to give the new surfaces
+new surfaces need to have keys made of submesh and surface names so that same named surfaces on different submeshes aren't merged on append
+**need to revisit surface, submesh naming in the context of merging into the same mesh
+
+
+**get double working
+
+*continue using T ...
+get rid of value_type<M>? at least when the typename issue gets fixed
+
+*would it make more sense for the template parameter to be vector instead of traits?
+that might make all of the storage type issues simpler?
+
+
+don't use texcoord_type where it should be vector_reduced_type
+
+
+remove_vertex/edge/submesh in Mesh (like remove_face) instead of mesh_util?
+these probably should be part of Mesh interface
+alternatively remove_face in mesh_util?
+one or the other for consistency
+
+
+create_border_with_holes_face for open ended cylinders
+create_holes_face for closed cylinders, repurposing end halfedges and vertices
+
+results of each should be identical
+function to diff two meshes
+
+
+make sure that reverse and invert are used consistently
+reverse applies better to linear sequences
+invert applies better for surfaces, things that can be turned inside-out
+reverse_winding_order (1D) vs invert_face (multi-parameter)
+
+
+see if mesh_util.hpp can be removed from mesh_boolean and triangulation
+
+uniqueness of submesh names is not enforced, but should be used sparingly and deliberately
+non-unique submesh names will cause submeshes to be merged on append
+
+**each function taking a Mesh should have a Submesh counterpart
+unless there is sufficient overlapping functionality such that M can satisfy both
+see if I can arrange for that
+with custom Mesh iterators
+
+*submeshes need same set of aux functions as surfaces
+where submeshes fit face to face, set face partner ids
+submesh attributes might include bounding box/hierarchy
+
+what about overlapping submeshes that share faces?
+not supported
+to support this, would need additional info to indicate sharing so that faces can be duplicated if only one in a shared set was modified
+
+should everything be part of a submesh (or submeshes for surfaces)?
+not necessarily X:1 or 1:X relationship between surfaces and submeshes
+
+decide whether null surfaces, submeshes are allowed, and if so, then what that means
+
+should a surface be able to span submeshes?
+no, but surfaces can have disjoint sections
+same with submeses
+
+section: everything connected starting from a given halfedge id
+surface uses section differently, context dependent?
+
+surfaces do not overlap
+
+submeshes and surfaces do not share faces
+submeshes and surfaces may have disjoint sections
+
+surfaces should have edges/boundaries/...
+submeshes should have adjoining surfaces/faces
+
+halfedge/vertex
+face, adjacency using halfedge partners
+submesh, adjacency using face partners
+mesh
+
+surfaces are edged subsets of submesh/mesh
+
+
+lamp
+check normal orientation
+check proper extrusion winding order
+check texture coordinates
+create lamp pieces individually
+write
+calculate face normals
+write
+
+
+*modify primitives to return submeshes
+*primitives take a mesh parameter, append new geometry, and return a submesh of the added geometry
+
+*transforms that take submesh, use if constexpr, ... (check Herb Sutters gotw)
+with new iterators, many mesh, submesh, and even surface transformations and operations can use a single function to handle all of them
+
+
+only positions for floating vertices above are valid, normals and texture coordinates need to be recalculated
+split edge vertices should be OK
+
+
+surfaces can span submeshes?
+smooth across breaks
+need inter-submesh surface face connectivity for smoothing, not just surface grouping
+instead of surfaces being allowed to span submeshes, client must ensure edge conditions complementary
+simpler and surfaces can then have submesh ids
+
+
+*add provision for bounding box, convex hull to speed up interior/exterior test
+    creation
+    intersection
+encapsulate auxiliary bounds in test, check in order of complexity
+    box
+    hull
+    mesh
+
+
+operations on the structure of the submesh and operations applied to the mesh itself must be coordinated by the client
+
+for each function operating on a mesh, need a submesh counterpart, each iterating its own way and calling a common function
+
+it should be assumed that submeshes are single, self-contained, fully connected sets of components
+not necessarily, boolean operations can result in multiple disconnected components
+
+move to mesh_body (currently mesh_boolean) or somesuch:
+attach (union)
+weld (union)
+clip (subtract halfplane)
+split
+union (a | b)
+intersection (a & b)
+difference (a & !b)
+
+manipulation, sculpting, ...
+
+
+id_type cut_border_hole(M& mesh, id_type idSurface, const OrientedPolygon& polygon);
+
+unmark surface
+add polygon edges, splitting any intersections whether on the polygon or surface side
+
+how should orientation be specified on surface?
+surface reference point (polygon origin)
+surface reference vertex (polygon right)
+
+
+*add attach that references surfaces
+delete surface B faces
+split surface A faces that are intersected by the hole
+    do similarly to clip, but with polygon rather than plane
+    can share code, parameterize the intersection algorithm
+split hole B halfedges to match surface A border
+
+
+**having a complete set of header includes is especially important with template headers
+include anything explicitly mentioned; don't rely on another header including it
+dependencies are then explicit
+
+
+*does it even make sense to have custom face properties/metadata? would they ever change?
+yes for metadata/auxiliary data unless a run-time approach is needed
+is this related to materials?
+see comments about tangents in model notes
+
+
+
+
+
+Attributes and Vertex Identity
+
+vector traits instead of T, N?
+in mesh_inversion, provide for vertex attributes transform function rather than explicitly referencing texcoords
+in mesh_inversion, provide for face/surface attributes transform function(s)
+
+currently there is a one-to-one relationship between halfedges and vertices
+
+halfedge
+    does not have position, get from vertex
+    may have normal
+        if not, get from vertex
+    may have values for all attributes other than position and normal
+        if not, get from vertex
+vertex
+    must have position
+    may have normal
+        if not, first check halfedge, then face
+    may have values for all attributes other than position and normal
+        if not, then halfedges must have values
+face
+    may have normal
+        if not, get from surface
+surface
+    may have normal
+        if not, then all faces must have normals
+
+maybe skip any inheritance of attributes and just make sure that what would have been inherited is exact?
+        
+normal propagation is worth doing no matter what
+other values only needed if there is not a one-to-one halfedge vertex relationship
+
+to do all this, attributes need linkage, but:
+brep handles linkage
+attributes should be completetely opaque to brep
+vertex attributes() might call halfedge.effective_attributes(vertex.attributes) to get fully specified attributes
+
+
+should attributes() return an Attributes reference or the actual templated type?
+work toward the former, brep currently knows too much about attributes
+
+attributes flags could be done away with given member function existence detection
+although member functions might be defined based on attributes flags
+
+need attributes() for accessing local state, effective_attributes() for filled state?
+maybe instead of std::optional, another flags to indicate where attribute values are missing
+    makes for simpler checks for fullness; "missing" bits all 0; fields that are not present are not missing
+    can use same flags as attribute components
+
+
+unique vertices with overridden attributes in halfedges
+    deal with attributes first
+vertex, face attributes
+    need to specify subset
+    optional values so they can be inherited
+    can then be merged into single (set of) attributes class
+    vertex/halfedge share an attributes type, face/surface share an attributes type
+        one or the other of each type needs to have a value
+
+
+the vertex identity problem
+
+there is no vertex object that represents a unique vertex position
+coincident vertices have no indication that they represent the same point except by directly comparing position or via vertex halfedge iterator
+    vertex halfedge iterator does not support borders, and can not support more than one
+vertex partners? direct rather than via halfedge connections
+vertex prev and next ids, loop at each master vertex position
+vertex vertex iterator
+
+vertex is singular and holds position
+would require vertex to have explicit halfedge list
+halfedges point to singular vertex
+this would make vertex halfedge iterators easier (single vertex case) or more difficult (neither singular vertex nor one-to-one mapping)
+
+halfedge-vertex relationship
+one-to-one (current)
+one-to-many (single vertex)
+many-to-many (required at surface edges at the very least unless attributes can be separated)
+
+
+master vertex position and universal normal lists
+attributes then reference these instead of containing duplicate values
+would then need an attributes blob, parameterized by vertex value and face value types
+blob definition in traits
+mesh would need an instance of blob
+
+a master vertex list corresponding to unique positions
+current vertices have an id referencing a master vertex
+halfedges continue to reference current vertices
+
+
+would be nice if attributes could be dynamic without too much overhead
+should attributes be stored in list with their own ids to prevent duplication?
+attribute values can have different types making even a map impractical for individual attributes
+register attributes for vertex and face
+
+
+for optional to work, attributes need to know where default comes from
+pass in higher level attributes when resolving them
+
+
+halfedge
+    -> links
+    -> vertex
+    -> face
+    local vertex attributes (optional to default to vertex)
+
+vertex
+    [] -> halfedge *
+    position (?)
+    attributes (optional normal to default to face)
+
+face
+    [] -> halfedge (linked list)
+    -> surface
+    -> face (partner)
+    attributes (optional to default to surface)
+
+surface
+    [] -> face
+    attributes
+
+
+probably need a template solution for performance, very general solutions have a lot of overhead
+
+want flexibility for different attribute configurations
+with efficiency good enough for a real time rendering context
+cross purposes
+
+vertex use count for vertices that are shared by multiple halfedges
+no current primitive/model shares vertices
+useful for rendering, lower vertex count
+current code does not check for this possibility and may apply transforms multiple times in cases of shared vertex usage
+
+
+attributes
+should be packed. do not store one of each possible field
+    array of config info, like Direct3D, ordered
+    flag bits, constructed in bit order
+single memory block
+    
+add layout object to attributes classes (flags)
+
+cast to type at offset based on map of requested type to position
+template definition, field existence based on flags
+just define the custom value type as I am now
+looking for a shortcut, one line definition
+but still need traits so clients can query/work based on capabilities
+
+
+
+
+Surfaces
+
+surfaces and texture coordinates best applied at construction
+
+would be nice if normal and texture calculations could be moved to the attributes level or similar
+
+attach and weld will generally change submesh composition, so that will need to be reflected up the line to mesh
+
+sphere has body, geodesic sphere has face surfaces
+function or parameter to turn geodesic into body oriented (single body surface)?
+*build consistently, then recaculate all if other is called for
+for icosahedron/geodesic body texture coordinates are impractical to calculate
+create icosahedron with body texture coordinates, count on geodesic split/triangulate to interpolate, and convert to body as needed
+
+vertex attributes are set at the mesh level
+allow for vertex attributes to be set at the surface level?
+base class required for separate sets of vertex/face attributes
+
+groups for surfaces in obj files should have the fully qualified surface name: submesh/surface
+the slash, however, is not technically allowed in obj group names
+
+obj file format
+-   file_name       mesh
+o   object_name     submesh
+g   group_name      surface
+s smoothing group
+(mg applies only to free-form geometry)
+
+
+
+
+Current assumptions, constraints, and compliance
+
+faces and polygons are planar (normal generation, intersection, ...)
+
+within a mesh:
+surface names are distinct
+submesh names are distinct
+
+meshes are bodies with consistent vertex, face, surface, ... attributes
+all geometry is part of a surface, submesh, and mesh
+every face is part of exactly one surface
+every surface (all faces) is part of exactly one submesh
+surfaces can have disconnected sections
+submeshes can have disconnected sections
+
+with the constraints above there is no need for:
+mesh to have a surface index
+face to have a submesh id
+submesh to have face_ids
+
+however, the code handles the cases where:
+faces are not part of surfaces
+surfaces are not part of submeshes
+
+and does not handle the cases where:
+surfaces are not fully connected
+submeshes are not fully connected
+
+it's generally assumed that surfaces have no borders, but this is a useful case to support, both closed and open surfaces and submeshes
+
+
+
+
+Models, meshes, submeshes
+
+forms/bodies/meshes/...
+
+model should store information about semantic features and rendering info, possibly indexed by object, group and/or surfaces names
+model is a level of abstraction above mesh, a body that should be rendered as a whole
+meshes too should be considered a single object no matter how many submeshes it may have
+
+meshes may contain unconnected/distinct sets of geometry
+meshes contain one or more independent sets of fully connected geometry
+submeshes should normally be used for a fully connected subset of mesh geometry
+
+mesh supports only a single level of submesh, no hierarchy
+any grouping must be handled at the application level
+
+operations can only be applied to meshes or submeshes in the same mesh
+
+mesh should store list of its submeshes and disconnected bodies, whether explicit or only internal (formed after split for example)
+does mesh need to know about its submeshes?
+should mesh submesh list cover all mesh seometry?
+
+fully connected meshes/submeshes can be minimally specified by id of any surface/face/halfedge in the mesh
+need to handle possibility of disconnected submeshes and surfaces
+*just don't do this
+
+model has mesh list referenced by name
+    and submesh and surface lists?
+mesh has submesh list referenced by name
+    and surface list?
+submesh has surface list referenced by name
+
+
+
+
+Materials
+
+as with everything else, materials should be referenced by ids, not pointers, at the brep level
+
+should materials be part of attributes?
+yes, material attributes can be applied to vertices, not just surfaces
+no, keep separate, if materials might be added later, ...
+yes and no, materials are not within the scope of these libraries
+just removing them for now
+multiple materials?
+
+
+
+
+Testing
+
+check that there are no missing texture coordinates
+check that all at least primitive faces are associated with a surface
+
+clip_test, triangulated_* have duplicate texture coordinates
+
+*fractal cubes seem to have bad vertex iterators, partner id null
+
+test read_obj
+
+make sure that weld is removing the correct number of halfedges/vertices
+
+mesh cleanup
+ensures that all colocated vertex positions are exactly the same
+for each surface, ensures that all colocated vertex normals are exactly the same
+
+validation
+brep handles data structure integrity, connectivity, ...
+model handles more semantic things such as normal consistency, ...
+Face::center, Face::convex?
+
+check functions offer different levels of checking, be more specific and consistent
+
+check face normal validity, especially in context of convex/reflex vertex characterization
+separate vertex/face normal functions for no normal direction hint and explicit normal direction hint (current versions just try their best)
+
+test
+create convex polyhedron
+using face normals and origin distances, use clip to reproduce it
+
+test using each possible orientation option
+test with different triangulation schemes
+test with optional triangulation before clipping
+tests for 2d forms
+
+
+
+
+Research/Requirements
+
+*Add texture conditional (if constexpr) code everywhere in model
+
+need mesh comparator
+            
+in create_border_face/create_border_hole, add a facility for alternate border halfedge detection?
+
+see if mesh traits can be further applied
+
+append can use append_face loop
+
+have separate functions for normal faces and border faces so that proper checks can be made
+
+consider how to further split up mesh_util
+
+svg
+change font to something that doesn't obscure decimal points
+
+dot norm_squared, only one occurrence?
+
+0 colinear (and/or convex?)
+Pi colinear
+2Pi colinear (and/or reflex?)
+would be nice if brep could use geometry for this kind of thing
+
+active_count excludes deleted elements
+use count instead of active_count and size() for total instead?
+
+check current test forms for vector_eq, see dodecahedron.obj for example
+when positions/normals/texcoords are vector_eq, set values same?
+    positions and vertex normals can be calculated once and shared, face normals need to be consistent across face
+how to choose best out of a set of vector_eq values? prefer almost_zero components and then averaged?
+vector_eq positions and normals are almost fixed with improved less in obj_io (commutative property failing?)
+
+Is there a need for an explicit Edge object rather than pairs of halfedges?
+
+triangulation, caller or function responsible for 3 side checking? latter makes for a better interface
+should triangulate_central_vertex allow for triangulation of triangles too? min edge count parameter 3/4, default 4 at which it triangulates
+
+don't automatically append in the create function
+automatic appending makes post-processing primitives more difficult
+
+
+reference counting instead of deleted flag for deletion of vertices, faces, halfedges in pack
+more overhead, but useful for sanity checks
+
+on halfedge set_deleted, mark all referenced halfedges, vertices, and faces deleted
+with this done, there is no need to check for deleted following nullid check
+
+instead, single delete flag, when checking for deleted, check halfedge connections too
+explicit and implicit deletion
+
+prior to pack a validity check that checks that reference counts are in sync with total and remaining
+
+
+*degenerate face removal
+replace face with a series of edges containing all vertices in order
+
+collapse intersecting faces (criteria?)
+
+
+Mesh should have accessor functions, not expose vectors directly; id should not necessarily be position in vector
+no, need direct access for size, iterators, ..
+no again, with deleted elements, size is not necessarily valid, and iterators need to explicitly exclude them
+size and iterators on list abstractions can account for these transparently
+
+Mesh functions that add each object type and automatically assign id?
+only if id is returned since connections generally need to be made
+
+
+Halffaces
+halfedges support face adjacency
+halffaces support mesh adjacency
+halffaces can be used to automatically identify where weld/attach should be applied
+implemented at face level, but can be applied at surface level
+immediate application with menger sponge and mosely snowflake
+
+all faces currently support halfface interface, just without full implementation
+either halffaces must have the same vertex positions
+or may need to manage a many-to-many relationship
+
+delete_edge merges adjacent faces
+delete_face merges adjacent meshes
+
+
+
+
+Scripting system
+add logging to primitives, transforms, ... that can be read back in to recreate meshes
+probably not possible in general, consider the case where each vertex is transformed by a matrix based on its position
+must be done at the client/main level
+probably no elegant way to incorporate scripting into primitives, transformations, ... anyway
+
+
+ear clipping algorithm
+https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=4DA8BE3536598E980290761FF10448DB?doi=10.1.1.115.291&rep=rep1&type=pdf
+http://www.mathematik.uni-marburg.de/~thormae/lectures/graphics1/code/JsCoarseImg/EarCutting.html
+
+diagonal orientation really only applies to non-planar quads
+inner/trough/oblique, outer/peak/reflex
+
+diagonal triangulation
+shorter/delaunay
+inner/outer, calculated using face normal
+
+*in the non-planar case, try triangulate_center
+
+
+
+
+Bugs
+
+Face/Vertex/... default constructors dereference null m_pmesh in Elements initialization
+
+menger_sponge
+why are there multiple texcoords and normals after clipping? (diagonal -> diagonal_half)
+I can understand texcoords, but not normals (only 6 normals all using the same matrix)
+
+
+
+
+Usage/Guidelines
+
+Document clearly that halfedge (and other) iterators and references will be invalidated on container changes
+
+Surfaces are the mechanism for smoothing (and material grouping)
+surfaces determine both normal and texture coordinates
+normals are smooth within a surface
+typically a single texture covers a surface
+surfaces represent smooth texture mappings
+
+id's are used internally by primitives/brep, but only name should be used by clients
+
+marked and selected bits are cleared only before they are required, state between usages has no significance
+deleted bit is cleared on pack, value is always significant
+
+append does not check for deleted
+
+never call face.set_deleted on its own, use mesh.remove_face_surface
+
+everything now has normals that can be used with vertex orientation in calculate_face_normals
+
+functions that act on a single object can assert !deleted
+deleted check should be made by caller
+add additional deleted assertions wherever appropriate
+
+idXxx instead of id, always in function signatures at least
+id only for local loop counter
+
+use id instead of i
+mesh needs counters for next id's (conceptionally, may still just use size)
+saves the work of reassigning id's when packing
+since there may then be gaps between id's, checking against size/next id by itself is no longer sufficient for validity
+also need to check for !deleted
+
+all meshes have names?
+all surfaces have a submesh
+all faces have a surface
+
+Halfedge, Vertex, Face, Surface, Mesh now strictly handle connectivity
+geometry contains direction, line, segment, plane access functions
+mesh_info, mesh_util, mesh_inversion handle geometry including Attributes

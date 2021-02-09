@@ -1,0 +1,25 @@
+
+*rewrite viewBox after finding actual dimensions
+
+
+function to add to existing or newly created defs element
+how to indicate whether to add element at current position or to defs?
+have a separate defs version which wraps the current position version
+*single defs function with callback
+*untested
+
+push curent element position
+find defs element
+if not exists, create it at beginning of svg element list
+set defs to current element
+add new defs child element (current function)
+pop 
+
+
+what's wrong with symbol position?
+
+
+define styles
+define attributes to be applied to all shapes (application of common style?)
+allow for common styles/attributes by element type
+no, just define styles externally and add a single attribute for it

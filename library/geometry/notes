@@ -1,0 +1,286 @@
+
+Common geometry constructs and algorithms
+--------------------------------------------------------------------------------
+
+http://geomalgorithms.com/a07-_distance.html
+https://math.stackexchange.com/questions/2386768/3d-intersection-of-a-line-and-a-line-segment
+
+https://en.wikipedia.org/wiki/Skew_lines#Distance
+https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d
+http://geomalgorithms.com/a05-_intersect-1.html
+http://mathforum.org/library/drmath/view/62814.html
+https://www.mathworks.com/matlabcentral/answers/365911-finding-the-point-of-intersection-of-two-lines-in-3d-space
+http://paulbourke.net/geometry/pointlineplane/
+
+//    typename Traits::vector_type v = cross(lineA.direction(), lineB.direction());
+//    return abs(dot(lineB.point() - lineA.point(), v) / v.norm());
+
+
+Classes in this library are parameterized with a traits class which must supply:
+value_type
+size_type
+size_type dimension
+value_type val()
+reduced_traits
+
+
+normals in attributes should use rotational lerp
+
+
+closest_point_parameters
+*deal with segment, allow for vector rather than unit direction
+scaling s/t by length should work, but adds additional operations, whereas with a non-unit direction, get 0..1 result automatically 
+maybe closest_point_parameters shouldn't take lines, or allow for additional types?
+
+caller responsible for line direction vector unit, but and when it should not be.
+maybe take line components (point, direction vector) instead fo lines and keep line direction unit?
+
+see where else parallel_unit can be used
+    coplanar
+    distance
+    intersect
+can count on normal vectors to be unit, but direction vectors?
+a Line flag that indicates whether the direction is a unit vector?
+maybe just get rid of parallel_unit for lines for now?
+
+or just deal with the segment.line() direction vector issue
+
+*remove unit assertion from line, check only when use of direction vector requires it to be unit
+
+**Linear (line, ray, segment, halfedge), Planar (plane, polygon, face) interfaces
+common linear base instead of line functions
+templates instead of Line parameters in intersection, ...
+declares common point() and vector() (planar normal())
+
+
+ideally hard 0..1 checks here with clamping handled by caller for external consistency
+
+
+segment
+half_segment
+open_segment
+
+ray
+open_ray
+
+
+PolygonWithHoles should have Polygon base class
+then single functions with Polygon ...
+
+load_polygon needs to be able to handle any number of position values
+strict parameter for exact match?
+indication whether or not there was a match?
+**load_points needs same treatment
+*move parse_point to math, ...
+
+create_cylinder should be able to take 2D or 3D polygons
+
+In general, need a way for assignment between vectors of different sizes
+Sensible to increase size, but not to decrease (loss of info)
+only by 1 either way for homogeneous coordinates?
+
+
+load functions do not clear so that additional points/polygons can be appended
+clear must be done manually
+
+polygon can be loaded from points or polygon xml file
+polygon with holes can only be loaded from polygon xml file
+
+PolygonWithHoles base class Polygon?
+
+
+*In Attributes, change Flags to something more descriptive?
+originally Property; Attribute?
+AttributeFlags
+AttributeType, but then AttributeType::type? just Attribute::Type
+component, semantic, ...
+type is fine for attribute, but need plural for flags()
+
+I don't like how aliases have to be duplicated in each Attributes subclass
+I don't like how Flags has to be external to Attributes, but ridiculous to have to qualify it if not
+
+AttributesTraits
+all the info to dynamically construct all of the Attributes
+
+AttributeTraits
+    flag/type
+    value_type
+
+using PositionNormal<T> = Attributes<T, Attribute::Position, Attribute::Normal>
+
+
+curve normal is change in curvature, should probably correspond to OrientedPoint::right
+actually right might be -normal
+surfaces have bitangent, curves have binormal
+
+
+*think about getting rid of IntersectionType, exposing types directly from Intersection
+
+
+add interpolate to properties given polygon or set of reference values and position or parameter relative to bounds
+(belongs in model, geometry doesn't have properties other than position)
+
+
+*keep geometry primitives self contained, no reference to other types in class
+specialized template functions for different operations instead of overloaded functions?
+distance, incidence, intersection, parallel
+this would allow for mixed dimension operations if they make sense
+no need for many combinations, see geometric tools matrix
+
+
+Path (currently vector of OrientedPoint)
+implement this as polyline of OrientedPoint
+parameterize Polyline with point type instead of Vector parameters?
+polyline traits
+then properties can be used
+add orientedpoint to properties, Attributes subclass then?
+Curve could also be a polyline with custom point type (oriented, weighted, ...)
+    custom point types are paired with curve algorithms that use them
+No, Curve uses different access, 0..1, but would contain a polyline of (oriented) control points
+for curve, right should be renamed normal
+
+
+for parallel, all line types (L) can use an external function taking two direction vectors
+similarly for surfaces (S)
+parallel(L, L) directions equal
+parallel(S, L) dot(normal, direction) == 0
+parallel(L, S) dot(direction, normal) == 0
+parallel(S, S) normals equal
+need explicit template parameters or Line and Surface base classes for this to work
+somehow make the distinction between L's and S's
+if constexpr (T::dimension == 1 && S::dimension == 1) ...
+dimension used for the space, need a separate for object dimensionality, degrees of freedom, parameter space dimension
+
+
+would be nice if geometry constructs could be parameterized by vector type instead of value type and dimension
+dimensional specialization makes this impractical
+
+
+HalfPlane
+
+move all intersection out of geometry classes
+geometry classes can have contains, ..., but call the intersects forms?
+no, still cross dependencies
+what if each object only references/includes lower level objects?
+
+
+https://www.geometrictools.com/
+http://geomalgorithms.com/
+http://paulbourke.net/
+
+
+*how does openmesh do values?
+
+check eigen/vcg, openmesh, cgal, meshlab, geometric tools
+E:\Users\Q\User\Keith\dev\library3\OpenMesh-7.1\Documentation
+git clone gitolite@git.dev.opencascade.org:occt occt
+
+
+Vector
+value_type used to be consistent with STL containers
+coefficient - multiplicative factor
+coordinate - coefficient of basis vector
+vectors have coefficients/components of scalar type
+points have coordinates
+
+vector components
+matrix elements
+
+since a vector is a matrix, use element for both for consistency?
+vectors defined in terms of one-dimensional matrices? if so, then element wins
+
+
+math
+    vector, matrix
+geometry
+    point, line, curve, plane, manifold, sphere
+topology
+    vertex, edge, face, surface, mesh
+
+geometry included in math library?
+
+
+abstraction for Color based on XMFLOAT4 for use in Vertex
+Color with type and traits similar to Vector
+
+
+https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+
+
+*full unit tests for all vector operations
+
+
+separate point (absolute) and vector (relative) classes?
+
+Point
+p(v)            
+p = v           
+p += v          =
+p = p + v       =
+p = v + p       
+p -= v          =
+p = p - v       
+p *= f          =
+p = p * f       =
+p = f * p       =
+p /= f          =
+p = p / f       =
+
+Vector
+v += v          =
+v = p + v       =
+v = v + v       
+v -= v          =
+v = v - v       
+v = p - p       
+v *= f          =
+v = v * f       =
+v = f * v       =
+v /= f          =
+v = v / f       =
+
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+bool quetzal::geometry::intersects(const Line<Traits>& line, const Segment<Traits>& segment)
+{
+    if (!intersects(line, segment.line()))
+    {
+        return false;
+    }
+
+    math::Vector<Traits> p = line.point();
+    math::Vector<Traits> d = line.direction();
+    math::Vector<Traits> a = segment.points()[0];
+    math::Vector<Traits> b = segment.points()[1];
+
+    typename Traits::value_type t;
+    typename Traits::value_type s;
+
+    // Since we know that there is a linear intersection, at least one of these should be non-zero
+    typename Traits::value_type denomxy = d[1] * (a[0] - b[0]) - d[0] * (a[1] - b[1]);
+    typename Traits::value_type denomxz = d[2] * (a[0] - b[0]) - d[0] * (a[2] - b[2]);
+    typename Traits::value_type denomyz = d[2] * (a[1] - b[1]) - d[1] * (a[2] - b[2]);
+
+    if (abs(denomxy) > abs(denomxz) && abs(denomxy) > abs(denomyz))
+    {
+        t = (d[1] * (a[0] - p[0]) - d[0] * (a[1] - p[1])) / denomxy;
+        s = (a[0] * (b[1] - p[1]) - b[0] * (a[1] - p[1]) + p[0] * (a[1] - b[1])) / denomxy;
+    }
+    else if (abs(denomxz) > abs(denomyz))
+    {
+        t = (d[2] * (a[0] - p[0]) - d[0] * (a[2] - p[2])) / denomxz;
+        s = (a[0] * (b[2] - p[2]) - b[0] * (a[2] - p[2]) + p[0] * (a[2] - b[2])) / denomxz;
+    }
+    else
+    {
+        t = (d[2] * (a[1] - p[1]) - d[1] * (a[2] - p[2])) / denomyz;
+        s = (a[1] * (b[2] - p[2]) - b[1] * (a[2] - p[2]) + p[1] * (a[2] - b[2])) / denomyz;
+    }
+
+    math::Vector<Traits> v = segment.point(t);
+    math::Vector<Traits> u = line.point(s);
+    assert(vector_eq(u, v));
+
+    return float_ge0(t) && float_le(t, Traits::val(1));
+}

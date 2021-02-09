@@ -1,0 +1,123 @@
+
+*modify update to perform mapping from viewport portion of original frame to display
+
+get rid of resizing, size set on startup, load will interpolate as necesary
+size controlled by main, controller frame
+layout, spacing, and pixel size should be handled at higher level, controller/scene
+
+
+load new pattern on background thread
+no need for mutex during transitions, transition setting (atomic) coming into effect will instantly modify update
+mutex still needed for changes to running shot
+
+shot updates to given frame
+controller performs transition between shot frames
+
+
+allow for wipes (horiz, vertical; radial, circular, spiral, ...) between frame changes as well
+
+
+viewport effect: rectangular effect where it appears like you're looking out a train window or scanning around a scene through a square opening
+variable speed based on radius, ...
+random movement pattern
+arbitrary output function instead of just built in shifts, ...
+
+
+velocity should be 0..1 relative to viewport, not between pixels
+
+
+pixel
+    geometry&
+    transformation (position)
+        with scaling, translation, rotation, can have pulsating, wandering, and/or spinning pixels
+    color
+
+non-linear pixel spacing (arithmetic/geometric)
+
+
+xml
+color layouts
+animation types
+display references a layout and optionally an animation type
+
+aurora, pulsar, quasar, dancing lights, synchronized lighting, lighting bugs, digital nebula/galaxy
+ball lightning, orbs, ufos, fairy lights, moon lights, running lights, phoenix lights
+lightwave, photon, phase, space, rays, warp, wavefront
+star lights, stride lights, shifting lights, quicklight (sand)
+flame pattern, vu meter, stars, lightning bugs (random yellow/green), tunnel, ...
+radium, spiral
+rayarray, yarray, rayar, Q-rays
+
+
+shift speed control (walk, run, sprint)
+camera speed control
+
+
+frame transform algorithm
+function object?
+plug-in
+starts with frame (set)
+update with dt
+
+
+Y = 0.299 * R + 0.587 * G + 0.114 * B
+
+
+additional init and feed methods?
+void init(...);
+void feed(...);
+
+
+marquee
+radar
+spiral initialization
+
+3 dimensional light array, cube, sphere, ...
+
+feed edge (center, arbitrary)
+
+shift center vert/horiz axis (feed) (or just implement this with multiple displays)
+
+shift all/rgb/a
+
+reverse/reflect horiz/vert (for multiple display initialization, ...)
+
+instead of multiple displays, just better initialization/shifting algorithm interfaces
+
+
+Interface
+
+key to activate/deactivate interface
+
+[dimensions]
+x
+y
+(z)
+bulb size: 0..1 * spacing
+
+[arrangement]
+rectangular
+radial
+cylindrical
+spherical: lattitude/longitude, geodesic, or geodesic dual
+
+color presets
+custom color scheme dialog
+
+[horizontal]
+linear spacing
+logarithmic spacing
+logarithmic spacing parameter
+buttonpush  shift left
+buttonpush  stop
+buttonpush  shift right
+edit/spin   horiz rate
+
+[vertical]
+linear spacing
+logarithmic spacing
+logarithmic spacing parameter
+buttonpush  shift up/out
+buttonpush  stop
+buttonpush  shift down/in
+edit/spin   vert rate

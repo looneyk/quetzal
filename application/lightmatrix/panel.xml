@@ -1,0 +1,76 @@
+?xml version="1.0" encoding="UTF-8"?>
+<panel name="main" class="">
+    <control name="arrangement" class="button_toggle">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image_pressed>Radial</image_pressed>
+        <image_unpressed>Rectangular</image_pressed> <!-- no unpressed effect -->
+    </control>
+    <control name="shift_color" class="button_toggle">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="shift_brightness" class="button_toggle">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_upleft" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_up" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_upright" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_left" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_null" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_right" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_downleft" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_down" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="enable_downright" class="button_push">
+        <position>0 0</position>
+        <size>0 0</size>
+        <image></image>
+    </control>
+    <control name="velocity_x" class="edit_spin">
+        <position>0 0</position>
+        <size>0 0</size>
+        <data_type>float</data_type>
+        <increment>0</increment>
+    </control>
+    <control name="velocity_y" class="edit_spin">
+        <position>0 0</position>
+        <size>0 0</size>
+        <data_type>float</data_type>
+        <increment>0</increment>
+    </control>
+</panel>
