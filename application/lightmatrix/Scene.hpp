@@ -6,10 +6,10 @@
 //------------------------------------------------------------------------------
 
 #include "Frame.hpp"
-//#include "direct3d11/Scene.hpp"
-#include "direct3d11/Renderer.hpp"
-#include "direct3d11/Camera.hpp"
-#include "direct3d11/Model.hpp"
+//#include "quetzal/direct3d11/Scene.hpp"
+#include "quetzal/direct3d11/Renderer.hpp"
+#include "quetzal/direct3d11/Camera.hpp"
+#include "quetzal/direct3d11/Model.hpp"
 
 namespace quetzal
 {

@@ -17,54 +17,54 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cubes", "cubes.vcxproj", "{
 		{68F711A2-1EC7-46ED-9563-C03F0231E036} = {68F711A2-1EC7-46ED-9563-C03F0231E036}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "direct3d11", "..\..\library\direct3d11\direct3d11.vcxproj", "{887BA000-5E91-442C-900A-D1F5EC3B435A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "direct3d11", "..\..\library\quetzal\direct3d11\direct3d11.vcxproj", "{887BA000-5E91-442C-900A-D1F5EC3B435A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{579C841A-0E45-409A-B443-AAF0C11F05AD} = {579C841A-0E45-409A-B443-AAF0C11F05AD}
 		{90D3A788-052F-4F22-8D69-E756DBDFA577} = {90D3A788-052F-4F22-8D69-E756DBDFA577}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "input", "..\..\library\input\input.vcxproj", "{68F711A2-1EC7-46ED-9563-C03F0231E036}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "input", "..\..\library\quetzal\input\input.vcxproj", "{68F711A2-1EC7-46ED-9563-C03F0231E036}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "framework", "..\..\library\framework\framework.vcxproj", "{B1EA8D8B-77F1-4140-A59A-2D7D553CD2AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "framework", "..\..\library\quetzal\framework\framework.vcxproj", "{B1EA8D8B-77F1-4140-A59A-2D7D553CD2AD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{68F711A2-1EC7-46ED-9563-C03F0231E036} = {68F711A2-1EC7-46ED-9563-C03F0231E036}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "..\..\library\common\common.vcxproj", "{02756409-0BC4-4F9B-AC9C-25E6A33B8592}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "..\..\library\quetzal\common\common.vcxproj", "{02756409-0BC4-4F9B-AC9C-25E6A33B8592}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "model", "..\..\library\model\model.vcxproj", "{90D3A788-052F-4F22-8D69-E756DBDFA577}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "model", "..\..\library\quetzal\model\model.vcxproj", "{90D3A788-052F-4F22-8D69-E756DBDFA577}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{579C841A-0E45-409A-B443-AAF0C11F05AD} = {579C841A-0E45-409A-B443-AAF0C11F05AD}
 		{AE597C7B-BF6A-4293-99DB-79D8BF7A9451} = {AE597C7B-BF6A-4293-99DB-79D8BF7A9451}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "geometry", "..\..\library\geometry\geometry.vcxproj", "{579C841A-0E45-409A-B443-AAF0C11F05AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "geometry", "..\..\library\quetzal\geometry\geometry.vcxproj", "{579C841A-0E45-409A-B443-AAF0C11F05AD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "brep", "..\..\library\brep\brep.vcxproj", "{AE597C7B-BF6A-4293-99DB-79D8BF7A9451}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "brep", "..\..\library\quetzal\brep\brep.vcxproj", "{AE597C7B-BF6A-4293-99DB-79D8BF7A9451}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{579C841A-0E45-409A-B443-AAF0C11F05AD} = {579C841A-0E45-409A-B443-AAF0C11F05AD}
 		{35AE4533-AEBE-4742-98D9-30F1272649AE} = {35AE4533-AEBE-4742-98D9-30F1272649AE}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "..\..\library\math\math.vcxproj", "{35AE4533-AEBE-4742-98D9-30F1272649AE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "..\..\library\quetzal\math\math.vcxproj", "{35AE4533-AEBE-4742-98D9-30F1272649AE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wavefront_obj", "..\..\library\wavefront_obj\wavefront_obj.vcxproj", "{1102EB46-6B14-42FB-A24E-A39E643763F4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wavefront_obj", "..\..\library\quetzal\wavefront_obj\wavefront_obj.vcxproj", "{1102EB46-6B14-42FB-A24E-A39E643763F4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{35AE4533-AEBE-4742-98D9-30F1272649AE} = {35AE4533-AEBE-4742-98D9-30F1272649AE}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "modx", "..\..\library\modx\modx.vcxproj", "{30A5AE00-7AC5-4667-8584-BF297385FA93}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "modx", "..\..\library\quetzal\modx\modx.vcxproj", "{30A5AE00-7AC5-4667-8584-BF297385FA93}"
 	ProjectSection(ProjectDependencies) = postProject
 		{887BA000-5E91-442C-900A-D1F5EC3B435A} = {887BA000-5E91-442C-900A-D1F5EC3B435A}
 		{35AE4533-AEBE-4742-98D9-30F1272649AE} = {35AE4533-AEBE-4742-98D9-30F1272649AE}

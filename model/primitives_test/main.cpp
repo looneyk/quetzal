@@ -3,15 +3,15 @@
 // main.cpp
 //------------------------------------------------------------------------------
 
-#include "brep/Mesh.hpp"
-#include "brep/MeshTraits.hpp"
-#include "brep/mesh_util.hpp"
-#include "brep/triangulation.hpp"
-#include "common/FileValidator.hpp"
-#include "math/Interval.hpp"
-#include "math/VectorTraits.hpp"
-#include "model/obj_io.hpp"
-#include "model/primitives.hpp"
+#include "quetzal/brep/Mesh.hpp"
+#include "quetzal/brep/MeshTraits.hpp"
+#include "quetzal/brep/mesh_util.hpp"
+#include "quetzal/brep/triangulation.hpp"
+#include "quetzal/common/FileValidator.hpp"
+#include "quetzal/math/Interval.hpp"
+#include "quetzal/math/VectorTraits.hpp"
+#include "quetzal/model/obj_io.hpp"
+#include "quetzal/model/primitives.hpp"
 #include <iostream>
 #include <string>
 #include <cassert>

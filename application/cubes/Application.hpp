@@ -6,9 +6,9 @@
 // Application.hpp
 //------------------------------------------------------------------------------
 
-#include "direct3d11/Application.hpp"
-#include "direct3d11/Camera.hpp"
-#include "direct3d11/Statistics.hpp"
+#include "quetzal/direct3d11/Application.hpp"
+#include "quetzal/direct3d11/Camera.hpp"
+#include "quetzal/direct3d11/Statistics.hpp"
 #include "Scene.hpp"
 
 namespace quetzal::cubes

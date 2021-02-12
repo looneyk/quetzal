@@ -5,14 +5,14 @@
 //------------------------------------------------------------------------------
 
 #include "Application.hpp"
-#include "brep/Mesh.hpp"
-#include "brep/MeshTraits.hpp"
-#include "direct3d11/Vertex.hpp"
-#include "direct3d11/file_io.hpp"
-#include "model/mesh_extraction.hpp"
-#include "model/obj_io.hpp"
-#include "model/primitives.hpp"
-#include "common/ComException.hpp"
+#include "quetzal/brep/Mesh.hpp"
+#include "quetzal/brep/MeshTraits.hpp"
+#include "quetzal/direct3d11/Vertex.hpp"
+#include "quetzal/direct3d11/file_io.hpp"
+#include "quetzal/model/mesh_extraction.hpp"
+#include "quetzal/model/obj_io.hpp"
+#include "quetzal/model/primitives.hpp"
+#include "quetzal/common/ComException.hpp"
 #include <DirectXColors.h>
 #include <cassert>
 

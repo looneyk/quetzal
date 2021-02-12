@@ -4,13 +4,13 @@
 //------------------------------------------------------------------------------
 
 #include "Scene.hpp"
-#include "brep/Mesh.hpp"
-#include "brep/MeshTraits.hpp"
-#include "common/Exception.hpp"
-#include "direct3d11/Effects.hpp"
-#include "direct3d11/Vertex.hpp"
-#include "model/mesh_extraction.hpp"
-#include "model/primitives.hpp"
+#include "quetzal/brep/Mesh.hpp"
+#include "quetzal/brep/MeshTraits.hpp"
+#include "quetzal/common/Exception.hpp"
+#include "quetzal/direct3d11/Effects.hpp"
+#include "quetzal/direct3d11/Vertex.hpp"
+#include "quetzal/model/mesh_extraction.hpp"
+#include "quetzal/model/primitives.hpp"
 
 using namespace std;
 using namespace DirectX;

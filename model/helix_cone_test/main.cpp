@@ -3,13 +3,13 @@
 // main.cpp
 //------------------------------------------------------------------------------
 
-#include "brep/Mesh.hpp"
-#include "brep/MeshTraits.hpp"
-#include "brep/mesh_util.hpp"
-#include "common/FileValidator.hpp"
-#include "model/helix_cone.hpp"
-#include "model/obj_io.hpp"
-#include "model/primitives.hpp"
+#include "quetzal/brep/Mesh.hpp"
+#include "quetzal/brep/MeshTraits.hpp"
+#include "quetzal/brep/mesh_util.hpp"
+#include "quetzal/common/FileValidator.hpp"
+#include "quetzal/model/helix_cone.hpp"
+#include "quetzal/model/obj_io.hpp"
+#include "quetzal/model/primitives.hpp"
 #include <string>
 #include <iostream>
 #include <cassert>

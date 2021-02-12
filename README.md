@@ -13,7 +13,7 @@
 
 ## Libraries
 
--   brep - 3D mesh using a half-edge based boundary representation
+-   brep - 3D mesh using boundary representation with a half-edge data structure
 -   common - general utility classes and functions
 -   direct3d11 - Direct3D 11 rendering engine
 -   framework - application and window facilities

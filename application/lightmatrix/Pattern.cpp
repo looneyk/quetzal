@@ -5,8 +5,8 @@
 //------------------------------------------------------------------------------
 
 #include "Pattern.hpp"
-#include "xml/Document.hpp"
-#include "common/string_util.hpp"
+#include "quetzal/xml/Document.hpp"
+#include "quetzal/common/string_util.hpp"
 #include <DirectXMath.h> // Pi
 #include <fstream>
 #include <sstream>

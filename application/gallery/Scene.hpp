@@ -5,9 +5,9 @@
 // Scene.hpp
 //------------------------------------------------------------------------------
 
-#include "direct3d11/Camera.hpp"
-#include "direct3d11/Model.hpp"
-#include "modx/Axes.hpp"
+#include "quetzal/direct3d11/Camera.hpp"
+#include "quetzal/direct3d11/Model.hpp"
+#include "quetzal/modx/Axes.hpp"
 
 namespace quetzal::gallery
 {

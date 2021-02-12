@@ -5,16 +5,16 @@
 
 #include "Scene.hpp"
 #include "Application.hpp"
-#include "brep/Mesh.hpp"
-#include "brep/MeshTraits.hpp"
-#include "direct3d11/Model.hpp"
-#include "direct3d11/Vertex.hpp"
-#include "direct3d11/import_model.hpp"
-#include "direct3d11/mesh_util.hpp"
-#include "common/ComException.hpp"
-#include "model/primitives.hpp"
+#include "quetzal/brep/Mesh.hpp"
+#include "quetzal/brep/MeshTraits.hpp"
+#include "quetzal/direct3d11/Model.hpp"
+#include "quetzal/direct3d11/Vertex.hpp"
+#include "quetzal/direct3d11/import_model.hpp"
+#include "quetzal/direct3d11/mesh_util.hpp"
+#include "quetzal/common/ComException.hpp"
+#include "quetzal/model/primitives.hpp"
 
-#include "direct3d11/DDSTextureLoader.h"
+#include "quetzal/direct3d11/DDSTextureLoader.h"
 
 using namespace std;
 using namespace DirectX;

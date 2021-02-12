@@ -5,15 +5,15 @@
 
 #include "Scene.hpp"
 #include "Application.hpp"
-#include "brep/Mesh.hpp"
-#include "brep/MeshTraits.hpp"
-#include "common/ComException.hpp"
-#include "direct3d11/Vertex.hpp"
-#include "direct3d11/mesh_util.hpp"
-#include "math/VectorTraits.hpp"
-#include "math/math_util.hpp"
+#include "quetzal/brep/Mesh.hpp"
+#include "quetzal/brep/MeshTraits.hpp"
+#include "quetzal/common/ComException.hpp"
+#include "quetzal/direct3d11/Vertex.hpp"
+#include "quetzal/direct3d11/mesh_util.hpp"
+#include "quetzal/math/VectorTraits.hpp"
+#include "quetzal/math/math_util.hpp"
 
-#include "direct3d11/EffectBasic.hpp"
+#include "quetzal/direct3d11/EffectBasic.hpp"
 
 using namespace std;
 using namespace DirectX;

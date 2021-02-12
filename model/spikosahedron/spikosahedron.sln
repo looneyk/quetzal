@@ -15,7 +15,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spikosahedron", "spikosahed
 		{070747E8-A464-4D3B-888E-E85D81675BB8} = {070747E8-A464-4D3B-888E-E85D81675BB8}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "model", "..\..\library\model\model.vcxproj", "{90D3A788-052F-4F22-8D69-E756DBDFA577}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "model", "..\..\library\quetzal\model\model.vcxproj", "{90D3A788-052F-4F22-8D69-E756DBDFA577}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{579C841A-0E45-409A-B443-AAF0C11F05AD} = {579C841A-0E45-409A-B443-AAF0C11F05AD}
@@ -23,18 +23,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "model", "..\..\library\mode
 		{AE597C7B-BF6A-4293-99DB-79D8BF7A9451} = {AE597C7B-BF6A-4293-99DB-79D8BF7A9451}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "..\..\library\common\common.vcxproj", "{02756409-0BC4-4F9B-AC9C-25E6A33B8592}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "..\..\library\quetzal\common\common.vcxproj", "{02756409-0BC4-4F9B-AC9C-25E6A33B8592}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "..\..\library\math\math.vcxproj", "{35AE4533-AEBE-4742-98D9-30F1272649AE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "..\..\library\quetzal\math\math.vcxproj", "{35AE4533-AEBE-4742-98D9-30F1272649AE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "geometry", "..\..\library\geometry\geometry.vcxproj", "{579C841A-0E45-409A-B443-AAF0C11F05AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "geometry", "..\..\library\quetzal\geometry\geometry.vcxproj", "{579C841A-0E45-409A-B443-AAF0C11F05AD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{35AE4533-AEBE-4742-98D9-30F1272649AE} = {35AE4533-AEBE-4742-98D9-30F1272649AE}
 		{3A0E97DE-F090-451F-A1BE-92D44C95F9DA} = {3A0E97DE-F090-451F-A1BE-92D44C95F9DA}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "brep", "..\..\library\brep\brep.vcxproj", "{AE597C7B-BF6A-4293-99DB-79D8BF7A9451}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "brep", "..\..\library\quetzal\brep\brep.vcxproj", "{AE597C7B-BF6A-4293-99DB-79D8BF7A9451}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{579C841A-0E45-409A-B443-AAF0C11F05AD} = {579C841A-0E45-409A-B443-AAF0C11F05AD}
@@ -43,17 +43,17 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "brep", "..\..\library\brep\
 		{070747E8-A464-4D3B-888E-E85D81675BB8} = {070747E8-A464-4D3B-888E-E85D81675BB8}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xml", "..\..\library\xml\xml.vcxproj", "{3A0E97DE-F090-451F-A1BE-92D44C95F9DA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xml", "..\..\library\quetzal\xml\xml.vcxproj", "{3A0E97DE-F090-451F-A1BE-92D44C95F9DA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "triangulation", "..\..\library\triangulation\triangulation.vcxproj", "{39F6F1C4-D162-44FA-B4D8-0B2C489D7881}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "triangulation", "..\..\library\quetzal\triangulation\triangulation.vcxproj", "{39F6F1C4-D162-44FA-B4D8-0B2C489D7881}"
 	ProjectSection(ProjectDependencies) = postProject
 		{35AE4533-AEBE-4742-98D9-30F1272649AE} = {35AE4533-AEBE-4742-98D9-30F1272649AE}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "svg", "..\..\library\svg\svg.vcxproj", "{070747E8-A464-4D3B-888E-E85D81675BB8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "svg", "..\..\library\quetzal\svg\svg.vcxproj", "{070747E8-A464-4D3B-888E-E85D81675BB8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{02756409-0BC4-4F9B-AC9C-25E6A33B8592} = {02756409-0BC4-4F9B-AC9C-25E6A33B8592}
 		{35AE4533-AEBE-4742-98D9-30F1272649AE} = {35AE4533-AEBE-4742-98D9-30F1272649AE}

@@ -4,9 +4,9 @@
 //------------------------------------------------------------------------------
 
 #include "Application.hpp"
-#include "common/string_util.hpp"
+#include "quetzal/common/string_util.hpp"
 
-#include "common/logger.hpp"
+#include "quetzal/common/logger.hpp"
 
 using namespace std;
 
