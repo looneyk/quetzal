@@ -18,10 +18,6 @@ r1 = 1.1 is probably as far as I'd want to go due to spike height
 icosahedron vertices should match dodecahedron normals
 
 
-decide on create_face(..., normal) or create_face(..., {normal})
-create_surface same
-
-
 trinket_box is a perfect application for boolean difference, but not ready yet
 
 
@@ -31,6 +27,13 @@ hexagonal tower, hexagonal bricks
 apply depth pattern just like a regular texture
 algorithms to convert solid body descriptions to mesh
 Apply a spirograph spiral to spike
+
+
+spoctahedron
+snowflake1 with stellated octahedron (another rotated) is interesting
+separate program for twinned polyhedra?
+separate program for tetra based forms?
+cross - definitely out of place here
 
 
 helix_cone -> helix_pyramid

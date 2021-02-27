@@ -28,13 +28,13 @@ namespace quetzal::wavefront_obj
     bool parse_vertex_reference(const std::string& s, vertex_reference_type& vr);
 
     template<typename T, size_t N>
-    bool parse_components(const std::vector<std::string>& tokens, std::array<T, N>& components, size_t nMin);
+    bool parse_components(const std::vector<std::string>& tokens, std::array<T, N>& components, size_t nMin, T w = T(0));
 
 } // namespace quetzal::wavefront_obj
 
 //--------------------------------------------------------------------------
 template<typename T, size_t N>
-bool quetzal::wavefront_obj::parse_components(const std::vector<std::string>& tokens, std::array<T, N>& components, size_t nMin)
+bool quetzal::wavefront_obj::parse_components(const std::vector<std::string>& tokens, std::array<T, N>& components, size_t nMin, T w)
 {
     assert(nMin >= 2);
 
@@ -54,7 +54,7 @@ bool quetzal::wavefront_obj::parse_components(const std::vector<std::string>& to
 
     if constexpr (N > 3)
     {
-        components[3] = tokens.size() > 4 ? quetzal::to_type<T>(tokens[4]) : T(1);
+        components[3] = tokens.size() > 4 ? quetzal::to_type<T>(tokens[4]) : w;
     }
 
     return true;

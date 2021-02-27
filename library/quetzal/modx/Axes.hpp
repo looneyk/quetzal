@@ -35,7 +35,7 @@ namespace quetzal::modx
     private:
 
         void draw_origin(direct3d11::Camera& camera, direct3d11::Vector3 position, float scale, std::shared_ptr<direct3d11::IEffect> pEffect);
-        void draw_axis(direct3d11::Camera& camera, direct3d11::Vector3 position, direct3d11::Vector3 head, float length, direct3d11::Vector3 rotation, float scale, std::shared_ptr<direct3d11::IEffect> pEffect);
+        void draw_axis(direct3d11::Camera& camera, direct3d11::Vector3 position, float scale, float length, direct3d11::Vector3 head, direct3d11::Vector3 rotation, std::shared_ptr<direct3d11::IEffect> pEffect);
 
         direct3d11::Application& m_application;
 

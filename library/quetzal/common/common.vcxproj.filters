@@ -122,5 +122,14 @@
     <ClInclude Include="Properties.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Elements.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementsConstIterator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementsIterator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

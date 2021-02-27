@@ -93,6 +93,9 @@
     <ClCompile Include="EffectPhysicallyBased.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="obj_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.hpp">
@@ -204,6 +207,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EffectPhysicallyBased.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="obj_util.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

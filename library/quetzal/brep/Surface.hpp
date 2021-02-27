@@ -26,7 +26,7 @@ namespace quetzal::brep
 
     //--------------------------------------------------------------------------
     template<typename Traits, typename M = Mesh<Traits>>
-    class Surface : public Flags, public Properties
+    class Surface : public Flags
     {
     public:
 
@@ -78,6 +78,9 @@ namespace quetzal::brep
         const attributes_type& attributes() const;
         attributes_type& attributes();
         void set_attributes(const attributes_type& attributes);
+
+        const Properties& properties() const;
+        Properties& properties();
 
         // Virtual container interface, iterators for faces making up this surface
         size_type face_count() const;
@@ -133,6 +136,7 @@ namespace quetzal::brep
         face_ids_type m_face_ids;
         seam_ids_type m_seam_ids;
         attributes_type m_attributes;
+        Properties m_properties;
 
         faces_type m_faces;
         halfedges_type m_halfedges;
@@ -178,7 +182,6 @@ namespace quetzal::brep
 template<typename Traits, typename M>
 quetzal::brep::Surface<Traits, M>::Surface() :
     Flags(),
-    Properties(),
     m_pmesh(nullptr),
     m_id(nullid),
     m_name(),
@@ -186,6 +189,7 @@ quetzal::brep::Surface<Traits, M>::Surface() :
     m_face_ids(),
     m_seam_ids(),
     m_attributes(),
+    m_properties(),
     m_faces(*m_pmesh, nullid, m_faces_size, m_faces_first, m_faces_last, m_faces_end, m_faces_forward, m_faces_reverse, m_faces_element, m_faces_const_element),
     m_halfedges(*m_pmesh, nullid, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element),
     m_seams(*m_pmesh, nullid, m_seams_size, m_seams_first, m_seams_last, m_seams_end, m_seams_forward, m_seams_reverse, m_seams_element, m_seams_const_element),
@@ -198,7 +202,6 @@ quetzal::brep::Surface<Traits, M>::Surface() :
 template<typename Traits, typename M>
 quetzal::brep::Surface<Traits, M>::Surface(mesh_type& mesh, id_type id, const std::string& name, id_type idSubmesh, const attributes_type& attributes) :
     Flags(),
-    Properties(),
     m_pmesh(&mesh),
     m_id(id),
     m_name(name),
@@ -206,6 +209,7 @@ quetzal::brep::Surface<Traits, M>::Surface(mesh_type& mesh, id_type id, const st
     m_face_ids(),
     m_seam_ids(),
     m_attributes(attributes),
+    m_properties(),
     m_faces(mesh, id, m_faces_size, m_faces_first, m_faces_last, m_faces_end, m_faces_forward, m_faces_reverse, m_faces_element, m_faces_const_element),
     m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element),
     m_seams(mesh, id, m_seams_size, m_seams_first, m_seams_last, m_seams_end, m_seams_forward, m_seams_reverse, m_seams_element, m_seams_const_element),
@@ -324,6 +328,20 @@ void quetzal::brep::Surface<Traits, M>::set_attributes(const attributes_type& at
 {
     m_attributes = attributes;
     return;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename const quetzal::Properties& quetzal::brep::Surface<Traits, M>::properties() const
+{
+    return m_properties;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename quetzal::Properties& quetzal::brep::Surface<Traits, M>::properties()
+{
+    return m_properties;
 }
 
 //------------------------------------------------------------------------------
@@ -912,6 +930,7 @@ std::ostream& quetzal::brep::operator<<(std::ostream& os, const Surface<Traits, 
         os << ")";
 
         os << "\t" << surface.attributes();
+        os << "\t" << surface.properties();
     }
 
     os << std::endl;

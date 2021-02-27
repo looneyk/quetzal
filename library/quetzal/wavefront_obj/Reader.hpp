@@ -34,6 +34,7 @@ namespace quetzal::wavefront_obj
         using vector_type = typename M::vector_type;
         using texcoord_type = typename M::texcoord_type;
 
+        using open_function_type = std::function<void(M&, const std::string&)>;
         using object_function_type = std::function<void(M&, const std::string&)>;
         using group_function_type = std::function<void(M&, const std::string&)>;
         using face_open_function_type = std::function<void(M&)>;
@@ -42,7 +43,7 @@ namespace quetzal::wavefront_obj
         using materials_function_type = std::function<void(M&, const std::string&)>;
         using material_function_type = std::function<void(M&, const std::string&)>;
 
-        Reader(object_function_type on_object, group_function_type on_group, face_open_function_type on_face_open, face_vertex_function_type on_face_vertex, face_close_function_type on_face_close, materials_function_type on_materials, material_function_type on_material);
+        Reader(open_function_type on_open, object_function_type on_object, group_function_type on_group, face_open_function_type on_face_open, face_vertex_function_type on_face_vertex, face_close_function_type on_face_close, materials_function_type on_materials, material_function_type on_material);
         Reader(const Reader&) = delete;
         ~Reader() = default;
 
@@ -52,6 +53,7 @@ namespace quetzal::wavefront_obj
 
     private:
 
+        open_function_type m_on_open;
         object_function_type m_on_object;
         group_function_type m_on_group;
         face_open_function_type m_on_face_open;
@@ -65,7 +67,8 @@ namespace quetzal::wavefront_obj
 
 //------------------------------------------------------------------------------
 template<typename M>
-quetzal::wavefront_obj::Reader<M>::Reader(object_function_type on_object, group_function_type on_group, face_open_function_type on_face_open, face_vertex_function_type on_face_vertex, face_close_function_type on_face_close, materials_function_type on_materials, material_function_type on_material) :
+quetzal::wavefront_obj::Reader<M>::Reader(open_function_type on_open, object_function_type on_object, group_function_type on_group, face_open_function_type on_face_open, face_vertex_function_type on_face_vertex, face_close_function_type on_face_close, materials_function_type on_materials, material_function_type on_material) :
+    m_on_open(on_open),
     m_on_object(on_object),
     m_on_group(on_group),
     m_on_face_open(on_face_open),
@@ -87,6 +90,8 @@ void quetzal::wavefront_obj::Reader<M>::read(const std::filesystem::path& pathna
         oss << "Error opening input file " << pathname;
         throw Exception(oss.str(), __FILE__, __LINE__);
     }
+
+    m_on_open(m, pathname.filename().string());
 
     std::vector<point_type> positions;
     std::vector<vector_type> normals;
@@ -110,7 +115,7 @@ void quetzal::wavefront_obj::Reader<M>::read(const std::filesystem::path& pathna
         if (keyword == wavefront_obj::Keyword::Position)
         {
             std::array<value_type, 4> v;
-            bool b = parse_components(tokens, v, 3);
+            bool b = parse_components(tokens, v, 3, value_type(1)); // w = 1 for homogeneous coordinates
             if (!b)
             {
                 std::ostringstream oss;

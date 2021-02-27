@@ -13,7 +13,6 @@
 
 #include <iostream> // ...
 
-
 namespace quetzal::brep
 {
 
@@ -189,7 +188,7 @@ void quetzal::brep::triangulate_face_cdt(M& mesh, id_type idFace)
 
     p2t::CDT cdt(polygon);
 
-    for (id_type idHalfedgeHole : face.holes())
+    for (id_type idHalfedgeHole : face.hole_ids())
     {
         id_type id = idHalfedgeHole;
         std::vector<p2t::Point> hole;

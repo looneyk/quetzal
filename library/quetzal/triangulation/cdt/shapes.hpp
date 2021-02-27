@@ -131,17 +131,17 @@ namespace p2t
         void DebugPrint();
 
         // Flags to determine if an edge is a Constrained edge
-        bool constrained_edge[3];
+        bool m_bEdgeConstrained[3];
         // Flags to determine if an edge is a Delauney edge
-        bool delaunay_edge[3];
+        bool m_bEdgeDelaunay[3];
 
     private:
 
-        const Point* points_[3];
-        Triangle* neighbors_[3];
+        const Point* m_points[3];
+        Triangle* m_neighbors[3];
 
         // Has this triangle been marked as an interior triangle?
-        bool interior_;
+        bool m_bInterior;
     };
 
 }

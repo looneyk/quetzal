@@ -2,6 +2,16 @@
 Implementation of mesh using a halfedge data structure
 --------------------------------------------------------------------------------
 
+No, holes are not faces. They have nothing (attributes, links, ...) aside from their position in the face.
+Use Hole class, don't repurpose face.
+holes can be thought of as face subtraction
+trivial changes except for attach and clip, particularly the latter
+create_face(Hole&)
+face.delete_hole()
+...
+Holes are local to Face, not a Mesh managed list
+
+
 see what happens if I remove halfedge attributes
 since there is no override functionality, no vertex sharing
 does override even make sense? revisit this
@@ -30,6 +40,8 @@ really want to use vertices, but points is more general, for use in load and tra
 would be nice if path could also take advantage of this
 path should at least exactly parallel polyline?
 
+they're template classes, just need common point access interface
+
 *Points
 Polygon : Points
 Polyline : Points
@@ -37,7 +49,7 @@ Polyline : Points
 
 helix_cone test bed for face attributes?
 
-spiral instead of diminishing helix?
+spiral instead of diminishing helix? or rather a different type of spiral
 
 use faces_attributes_type afs0 where avs1 is used
 face_attributes, apply in create_helix_cone with polygon
@@ -107,10 +119,6 @@ but vertex attributes are a different story
 
 normals indicate outward, orientation indicates upward
 surfaces can have both
-
-
-general properties (name, value) in addition to attributes
-just build into attributes so it's accessibly everywhere without modification?
 
 
 general submesh metadata, bottom, top surfaces, ...
@@ -552,7 +560,7 @@ reverse_winding_order (1D) vs invert_face (multi-parameter)
 
 see if mesh_util.hpp can be removed from mesh_boolean and triangulation
 
-uniqueness of submesh names is not enforced, but should be used sparingly and deliberately
+uniqueness of submesh names is not enforced, but common names should be used sparingly and deliberately
 non-unique submesh names will cause submeshes to be merged on append
 
 **each function taking a Mesh should have a Submesh counterpart
@@ -836,6 +844,21 @@ but still need traits so clients can query/work based on capabilities
 
 
 
+External terminology correspondence
+
+shell (a set of connected faces)
+loop (a circuit of edges bounding a face)
+loop-edge links (also known as winged edge links or half-edges) which are used to create the edge circuits
+group sub-elements of the shape into logical units called geometric features, or simply features
+
+brep        direct3d11      STEP
+Surface     ModelMeshPart   shell
+Submesh     ModelMesh?      feature
+Mesh        ModelMesh?
+
+
+
+
 Surfaces
 
 surfaces and texture coordinates best applied at construction
@@ -936,14 +959,7 @@ submesh has surface list referenced by name
 
 Materials
 
-as with everything else, materials should be referenced by ids, not pointers, at the brep level
-
-should materials be part of attributes?
-yes, material attributes can be applied to vertices, not just surfaces
-no, keep separate, if materials might be added later, ...
-yes and no, materials are not within the scope of these libraries
-just removing them for now
-multiple materials?
+Materials are not used here, but references to them are stored as properties on load and preserved for subsequent processing
 
 
 

@@ -8,6 +8,7 @@
 #include "Flags.hpp"
 #include "id.hpp"
 #include "quetzal/common/Elements.hpp"
+#include "quetzal/common/Properties.hpp"
 #include "mesh_util.hpp"
 #include <iostream>
 #include <cassert>
@@ -76,6 +77,9 @@ namespace brep
         const halfedge_type& halfedge() const;
         halfedge_type& halfedge();
 
+        const Properties& properties() const;
+        Properties& properties();
+
         // Virtual container interface, iterators for halfedges on this seam
         size_type halfedge_count() const;
         const halfedges_type& halfedges() const;
@@ -104,6 +108,8 @@ namespace brep
         id_type m_idNext;
         id_type m_idPrev;
         id_type m_idHalfedge;
+        Properties m_properties;
+
         halfedges_type m_halfedges;
 
         static typename halfedges_type::size_function_type m_halfedges_size;
@@ -134,6 +140,7 @@ quetzal::brep::Seam<Traits, M>::Seam() :
     m_idNext(nullid),
     m_idPrev(nullid),
     m_idHalfedge(nullid),
+    m_properties(),
     m_halfedges(*m_pmesh, nullid, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element)
 {
 }
@@ -149,6 +156,7 @@ quetzal::brep::Seam<Traits, M>::Seam(mesh_type& mesh, id_type id, const std::str
     m_idNext(idNext),
     m_idPrev(idPrev),
     m_idHalfedge(idHalfedge),
+    m_properties(),
     m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element)
 {
 }
@@ -311,6 +319,20 @@ typename quetzal::brep::Seam<Traits, M>::halfedge_type& quetzal::brep::Seam<Trai
 {
     assert(m_pmesh != nullptr);
     return m_pmesh->halfedge(m_idHalfedge);
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename const quetzal::Properties& quetzal::brep::Seam<Traits, M>::properties() const
+{
+    return m_properties;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename quetzal::Properties& quetzal::brep::Seam<Traits, M>::properties()
+{
+    return m_properties;
 }
 
 //------------------------------------------------------------------------------
@@ -520,6 +542,7 @@ std::ostream& quetzal::brep::operator<<(std::ostream& os, const Seam<Traits, M>&
         os << "\t" << seam.prev_id();
         os << "\t" << seam.halfedge_id();
         os << "\t" << seam.surface_id();
+        os << "\t" << seam.properties();
     }
 
     os << std::endl;

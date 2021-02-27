@@ -415,7 +415,7 @@ void quetzal::brep::update_face(typename M::face_type& face, M& mesh, id_type id
     face.set_id(face.id() + idFaceOffset);
     face.set_halfedge_id(face.halfedge_id() + idHalfedgeOffset);
 
-    for (auto& idHalfedgeHole : face.holes()) // OK for vector, won't work for set ...
+    for (auto& idHalfedgeHole : face.hole_ids()) // OK for vector, won't work for set ...
     {
         idHalfedgeHole += idHalfedgeOffset;
     }
@@ -1048,10 +1048,10 @@ quetzal::id_type quetzal::brep::create_border_with_holes_face(M& mesh, id_type i
     id_type idFace = create_border_face(mesh, idHalfedge, normal, idSurface);
     auto& face = mesh.face(idFace);
 
-    for (id_type id: idHalfedgeHoles)
+    for (id_type idHole : idHalfedgeHoles)
     {
-        id_type idHalfedgeHole = create_border_hole(mesh, id, normal, idFace);
-        face.holes().push_back(idHalfedgeHole);
+        id_type idHalfedgeHole = create_border_hole(mesh, idHole, normal, idFace);
+        face.hole_ids().push_back(idHalfedgeHole);
     }
 
     return idFace;
@@ -1206,7 +1206,7 @@ void quetzal::brep::attach(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB, bo
         halfedge.attributes().set_normal(normal); // vertex ...
     }
 
-    faceA.holes().push_back(idHalfedgeB);
+    faceA.hole_ids().push_back(idHalfedgeB);
 
     interpolate_face_texcoords(faceA, faceB);
 
@@ -1215,7 +1215,7 @@ void quetzal::brep::attach(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB, bo
     id_type idSubmesh = faceA.submesh_id();
     size_t i = 0;
 
-    for (id_type idHalfedgeHole : faceB.holes())
+    for (id_type idHalfedgeHole : faceB.hole_ids())
     {
         id_type idFace = mesh.create_face(idSurface, idHalfedgeHole, {normal});
         auto& face = mesh.face(idFace);
@@ -1228,10 +1228,9 @@ void quetzal::brep::attach(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB, bo
 
         if (bHoleSurface)
         {
-            // overwrite idSurface here? ...
-            idSurface = mesh.create_surface(idSubmesh, mesh.surface(idSurface).name() + to_string(i));
-            face.set_surface_id(idSurface);
-            calculate_surface_texcoords(mesh, idSurface);
+            id_type idSurfaceHole = mesh.create_surface(idSubmesh, mesh.surface(idSurface).name() + to_string(i), mesh.surface(idSurface).attributes()); // properties ...
+            face.set_surface_id(idSurfaceHole);
+            calculate_surface_texcoords(mesh, idSurfaceHole);
             ++i;
         }
         else

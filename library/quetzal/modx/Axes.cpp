@@ -6,6 +6,7 @@
 #include "Axes.hpp"
 #include "quetzal/brep/Mesh.hpp"
 #include "quetzal/brep/MeshTraits.hpp"
+#include "quetzal/direct3d11/Vertex.hpp"
 #include "quetzal/math/VectorTraits.hpp"
 #include <d3d11_1.h>
 
@@ -74,15 +75,15 @@ void quetzal::modx::Axes::draw(direct3d11::Camera& camera, float scale, direct3d
 
     pEffect = m_application.effect_manager().open("emissive_red");
     assert(pEffect != nullptr);
-    draw_axis(camera, position, {1.0f, 0.0f, 0.0f}, 1.0f, {0.0f, math::PiHalf<float>, 0.0f}, scale, pEffect);
+    draw_axis(camera, position, scale, 1.0f, {1.0f, 0.0f, 0.0f}, {0.0f, math::PiHalf<float>, 0.0f}, pEffect);
 
     pEffect = m_application.effect_manager().open("emissive_green");
     assert(pEffect != nullptr);
-    draw_axis(camera, position, {0.0f, 1.0f, 0.0f}, 1.0f, {-math::PiHalf<float>, 0.0f, 0.0f}, scale, pEffect);
+    draw_axis(camera, position, scale, 1.0f, {0.0f, 1.0f, 0.0f}, {-math::PiHalf<float>, 0.0f, 0.0f}, pEffect);
 
     pEffect = m_application.effect_manager().open("emissive_blue");
     assert(pEffect != nullptr);
-    draw_axis(camera, position, {0.0f, 0.0f, 1.0f}, 1.0f, {0.0f, 0.0f, 0.0f}, scale, pEffect);
+    draw_axis(camera, position, scale, 1.0f, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, pEffect);
     return;
 }
 
@@ -120,7 +121,7 @@ void quetzal::modx::Axes::draw_origin(direct3d11::Camera& camera, direct3d11::Ve
 }
 
 //------------------------------------------------------------------------------
-void quetzal::modx::Axes::draw_axis(direct3d11::Camera& camera, direct3d11::Vector3 position, direct3d11::Vector3 head, float length, direct3d11::Vector3 rotation, float scale, std::shared_ptr<direct3d11::IEffect> pEffect)
+void quetzal::modx::Axes::draw_axis(direct3d11::Camera& camera, direct3d11::Vector3 position, float scale, float length, direct3d11::Vector3 head, direct3d11::Vector3 rotation, std::shared_ptr<direct3d11::IEffect> pEffect)
 {
     if (pEffect)
     {
@@ -168,7 +169,7 @@ void quetzal::modx::Axes::draw_axis(direct3d11::Camera& camera, direct3d11::Vect
     {
         mWorldHead *= XMMatrixRotationZ(rotation.z());
     }
-    mWorldHead *= XMMatrixTranslationFromVector(XMLoadFloat3(&head.rep()));
+    mWorldHead *= XMMatrixTranslationFromVector(XMLoadFloat3(&(head * scale).rep()));
     mWorldHead *= XMMatrixTranslationFromVector(XMLoadFloat3(&position.rep()));
 
     m_pModelShaft->draw(m_application.renderer(), m_application.common_states(), mWorldShaft, camera.view(), camera.projection());

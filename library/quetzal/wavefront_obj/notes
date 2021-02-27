@@ -11,5 +11,10 @@ how to write material with no group? blank group/surface name?
 
 Writer may need to cache material for the above, actual write with o or g
 
-
 Mesh materials property is a space separated list of materials files, same as for mtllib
+Material loading thus preserves the order of material files,
+but not any association between material usage and library as the first material with a given name will be the one used even if it appears in separate files
+Is this something that even needs to be taken into account?
+
+Do we really want to throw exceptions on material syntax errors?
+Just log and ignore, loading whatever we can?

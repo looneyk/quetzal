@@ -213,7 +213,7 @@ void p2t::SweepContext::MeshClean(Triangle& triangle)
             triangles_.push_back(*t);
             for (int i = 0; i < 3; ++i)
             {
-                if (!t->constrained_edge[i])
+                if (!t->m_bEdgeConstrained[i])
                 {
                     triangles.push_back(t->GetNeighbor(i));
                 }

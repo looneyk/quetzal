@@ -99,11 +99,10 @@ void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_ty
     }
     else
     {
-std::cout << "create_helix_cone" << nAzimuth<< "\t" << nz<< "\t" << rBase<< "\t" << dz<< "\t" << revs << std::endl;
-
-auto nn = math::normalize(normalProto);
-std::cout << "\t" << nn << std::endl;
-auto fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, 0);
+//std::cout << "create_helix_cone" << nAzimuth<< "\t" << nz<< "\t" << rBase<< "\t" << dz<< "\t" << revs << std::endl;
+//auto nn = math::normalize(normalProto);
+//std::cout << "\t" << nn << std::endl;
+//auto fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, 0);
     	create_band(m, nAzimuth, r0, r1, z0, z1, azimuth0, azimuth1, normalProto, normalProto, tsProto0, tsProto1, idSurface0, bSurfacesDistinct);
 
         for (size_type i = 2; i < nz; ++i)
@@ -115,11 +114,11 @@ auto fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nA
             rev1 = math::lerp(rev0, revs, t);
     	    azimuth1 = shift(azimuth, rev1);
 
-fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, i - 1);
+//fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, i - 1);
     	    connect_band(m, nAzimuth, r1, z1, azimuth1, normalProto, tsProto1, idSurface0, bSurfacesDistinct, bLinear);
         }
 
-fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, nz - 1);
+//fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, nz - 1);
         connect_apex_cusp(m, nAzimuth, dz, azimuth1, normalProto, idSurface0, bSurfacesDistinct, bLinear);
     }
 

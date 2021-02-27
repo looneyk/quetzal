@@ -5,7 +5,7 @@
 // triangulation.hpp
 //------------------------------------------------------------------------------
 
-#include "sweep/cdt.hpp"
+#include "cdt/cdt.hpp"
 
 namespace quetzal::triangulation
 {

@@ -9,10 +9,7 @@
 #include "SurfaceName.hpp"
 #include <string>
 
-namespace quetzal
-{
-
-namespace model
+namespace quetzal::model
 {
 
     //--------------------------------------------------------------------------
@@ -133,9 +130,7 @@ namespace model
         ExtentEndsCenter& operator=(const ExtentEndsCenter&) = default;
     };
 
-} // namespace model
-
-} // namespace quetzal
+} // namespace quetzal::model
 
 //------------------------------------------------------------------------------
 template<typename T>

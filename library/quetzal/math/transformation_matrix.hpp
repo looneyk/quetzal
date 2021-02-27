@@ -66,6 +66,18 @@ namespace math
     template<typename V>
     Matrix<typename V::value_type> rotation_lerp_unit(const V& a, const V& b, typename V::value_type t);
 
+    template<typename T>
+    Matrix<T> reflection_x();
+
+    template<typename T>
+    Matrix<T> reflection_y();
+
+    template<typename T>
+    Matrix<T> reflection_z();
+
+//    template<typename Traits>
+//    Matrix<Traits::value_type> reflection(const geometry::Plane<Traits>& plane);
+
     // Transformation matrix for rotating upFrom and rightFrom to coincide with upTo and rightTo
     // up and right vectors need to be unit length
     template<typename V>
@@ -277,6 +289,33 @@ quetzal::math::Matrix<typename V::value_type> quetzal::math::rotation_lerp_unit(
     }
 
     return rotation_axis(cross(a, b), t * angle_unit(a, b));
+}
+
+//------------------------------------------------------------------------------
+template<typename T>
+quetzal::math::Matrix<T> quetzal::math::reflection_x()
+{
+    Matrix<T> matrix = Matrix<T>::identity();
+    matrix(0, 0) = T(-1);
+    return matrix;
+}
+
+//------------------------------------------------------------------------------
+template<typename T>
+quetzal::math::Matrix<T> quetzal::math::reflection_y()
+{
+    Matrix<T> matrix = Matrix<T>::identity();
+    matrix(1, 1) = T(-1);
+    return matrix;
+}
+
+//------------------------------------------------------------------------------
+template<typename T>
+quetzal::math::Matrix<T> quetzal::math::reflection_z()
+{
+    Matrix<T> matrix = Matrix<T>::identity();
+    matrix(2, 2) = T(-1);
+    return matrix;
 }
 
 //------------------------------------------------------------------------------

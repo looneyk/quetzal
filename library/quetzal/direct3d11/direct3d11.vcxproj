@@ -167,6 +167,7 @@
     <ClCompile Include="file_io.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelManager.cpp" />
+    <ClCompile Include="obj_util.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ShaderBytecode.cpp" />
     <ClCompile Include="Statistics.cpp" />
@@ -203,6 +204,7 @@
     <ClInclude Include="input_layout.hpp" />
     <ClInclude Include="Model.hpp" />
     <ClInclude Include="ModelManager.hpp" />
+    <ClInclude Include="obj_util.hpp" />
     <ClInclude Include="PixelShaderManager.hpp" />
     <ClInclude Include="Renderer.hpp" />
     <ClInclude Include="ShaderBytecode.hpp" />

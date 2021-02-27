@@ -146,6 +146,8 @@ namespace quetzal::direct3d11
         template<typename V, typename I>
         void insert(Renderer& renderer, const std::vector<V>& vertices, const std::vector<I>& indices, std::shared_ptr<IEffect> pEffect = nullptr, ModelLoaderFlags flags = ModelLoader_FrontCounterClockwise);
 
+        // and use erase for removal ...
+
         size_t vertex_count() const;
         size_t triangle_count() const;
 

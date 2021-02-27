@@ -389,7 +389,7 @@ bool p2t::Sweep::Legalize(SweepContext& tcx, Triangle& t)
     // To legalize a triangle we start by finding if any of the three edges violate the Delaunay condition
     for (int i = 0; i < 3; ++i)
     {
-        if (t.delaunay_edge[i])
+        if (t.m_bEdgeDelaunay[i])
             continue;
 
         Triangle* ot = t.GetNeighbor(i);
@@ -401,9 +401,9 @@ bool p2t::Sweep::Legalize(SweepContext& tcx, Triangle& t)
 
             // If this is a Constrained Edge or a Delaunay Edge(only during recursive legalization)
             // then we should not try to legalize
-            if (ot->constrained_edge[oi] || ot->delaunay_edge[oi])
+            if (ot->m_bEdgeConstrained[oi] || ot->m_bEdgeDelaunay[oi])
             {
-                t.constrained_edge[i] = ot->constrained_edge[oi];
+                t.m_bEdgeConstrained[i] = ot->m_bEdgeConstrained[oi];
                 continue;
             }
 
@@ -411,8 +411,8 @@ bool p2t::Sweep::Legalize(SweepContext& tcx, Triangle& t)
             if (inside)
             {
                 // Lets mark this shared edge as Delaunay
-                t.delaunay_edge[i] = true;
-                ot->delaunay_edge[oi] = true;
+                t.m_bEdgeDelaunay[i] = true;
+                ot->m_bEdgeDelaunay[oi] = true;
 
                 // Lets rotate shared edge one vertex CW to legalize it
                 RotateTrianglePair(t, point, *ot, *op);
@@ -433,8 +433,8 @@ bool p2t::Sweep::Legalize(SweepContext& tcx, Triangle& t)
 
                 // Reset the Delaunay edges, since they only are valid Delaunay edges until we add a new triangle or point.
                 // XXX: need to think about this. Can these edges be tried after we return to previous recursive level?
-                t.delaunay_edge[i] = false;
-                ot->delaunay_edge[oi] = false;
+                t.m_bEdgeDelaunay[i] = false;
+                ot->m_bEdgeDelaunay[oi] = false;
 
                 // If triangle have been legalized no need to check the other edges since the recursive legalization will handle those so we can end here.
                 return true;
@@ -809,7 +809,6 @@ void p2t::Sweep::FillLeftConcaveEdgeEvent(SweepContext& tcx, Edge* edge, Node& n
             }
         }
     }
-
 }
 
 void p2t::Sweep::FlipEdgeEvent(SweepContext& tcx, const Point& ep, const Point& eq, Triangle* t, const Point& p)
@@ -868,7 +867,7 @@ p2t::Triangle& p2t::Sweep::NextFlipTriangle(SweepContext& tcx, Orientation o, Tr
         int edge_index = ot.EdgeIndex(&p, &op);
         assert(edge_index >= 0);
 
-        ot.delaunay_edge[edge_index] = true;
+        ot.m_bEdgeDelaunay[edge_index] = true;
         Legalize(tcx, ot);
         ot.ClearDelunayEdges();
         return t;
@@ -878,7 +877,7 @@ p2t::Triangle& p2t::Sweep::NextFlipTriangle(SweepContext& tcx, Orientation o, Tr
     int edge_index = t.EdgeIndex(&p, &op);
     assert(edge_index >= 0);
 
-    t.delaunay_edge[edge_index] = true;
+    t.m_bEdgeDelaunay[edge_index] = true;
     Legalize(tcx, t);
     t.ClearDelunayEdges();
     return ot;

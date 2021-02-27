@@ -7,13 +7,18 @@
 
 #include "quetzal/common/id.hpp"
 #include "quetzal/math/Vector.hpp"
+#include "quetzal/wavefront_obj/Material.hpp"
+#include "quetzal/wavefront_obj/MaterialLibrary.hpp"
 #include "quetzal/wavefront_obj/Reader.hpp"
 #include "quetzal/wavefront_obj/Writer.hpp"
 #include "quetzal/wavefront_obj/symbols.hpp"
 #include <array>
 #include <map>
 #include <filesystem>
+#include <sstream>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace quetzal::model
 {
@@ -24,7 +29,14 @@ namespace quetzal::model
     template<typename M>
     void write_obj(const M& mesh, const std::filesystem::path& pathname);
 
+    using Materials = std::unordered_map<std::string, wavefront_obj::Material>;
+
+    template<typename M>
+    Materials read_materials(const M& mesh, const std::filesystem::path& pathname); // path to materials directory
+
     // central location for these? ...
+    // these are not directly related to either wavefront_obj or Mesh ...
+    const std::string MaterialStandardPropertyName = "material_standard";
     const std::string MaterialsPropertyName = "materials";
     const std::string MaterialPropertyName = "material";
 
@@ -39,6 +51,14 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
     id_type idFace = nullid;
     size_t nvFace = 0;
     std::string material;
+
+    //--------------------------------------------------------------------------
+    auto on_open = [&](M& mesh, const std::string& name) -> void
+    {
+        mesh.set_name(name);
+        mesh.properties().set(MaterialStandardPropertyName, "wavefront_obj");
+        return;
+    };
 
     //--------------------------------------------------------------------------
     auto on_object = [&](M& mesh, const std::string& name) -> void
@@ -63,9 +83,9 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
 
         if (mesh.surface(idSurface).empty() && !material.empty())
         {
-            mesh.surface(idSurface).set_property(MaterialPropertyName, material);
+            mesh.surface(idSurface).properties().set(MaterialPropertyName, material);
         }
-        else if (mesh.surface(idSurface).property(MaterialPropertyName) != material)
+        else if (mesh.surface(idSurface).properties().get(MaterialPropertyName) != material)
         {
             // The case where an existing group is being specified in the context of a different material is not handled here ...
             // This needs to be deferred in case the discrepancy is corrected in a subsequent material specification ...
@@ -150,12 +170,12 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
     auto on_materials = [&](M& mesh, const std::string& name) -> void
     {
         std::string prefix;
-        if (mesh.contains_property(MaterialsPropertyName))
+        if (mesh.properties().contains(MaterialsPropertyName))
         {
-            prefix = mesh.property(MaterialsPropertyName) + " ";
+            prefix = mesh.properties().get(MaterialsPropertyName) + " ";
         }
 
-        mesh.set_property(MaterialsPropertyName, prefix + name);
+        mesh.properties().set(MaterialsPropertyName, prefix + name);
         return;
     };
 
@@ -171,9 +191,9 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
 
         if (mesh.surface(idSurface).empty() && !material.empty())
         {
-            mesh.surface(idSurface).set_property(MaterialPropertyName, material);
+            mesh.surface(idSurface).properties().set(MaterialPropertyName, material);
         }
-        else if (mesh.surface(idSurface).property(MaterialPropertyName) != material)
+        else if (mesh.surface(idSurface).properties().get(MaterialPropertyName) != material)
         {
             // The case where an existing group is being specified in the context of a different material is not handled here ...
             // Could handle this here creating surface with name group_material, store group name in properties for subsequent use, ...
@@ -183,7 +203,7 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
         return;
     };
 
-    wavefront_obj::Reader<M> reader(on_object, on_group, on_face_open, on_face_vertex, on_face_close, on_materials, on_material);
+    wavefront_obj::Reader<M> reader(on_open, on_object, on_group, on_face_open, on_face_vertex, on_face_close, on_materials, on_material);
     reader.read(pathname, mesh);
     return;
 }
@@ -194,9 +214,9 @@ void quetzal::model::write_obj(const M& mesh, const std::filesystem::path& pathn
 {
     wavefront_obj::Writer<typename M::value_type> writer(pathname);
 
-    if (mesh.contains_property(MaterialsPropertyName))
+    if (mesh.properties().contains(MaterialsPropertyName))
     {
-        writer.set_materials(mesh.property(MaterialsPropertyName));
+        writer.set_materials(mesh.properties().get(MaterialsPropertyName));
     }
 
     for (const typename M::vertex_type& vertex : mesh.vertices())
@@ -241,9 +261,9 @@ void quetzal::model::write_obj(const M& mesh, const std::filesystem::path& pathn
         {
             assert(!surface.empty());
             writer.set_group(surface.name());
-            if (surface.contains_property(MaterialPropertyName))
+            if (surface.properties().contains(MaterialPropertyName))
             {
-                writer.set_material(surface.property(MaterialPropertyName));
+                writer.set_material(surface.properties().get(MaterialPropertyName));
             }
 
             for (const auto& face : surface.faces())
@@ -254,6 +274,57 @@ void quetzal::model::write_obj(const M& mesh, const std::filesystem::path& pathn
     }
 
     return;
+}
+
+//------------------------------------------------------------------------------
+template<typename M>
+quetzal::model::Materials quetzal::model::read_materials(const M& mesh, const std::filesystem::path& pathname)
+{
+    Materials materials;
+
+    std::vector<std::string> filenames;
+    if (mesh.properties().contains(MaterialsPropertyName))
+    {
+        std::istringstream iss(mesh.properties().get(MaterialsPropertyName));
+        std::string filename;
+        while (iss >> filename)  
+        { 
+            filenames.push_back(filename);
+        } 
+    }
+
+    std::unordered_set<std::string> materialUsages;
+    for (const auto& surface : mesh.surfaces())
+    {
+        if (surface.properties().contains(MaterialPropertyName))
+        {
+            materialUsages.insert(surface.properties().get(MaterialPropertyName));
+        }
+    }
+
+    for (const auto& filename : filenames)
+    {
+//        filename = pathname / filename;
+pathname;
+        wavefront_obj::MaterialLibrary materialLibrary(filename);
+        while (!materialLibrary.eof())
+        {
+            wavefront_obj::Material material = materialLibrary.read_material();
+            std::string name = material.m_name;
+            if (materials.contains(name))
+            {
+                continue; // skip second definition, should log warning ...
+            }
+
+            if (materialUsages.contains(name))
+            {
+                materials.emplace(name, material);
+                materialUsages.erase(name);
+            }
+        }
+    }
+
+    return materials;
 }
 
 #endif // QUETZAL_MODEL_OBJ_IO_HPP

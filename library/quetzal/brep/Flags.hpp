@@ -36,7 +36,7 @@ namespace quetzal::brep
         bool empty() const;
         virtual void clear() const;
 
-//    protected:
+    protected:
 
         Flags() = default;
         Flags(const Flags&) = default;

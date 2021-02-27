@@ -163,19 +163,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="sweep\shapes.hpp" />
+    <ClInclude Include="cdt\shapes.hpp" />
     <ClInclude Include="triangulation.hpp" />
-    <ClInclude Include="sweep\advancing_front.hpp" />
-    <ClInclude Include="sweep\cdt.hpp" />
-    <ClInclude Include="sweep\sweep.hpp" />
-    <ClInclude Include="sweep\sweep_context.hpp" />
+    <ClInclude Include="cdt\advancing_front.hpp" />
+    <ClInclude Include="cdt\cdt.hpp" />
+    <ClInclude Include="cdt\sweep.hpp" />
+    <ClInclude Include="cdt\sweep_context.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sweep\advancing_front.cpp" />
-    <ClCompile Include="sweep\cdt.cpp" />
-    <ClCompile Include="sweep\shapes.cpp" />
-    <ClCompile Include="sweep\sweep.cpp" />
-    <ClCompile Include="sweep\sweep_context.cpp" />
+    <ClCompile Include="cdt\advancing_front.cpp" />
+    <ClCompile Include="cdt\cdt.cpp" />
+    <ClCompile Include="cdt\shapes.cpp" />
+    <ClCompile Include="cdt\sweep.cpp" />
+    <ClCompile Include="cdt\sweep_context.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

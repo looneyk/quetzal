@@ -163,9 +163,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Elements.hpp" />
-    <ClInclude Include="ElementsConstIterator.hpp" />
-    <ClInclude Include="ElementsIterator.hpp" />
     <ClInclude Include="Face.hpp" />
     <ClInclude Include="Flags.hpp" />
     <ClInclude Include="HalfEdge.hpp" />

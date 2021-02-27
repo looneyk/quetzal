@@ -5,24 +5,21 @@
 // Properties.hpp
 //------------------------------------------------------------------------------
 
+#include <iosfwd>
 #include <unordered_map>
+#include <utility>
 
 namespace quetzal
 {
 
+    //--------------------------------------------------------------------------
     class Properties
     {
     public:
 
-        std::string property(const std::string& name) const;
-        void set_property(const std::string& name, const std::string& value);
-
-        bool contains_property(const std::string& name) const;
-
-        void remove_property(const std::string& name);
-        void clear_properties();
-
-    protected:
+        using values_type = std::unordered_map<std::string, std::string>;
+        using iterator = typename values_type::iterator;
+        using const_iterator = typename values_type::const_iterator;
 
         Properties() = default;
         Properties(const Properties&) = default;
@@ -32,10 +29,38 @@ namespace quetzal
         Properties& operator=(const Properties&) = default;
         Properties& operator=(Properties&&) = default;
 
+        std::string get(const std::string& name) const;
+        void set(const std::string& name, const std::string& value);
+        void set(const Properties& properties);
+
+        bool contains(const std::string& name) const;
+
+        void erase(const std::string& name);
+        void clear();
+
+        void print(std::ostream& os) const;
+
+        friend void swap(Properties& lhs, Properties& rhs) noexcept
+        {
+            using std::swap;
+            swap(lhs.m_values, rhs.m_values);
+        }
+
+        iterator begin() { return m_values.begin(); }
+        iterator end() { return m_values.end(); }
+
+        const_iterator begin() const { return m_values.begin(); }
+        const_iterator end() const { return m_values.end(); }
+
+        const_iterator cbegin() const { return m_values.begin(); }
+        const_iterator cend() const { return m_values.end(); }
+
     private:
 
-        std::unordered_map<std::string, std::string> m_values;
+        values_type m_values;
     };
+
+    std::ostream& operator<<(std::ostream& os, const Properties& properties);
 
 } // namespace quetzal
 

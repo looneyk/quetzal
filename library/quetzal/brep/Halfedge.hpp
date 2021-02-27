@@ -19,7 +19,7 @@ namespace quetzal::brep
 
     //--------------------------------------------------------------------------
     template<typename Traits, typename M = Mesh<Traits>>
-    class Halfedge : public Flags, public Properties
+    class Halfedge : public Flags
     {
     public:
 
@@ -82,6 +82,9 @@ namespace quetzal::brep
         id_type partner_surface_id() const;
         bool surface_seam() const;
 
+        const Properties& properties() const;
+        Properties& properties();
+
         size_t error_count() const;
         bool check() const;
 
@@ -100,6 +103,7 @@ namespace quetzal::brep
         id_type m_idPrev;
         id_type m_idVertex;
         id_type m_idFace;
+        Properties m_properties;
     };
 
     template<typename Traits, typename M>
@@ -111,14 +115,14 @@ namespace quetzal::brep
 template<typename Traits, typename M>
 quetzal::brep::Halfedge<Traits, M>::Halfedge(mesh_type& mesh, id_type id, id_type idPartner, id_type idNext, id_type idPrev, id_type idVertex, id_type idFace) :
     Flags(),
-    Properties(),
     m_pmesh(&mesh),
     m_id(id),
     m_idPartner(idPartner),
     m_idNext(idNext),
     m_idPrev(idPrev),
     m_idVertex(idVertex),
-    m_idFace(idFace)
+    m_idFace(idFace),
+    m_properties()
 {
 }
 
@@ -364,6 +368,20 @@ bool quetzal::brep::Halfedge<Traits, M>::surface_seam() const
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
+typename const quetzal::Properties& quetzal::brep::Halfedge<Traits, M>::properties() const
+{
+    return m_properties;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename quetzal::Properties& quetzal::brep::Halfedge<Traits, M>::properties()
+{
+    return m_properties;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
 size_t quetzal::brep::Halfedge<Traits, M>::error_count() const
 {
     assert(m_pmesh != nullptr);
@@ -445,12 +463,14 @@ std::ostream& quetzal::brep::operator<<(std::ostream& os, const Halfedge<Traits,
         os << "\t" << halfedge.face_id();
         if (halfedge.vertex_id() != nullid)
         {
-            os << "\t" << halfedge.vertex().attributes();
+            os << "\t" << halfedge.attributes();
         }
         else
         {
             os << "\t" << "vertex null";
         }
+
+        os << "\t" << halfedge.properties();
     }
 
     os << std::endl;

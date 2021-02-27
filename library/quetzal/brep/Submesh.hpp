@@ -94,6 +94,9 @@ namespace quetzal::brep
         attributes_type& attributes();
         void set_attributes(const attributes_type& attributes);
 
+        const Properties& properties() const;
+        Properties& properties();
+
         bool contains_surface(const std::string& name) const;
         bool contains_surface(id_type idSurface) const;
         void add_surface(id_type idSurface); // add surface to list
@@ -140,6 +143,7 @@ namespace quetzal::brep
         index_type m_surface_index;
 
         attributes_type m_attributes;
+        Properties m_properties;
 
         static typename faces_type::size_function_type m_faces_size;
         static typename faces_type::terminal_function_type m_faces_first;
@@ -169,7 +173,6 @@ namespace quetzal::brep
 template<typename Traits, typename M>
 quetzal::brep::Submesh<Traits, M>::Submesh() :
     Flags(),
-    Properties(),
     m_pmesh(nullptr),
     m_id(nullid),
     m_name(),
@@ -178,7 +181,8 @@ quetzal::brep::Submesh<Traits, M>::Submesh() :
     m_surface_ids(),
     m_surfaces(*m_pmesh, nullid, m_surfaces_size, m_surfaces_first, m_surfaces_last, m_surfaces_end, m_surfaces_forward, m_surfaces_reverse, m_surfaces_element, m_surfaces_const_element),
     m_surface_index(),
-    m_attributes()
+    m_attributes(),
+    m_properties()
 {
 }
 
@@ -195,7 +199,8 @@ quetzal::brep::Submesh<Traits, M>::Submesh(mesh_type& mesh, id_type id, const st
     m_surface_ids(),
     m_surfaces(mesh, id, m_surfaces_size, m_surfaces_first, m_surfaces_last, m_surfaces_end, m_surfaces_forward, m_surfaces_reverse, m_surfaces_element, m_surfaces_const_element),
     m_surface_index(),
-    m_attributes(attributes)
+    m_attributes(attributes),
+    m_properties()
 {
 }
 
@@ -423,6 +428,20 @@ void quetzal::brep::Submesh<Traits, M>::set_attributes(const attributes_type& at
 {
     m_attributes = attributes;
     return;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename const quetzal::Properties& quetzal::brep::Submesh<Traits, M>::properties() const
+{
+    return m_properties;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename quetzal::Properties& quetzal::brep::Submesh<Traits, M>::properties()
+{
+    return m_properties;
 }
 
 //------------------------------------------------------------------------------
@@ -833,6 +852,7 @@ std::ostream& quetzal::brep::operator<<(std::ostream& os, const Submesh<Traits, 
         os << ")";
 
         os << "\t" << submesh.attributes();
+        os << "\t" << submesh.properties();
     }
 
     os << std::endl;

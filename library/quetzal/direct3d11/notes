@@ -1,4 +1,12 @@
 
+really want thick wireframe ...
+https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-depth-stencil
+https://gamedev.stackexchange.com/questions/34652/outline-object-effect
+https://gamedev.stackexchange.com/questions/16391/how-can-i-reduce-aliasing-in-my-outline-glow-effect
+https://developer.valvesoftware.com/wiki/L4D_Glow_Effect
+http://www.rastertek.com/dx11tut46.html
+
+
 *deal with EffectBasic lighting
 
 // Effect
@@ -22,6 +30,13 @@ where context is needed, don't use renderer, but maybe context abstraction, Rend
 
 where tangents have 4 elements, should w be 0 or 1? normalization?
 positions 1, vectors 0? so tangent 0?
+
+
+restore rasterizer cull mode to front/back instead of cw/ccw, but allow it to be specified separately
+clean up ccw and culling, init with cw/ccw, then front/back instead of cw/ccw
+or just 4 forms to cover all of the combinations?
+but cw/ccw is more of a property, and culling can be done as desired (but you may never do cull front)
+what I have now is all I'm ever likely to need. And done.
 
 
 vertex layout selector?

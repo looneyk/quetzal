@@ -257,6 +257,9 @@
     <ClInclude Include="ComException.hpp" />
     <ClInclude Include="com_ptr.hpp" />
     <ClInclude Include="DateTime.hpp" />
+    <ClInclude Include="Elements.hpp" />
+    <ClInclude Include="ElementsConstIterator.hpp" />
+    <ClInclude Include="ElementsIterator.hpp" />
     <ClInclude Include="error_util.hpp" />
     <ClInclude Include="Exception.hpp" />
     <ClInclude Include="Factory.hpp" />

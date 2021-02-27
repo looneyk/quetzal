@@ -36,7 +36,7 @@ namespace quetzal::brep
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    class Mesh : public Flags, public Properties
+    class Mesh : public Flags
     {
     public:
 
@@ -233,6 +233,9 @@ namespace quetzal::brep
         void clear_seams(id_type idSurface);
         void generate_seams();
 
+        const Properties& properties() const;
+        Properties& properties();
+
         // These link... functions unused, reference implementations? could use of these simplify connectivity?
         bool linked_face_surface(id_type idFace, id_type idSurface) const;
         bool linked_face_submesh(id_type idFace, id_type idSubmesh) const;
@@ -297,6 +300,8 @@ namespace quetzal::brep
 
         seam_store_type m_seam_store;
         seams_type m_seams;
+
+        Properties m_properties;
 
         static typename halfedges_type::size_function_type m_halfedges_size;
         static typename halfedges_type::terminal_function_type m_halfedges_first;
@@ -386,7 +391,6 @@ namespace quetzal::brep
 template<typename Traits>
 quetzal::brep::Mesh<Traits>::Mesh(const std::string& name) :
     Flags(),
-    Properties(),
     m_id(nullid),
     m_name(name),
     m_halfedge_store(),
@@ -402,7 +406,8 @@ quetzal::brep::Mesh<Traits>::Mesh(const std::string& name) :
     m_submeshes(*this, nullid, m_submeshes_size, m_submeshes_first, m_submeshes_last, m_submeshes_end, m_submeshes_forward, m_submeshes_reverse, m_submeshes_element, m_submeshes_const_element),
     m_submesh_index(),
     m_seam_store(),
-    m_seams(*this, nullid, m_seams_size, m_seams_first, m_seams_last, m_seams_end, m_seams_forward, m_seams_reverse, m_seams_element, m_seams_const_element)
+    m_seams(*this, nullid, m_seams_size, m_seams_first, m_seams_last, m_seams_end, m_seams_forward, m_seams_reverse, m_seams_element, m_seams_const_element),
+    m_properties()
 {
 }
 
@@ -410,7 +415,6 @@ quetzal::brep::Mesh<Traits>::Mesh(const std::string& name) :
 template<typename Traits>
 quetzal::brep::Mesh<Traits>::Mesh(const Mesh& other) :
     Flags(other),
-    Properties(),
     m_id(other.m_id),
     m_name(other.m_name),
     m_halfedge_store(other.m_halfedge_store),
@@ -426,7 +430,8 @@ quetzal::brep::Mesh<Traits>::Mesh(const Mesh& other) :
     m_submeshes(other.m_submeshes),
     m_submesh_index(other.m_submesh_index),
     m_seam_store(other.m_seam_store),
-    m_seams(other.m_seams)
+    m_seams(other.m_seams),
+    m_properties()
 {
     reassign_mesh();
 }
@@ -435,7 +440,6 @@ quetzal::brep::Mesh<Traits>::Mesh(const Mesh& other) :
 template<typename Traits>
 quetzal::brep::Mesh<Traits>::Mesh(Mesh&& other) :
     Flags(other),
-    Properties(),
     m_id(other.m_id),
     m_name(std::move(other.m_name)),
     m_halfedge_store(std::move(other.m_halfedge_store)),
@@ -451,7 +455,8 @@ quetzal::brep::Mesh<Traits>::Mesh(Mesh&& other) :
     m_submeshes(other.m_submeshes),
     m_submesh_index(std::move(other.m_submesh_index)),
     m_seam_store(std::move(other.m_seam_store)),
-    m_seams(other.m_seams)
+    m_seams(other.m_seams),
+    m_properties()
 {
     reassign_mesh();
 }
@@ -483,6 +488,7 @@ quetzal::brep::Mesh<Traits>& quetzal::brep::Mesh<Traits>::operator=(Mesh&& other
     m_submesh_index = std::move(other.m_submesh_index);
     m_seam_store = std::move(other.m_seam_store);
     m_seams = std::move(other.m_seams);
+    m_properties = std::move(other.m_properties);
 
     reassign_mesh();
     return *this;
@@ -1090,7 +1096,7 @@ void quetzal::brep::Mesh<Traits>::move_surface(id_type idSurface, const std::str
     id_type idSubmeshDest = submesh_id(nameSubmeshDest);
     if (idSubmeshDest == nullid)
     {
-        idSubmeshDest = create_submesh(nameSubmeshDest);
+        idSubmeshDest = create_submesh(nameSubmeshDest); // attributes and properties from mesh.surface(idSurface).submesh() ...
     }
 
     if (nameSurfaceDest.empty())
@@ -1101,7 +1107,7 @@ void quetzal::brep::Mesh<Traits>::move_surface(id_type idSurface, const std::str
     id_type idSurfaceDest = surface_id(idSubmeshDest, nameSurfaceDest);
     if (idSurfaceDest == nullid)
     {
-        idSurfaceDest = create_surface(idSubmeshDest, nameSurfaceDest, surface(idSurface).attributes());
+        idSurfaceDest = create_surface(idSubmeshDest, nameSurfaceDest, surface(idSurface).attributes()); // properties ...
     }
 
     surface_type& s = surface(idSurface);
@@ -1716,6 +1722,20 @@ void quetzal::brep::Mesh<Traits>::generate_seams()
 
 //------------------------------------------------------------------------------
 template<typename Traits>
+typename const quetzal::Properties& quetzal::brep::Mesh<Traits>::properties() const
+{
+    return m_properties;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+typename quetzal::Properties& quetzal::brep::Mesh<Traits>::properties()
+{
+    return m_properties;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
 bool quetzal::brep::Mesh<Traits>::linked_face_surface(id_type idFace, id_type idSurface) const
 {
     if (idFace == nullid || idSurface == nullid)
@@ -2148,7 +2168,7 @@ void quetzal::brep::Mesh<Traits>::pack()
         assert(halfedge_mapping.contains(face.halfedge_id()));
         face.set_halfedge_id(halfedge_mapping[face.halfedge_id()]);
 
-        for (id_type& idHalfedgeHole : face.holes())
+        for (id_type& idHalfedgeHole : face.hole_ids())
         {
             assert(halfedge_mapping.contains(idHalfedgeHole));
             idHalfedgeHole = halfedge_mapping[idHalfedgeHole];
@@ -2522,6 +2542,7 @@ void quetzal::brep::swap(Mesh<Traits>& lhs, Mesh<Traits>& rhs)
     swap(lhs.m_submesh_store, rhs.m_submesh_store);
     swap(lhs.m_submesh_index, rhs.m_submesh_index);
     swap(lhs.m_seam_store, rhs.m_seam_store);
+    swap(lhs.properties(), rhs.properties());
 
     lhs.reassign_mesh();
     rhs.reassign_mesh();

@@ -48,6 +48,13 @@ int main(int argc, char* argv)
     string name;
     mesh_type mesh;
 
+    name = "first_layer_block";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, name, 125.0f, 25.0f, 5.0f);
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
     name = "axis_shaft";
     cout << name << endl;
     mesh.clear();

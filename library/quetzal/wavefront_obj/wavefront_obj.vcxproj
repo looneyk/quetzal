@@ -19,12 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Material.hpp" />
+    <ClInclude Include="MaterialLibrary.hpp" />
     <ClInclude Include="Reader.hpp" />
     <ClInclude Include="reader_util.hpp" />
     <ClInclude Include="symbols.hpp" />
     <ClInclude Include="Writer.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="MaterialLibrary.cpp" />
     <ClCompile Include="reader_util.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
