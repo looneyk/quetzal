@@ -71,7 +71,7 @@ void quetzal::brep::triangulate(M& mesh)
     {
         const typename M::face_type& face = mesh.face(i);
 
-        if (face.deleted() || face.vertex_count() == 3)
+        if (face.deleted() || (face.vertex_count() == 3 && face.hole_count() == 0))
         {
             continue;
         }
@@ -170,7 +170,6 @@ void quetzal::brep::triangulate_face_cdt(M& mesh, id_type idFace)
 {
     const auto& face = mesh.face(idFace);
     assert(!face.deleted());
-    assert(face.vertex_count() > 3);
 
     typename M::face_attributes_type af = face.attributes();
     typename M::vector_type normal = af.normal();

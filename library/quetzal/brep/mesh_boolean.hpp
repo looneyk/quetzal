@@ -24,8 +24,6 @@
 #include <algorithm>
 #include "validation.hpp"
 
-//#include "quetzal/model/mesh_attributes.hpp"
-
 namespace quetzal
 {
 

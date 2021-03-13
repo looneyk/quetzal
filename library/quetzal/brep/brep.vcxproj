@@ -170,6 +170,7 @@
     <ClInclude Include="Mesh.hpp" />
     <ClInclude Include="MeshTraits.hpp" />
     <ClInclude Include="mesh_boolean.hpp" />
+    <ClInclude Include="mesh_connection.hpp" />
     <ClInclude Include="mesh_geometry.hpp" />
     <ClInclude Include="mesh_inversion.hpp" />
     <ClInclude Include="mesh_util.hpp" />

@@ -8,10 +8,7 @@
 #include "Polygon.hpp"
 #include <vector>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     // PolygonWithHoles has a single exterior/enclosing Polygon and 0 or more interior/hole Polygon's
@@ -55,9 +52,7 @@ namespace geometry
         holes_type m_holes;
     };
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

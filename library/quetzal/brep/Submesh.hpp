@@ -23,7 +23,7 @@ namespace quetzal::brep
 
     //--------------------------------------------------------------------------
     template<typename Traits, typename M = Mesh<Traits>>
-    class Submesh : public Flags, public Properties
+    class Submesh : public Flags
     {
     public:
 
@@ -43,7 +43,7 @@ namespace quetzal::brep
         using size_type = typename traits_type::size_type;
 
         Submesh();
-        Submesh(mesh_type& mesh, id_type id, const std::string& name, const attributes_type& attributes);
+        Submesh(mesh_type& mesh, id_type id, const std::string& name, const attributes_type& attributes, const Properties& properties = {});
         Submesh(const Submesh&) = default;
         Submesh(Submesh&&) noexcept = default;
         ~Submesh() = default;
@@ -188,9 +188,8 @@ quetzal::brep::Submesh<Traits, M>::Submesh() :
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-quetzal::brep::Submesh<Traits, M>::Submesh(mesh_type& mesh, id_type id, const std::string& name, const attributes_type& attributes) :
+quetzal::brep::Submesh<Traits, M>::Submesh(mesh_type& mesh, id_type id, const std::string& name, const attributes_type& attributes, const Properties& properties) :
     Flags(),
-    Properties(),
     m_pmesh(&mesh),
     m_id(id),
     m_name(name),
@@ -200,7 +199,7 @@ quetzal::brep::Submesh<Traits, M>::Submesh(mesh_type& mesh, id_type id, const st
     m_surfaces(mesh, id, m_surfaces_size, m_surfaces_first, m_surfaces_last, m_surfaces_end, m_surfaces_forward, m_surfaces_reverse, m_surfaces_element, m_surfaces_const_element),
     m_surface_index(),
     m_attributes(attributes),
-    m_properties()
+    m_properties(properties)
 {
 }
 

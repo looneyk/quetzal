@@ -1,7 +1,7 @@
 #ifndef P2T_CDT_H
 #define P2T_CDT_H
 
-#include "sweep_context.hpp"
+#include "SweepContext.hpp"
 
 namespace p2t
 {
@@ -18,7 +18,7 @@ namespace p2t
         // Add a steiner point
         void AddPoint(Point* point);
 
-        // Triangulate - do this AFTER you've added the polyline, holes, and Steiner points
+        // Triangulate - do this AFTER you've added the points, holes, and Steiner points
         void Triangulate();
 
         // Get resulting triangles

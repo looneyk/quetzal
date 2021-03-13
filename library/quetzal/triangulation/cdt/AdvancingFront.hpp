@@ -1,5 +1,5 @@
-#ifndef ADVANCINGFRONT_H
-#define ADVANCINGFRONT_H
+#if !defined(CDT_ADVANCINGFRONT_HPP)
+#define CDT_ADVANCINGFRONT_HPP
 
 #include "shapes.hpp"
 
@@ -69,4 +69,4 @@ namespace p2t
 
 }
 
-#endif // ADVANCINGFRONT_H
+#endif // CDT_ADVANCINGFRONT_HPP

@@ -1,9 +1,9 @@
-#ifndef SWEEP_CONTEXT_H
-#define SWEEP_CONTEXT_H
+#if !defined(CDT_SWEEPCONTEXT_HPP)
+#define CDT_SWEEPCONTEXT_HPP
 
+#include "AdvancingFront.hpp"
 #include <list>
 #include <vector>
-#include "advancing_front.hpp"
 
 namespace p2t
 {
@@ -40,8 +40,8 @@ namespace p2t
 
         const Point* GetPoint(size_t n);
 
-        void AddFace(std::vector<Point*> polyline);
-        void AddHole(std::vector<Point*> polyline);
+        void AddFace(std::vector<Point*> points);
+        void AddHole(std::vector<Point*> points);
         void AddPoint(Point* point);
 
         AdvancingFront& front();
@@ -96,7 +96,7 @@ namespace p2t
     private:
 
         void InitTriangulation();
-        void InitEdges(std::vector<Point*> polyline);
+        void InitEdges(std::vector<Point*> points);
 
         friend class Sweep;
 
@@ -117,4 +117,4 @@ namespace p2t
 
 }
 
-#endif
+#endif // CDT_SWEEPCONTEXT_HPP

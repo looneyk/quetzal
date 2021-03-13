@@ -18,36 +18,36 @@
     <ClInclude Include="cdt\advancing_front.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cdt\cdt.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="triangulation.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cdt\sweep.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cdt\sweep_context.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cdt\shapes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cdt\AdvancingFront.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cdt\Sweep.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cdt\SweepContext.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cdt\advancing_front.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cdt\cdt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cdt\sweep.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cdt\sweep_context.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="cdt\shapes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cdt\AdvancingFront.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cdt\Sweep.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cdt\SweepContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

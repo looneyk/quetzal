@@ -124,7 +124,7 @@ void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_ty
 
     triangulate(m); // Needs to be done here for better (?) surface normal calculation
 
-    seal_cylinder(m, nAzimuth, nz, false, true, false, ExtentSideFlat<T>(), ExtentEndsFlat<T>(), idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, true, false, Extent<T>(), ExtentEndsFlat<T>(), idSubmesh);
 
     // This has to be done after sealing bottom so that vertex halfedge iterators will work, fix that ...
     for (auto& surface : m.submesh(idSubmesh).surfaces())
@@ -212,7 +212,7 @@ void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_ty
         connect_apex_cusp(m, avs1, true, idSurface0, bSurfacesDistinct, bLinear);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, true, false, ExtentSideFlat<T>(), ExtentEndsFlat<T>(), idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, true, false, Extent<T>(), ExtentEndsFlat<T>(), idSubmesh);
 
     // This has to be done after sealing bottom so that vertex halfedge iterators will work, fix that ...
     // face normals should be calculated above and applied to vertices here ...

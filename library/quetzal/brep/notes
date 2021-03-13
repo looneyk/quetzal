@@ -2,6 +2,21 @@
 Implementation of mesh using a halfedge data structure
 --------------------------------------------------------------------------------
 
+dot notation for new surfaces created (from another surface) during attach with holes, ...
+use .0 (blender uses .000 and unreal uses 0)
+a fixed length digit string implies limitation or requires diversion beyond that, so no
+/ submesh/surface separator (parent/child relationship)
+    extended_name
+    required in Surface, used in Mesh
+_ surface series separator (items in a series, body_0, bSurfacesDistinct)
+    series_suffix
+    model primitive usage
+. instance separator (instances of an item)
+    instance_suffix
+    application usage
+should this surface name construction/scheme be centralized? where?
+
+
 No, holes are not faces. They have nothing (attributes, links, ...) aside from their position in the face.
 Use Hole class, don't repurpose face.
 holes can be thought of as face subtraction
@@ -16,16 +31,24 @@ see what happens if I remove halfedge attributes
 since there is no override functionality, no vertex sharing
 does override even make sense? revisit this
 
+halfedge attributes is a convenient shortcut
+use it everywhere
+then if vertex sharing with halfedge comization is ever implemented, no change
+
+
+seam names not currently supported
+probably no seam names, but selection using a pair of surface id's
+seams are really halfseams, and should be treated analogously
+manage surface adjacency
+
+surface.set_regenerate_seams() needs to be called by user if surface face content changes other than by add_face/remove_face
+generate_seams needs testing
 
 *each end of a seam is a "surface vertex", that is another very useful concept when working with seams ...
 *ability to treat multiple seams as a unit (all seams for a particular surface?)
 what happens to seams when something like a fillet or rounding is applied?
     retain virtual seams?
     fillet/rounding is its own surface, so new seams are created
-
-surface.set_regenerate_seams() needs to be called by user if surface face content changes other than by add_face/remove_face
-generate_seams needs testing
-seam names not currently supported
 
 
 be able to handle surfaces that are not fully connected, border seams should not cause issues
@@ -45,6 +68,11 @@ they're template classes, just need common point access interface
 *Points
 Polygon : Points
 Polyline : Points
+
+
+Properties
+added constructor, create parameter for Surface
+add for other types
 
 
 helix_cone test bed for face attributes?

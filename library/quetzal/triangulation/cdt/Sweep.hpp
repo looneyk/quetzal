@@ -1,5 +1,5 @@
-#ifndef SWEEP_H
-#define SWEEP_H
+#if !defined(CDT_SWEEP_HPP)
+#define CDT_SWEEP_HPP
 /*
  * Sweep-line, Constrained Delauney Triangulation (CDT) See: Domiter, V. and
  * Zalik, B.(2008)'Sweep-line algorithm for constrained Delaunay triangulation',
@@ -198,4 +198,4 @@ namespace p2t
 
 }
 
-#endif
+#endif // CDT_SWEEP_HPP

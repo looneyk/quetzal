@@ -1,6 +1,6 @@
 
 #include "cdt.hpp"
-#include "sweep.hpp"
+#include "Sweep.hpp"
 
 using namespace std;
 
@@ -9,14 +9,14 @@ p2t::CDT::CDT(const vector<Point>& polygon) :
     m_face(),
     m_holes()
 {
-    vector<Point*> polyline;
+    vector<Point*> points;
 
     for (const auto& point : polygon)
     {
-        polyline.push_back(new p2t::Point(point));
+        points.push_back(new p2t::Point(point));
     }
 
-    sweep_context_.AddFace(polyline);
+    sweep_context_.AddFace(points);
 }
 
 p2t::CDT::~CDT()
@@ -38,16 +38,16 @@ p2t::CDT::~CDT()
 
 void p2t::CDT::AddHole(const vector<Point>& polygon)
 {
-    vector<Point*> polyline;
+    vector<Point*> points;
 
     for (const auto& point : polygon)
     {
-        polyline.push_back(new p2t::Point(point));
+        points.push_back(new p2t::Point(point));
     }
 
-    m_holes.push_back(polyline);
+    m_holes.push_back(points);
 
-    sweep_context_.AddHole(polyline);
+    sweep_context_.AddHole(points);
 }
 
 void p2t::CDT::AddPoint(Point* point)

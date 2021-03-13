@@ -10,19 +10,16 @@
 #include "quetzal/math/Interval.hpp"
 #include "quetzal/math/math_util.hpp"
 
-namespace quetzal
-{
-
-namespace model
+namespace quetzal::model
 {
 
     // Create figures in the xy-plane with ccw winding order relative to actual or effective z-axis
 
     template<typename Traits>
-    geometry::Polygon<Traits> create_square(typename Traits::value_type side, math::Vector<Traits> position = math::Vector<Traits>());
+    geometry::Polygon<Traits> create_square(typename Traits::value_type side, math::Vector<Traits> position = {});
 
     template<typename Traits>
-    geometry::Polygon<Traits> create_rectangle(typename Traits::value_type dx, typename Traits::value_type dy, math::Vector<Traits> position = math::Vector<Traits>());
+    geometry::Polygon<Traits> create_rectangle(typename Traits::value_type dx, typename Traits::value_type dy, math::Vector<Traits> position = {});
 
     template<typename Traits>
     geometry::Polygon<Traits> create_rectangle(math::Vector<Traits> position0, math::Vector<Traits> position1);
@@ -31,16 +28,16 @@ namespace model
     quetzal::geometry::Polygon<Traits> create_rectangle(math::Vector<Traits> position0, math::Vector<Traits> position1);
 
     template<typename Traits>
-    geometry::Polygon<Traits> create_circle(typename Traits::value_type radius, size_t nAzimuth, math::Vector<Traits> position = math::Vector<Traits>());
+    geometry::Polygon<Traits> create_circle(typename Traits::value_type radius, size_t nAzimuth, math::Vector<Traits> position = {});
 
     template<typename Traits>
-    geometry::Polygon<Traits> create_ellipse(typename Traits::value_type rx, typename Traits::value_type ry, size_t nAzimuth, math::Vector<Traits> position = math::Vector<Traits>());
+    geometry::Polygon<Traits> create_ellipse(typename Traits::value_type rx, typename Traits::value_type ry, size_t nAzimuth, math::Vector<Traits> position = {});
 
     template<typename Traits>
-    geometry::Polyline<Traits> create_circle_arc(typename Traits::value_type radius, size_t nAzimuth, math::Interval<typename Traits::value_type> azimuth, math::Vector<Traits> position = math::Vector<Traits>());
+    geometry::Polyline<Traits> create_circle_arc(typename Traits::value_type radius, size_t nAzimuth, math::Interval<typename Traits::value_type> azimuth, math::Vector<Traits> position = {});
 
     template<typename Traits>
-    geometry::Polyline<Traits> create_ellipse_arc(typename Traits::value_type rx, typename Traits::value_type ry, size_t nAzimuth, math::Interval<typename Traits::value_type> azimuth, math::Vector<Traits> position = math::Vector<Traits>());
+    geometry::Polyline<Traits> create_ellipse_arc(typename Traits::value_type rx, typename Traits::value_type ry, size_t nAzimuth, math::Interval<typename Traits::value_type> azimuth, math::Vector<Traits> position = {});
 
     // curve ...
 
@@ -50,9 +47,7 @@ namespace model
     template<typename Traits>
     void translate(geometry::Polygon<Traits>& polygon, math::Vector<Traits> offset);
 
-} // namespace model
-
-} // namespace quetzal
+} // namespace quetzal::model
 
 //------------------------------------------------------------------------------
 template<typename Traits>

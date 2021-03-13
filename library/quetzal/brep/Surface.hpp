@@ -48,7 +48,7 @@ namespace quetzal::brep
         using size_type = typename Traits::size_type;
 
         Surface();
-        Surface(mesh_type& mesh, id_type id, const std::string& name, id_type idSubmesh, const attributes_type& attributes);
+        Surface(mesh_type& mesh, id_type id, const std::string& name, id_type idSubmesh, const attributes_type& attributes, const Properties& properties = {});
         Surface(const Surface&) = default;
         Surface(Surface&&) noexcept = default;
         ~Surface() = default;
@@ -200,7 +200,7 @@ quetzal::brep::Surface<Traits, M>::Surface() :
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-quetzal::brep::Surface<Traits, M>::Surface(mesh_type& mesh, id_type id, const std::string& name, id_type idSubmesh, const attributes_type& attributes) :
+quetzal::brep::Surface<Traits, M>::Surface(mesh_type& mesh, id_type id, const std::string& name, id_type idSubmesh, const attributes_type& attributes, const Properties& properties) :
     Flags(),
     m_pmesh(&mesh),
     m_id(id),
@@ -209,7 +209,7 @@ quetzal::brep::Surface<Traits, M>::Surface(mesh_type& mesh, id_type id, const st
     m_face_ids(),
     m_seam_ids(),
     m_attributes(attributes),
-    m_properties(),
+    m_properties(properties),
     m_faces(mesh, id, m_faces_size, m_faces_first, m_faces_last, m_faces_end, m_faces_forward, m_faces_reverse, m_faces_element, m_faces_const_element),
     m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element),
     m_seams(mesh, id, m_seams_size, m_seams_first, m_seams_last, m_seams_end, m_seams_forward, m_seams_reverse, m_seams_element, m_seams_const_element),

@@ -21,12 +21,7 @@
 #include <array>
 #include <functional>
 
-#include "quetzal/brep/mesh_util.hpp"
-
-namespace quetzal
-{
-
-namespace model
+namespace quetzal::model
 {
 
     using size_type = size_t;
@@ -230,9 +225,7 @@ namespace model
     template<typename T>
     std::array<T, 3> texture_span(size_type i, size_type n, bool bCuspLower, bool bCuspUpper, T alignment = T(0.5));
 
-} // namespace model
-
-} // namespace quetzal
+} // namespace quetzal::model
 
 //------------------------------------------------------------------------------
 template<typename M>
@@ -1636,9 +1629,9 @@ void quetzal::model::connect_side_center(M& mesh, size_type na, size_type nb, bo
 template<typename M>
 void quetzal::model::close_side_flat(M& mesh, size_type na, size_type nb, bool bCuspLower, bool bCuspUpper, id_type idSurface, bool bPlanar)
 {
-    using T = typename M::value_type;
+    assert(bPlanar);
 
-    auto calculate_normal = [](const M& mesh, id_type idHalfedge0, id_type idHalfedge1, id_type idHalfedge2) -> typename M::vector_type { return normalize(cross(idHalfedge1 - idHalfedge0, idHalfedge2 - idHalfedge0)); };
+    using T = typename M::value_type;
 
     size_type nh = mesh.halfedge_store_count();
     size_type nv = mesh.vertex_store_count();
@@ -1654,13 +1647,14 @@ void quetzal::model::close_side_flat(M& mesh, size_type na, size_type nb, bool b
     id_type idNext1 = nh;
 
     id_type idMid0 = idPartnerLower0;
-    for (size_t i = 0; i < nb / 2; ++i)
-    {
-        idMid0 += 4 * na;
-    }
+    id_type idMid1 = idPartnerLower1 - (bCuspLower ? na : 0);
+    idMid0 += (nb / 2) * 4 * na;
+    idMid1 += (nb / 2) * 4 * na;
 
-    auto calculate_normal = [](const M& mesh, id_type idHalfedge0, id_type idHalfedge1, id_type idHalfedge2) -> typename M::vector_type { return normalize(cross(idHalfedge1 - idHalfedge0, idHalfedge2 - idHalfedge0)); };
-    typename M::vector_type normal = calculate_normal(mesh, idMid0, mesh.halfedge(idPartnerUpper1).next_id(), idPartnerLower1);
+    typename M::point_type positionMid0 = mesh.halfedge(idMid0).next().attributes().position();
+    typename M::point_type positionMid1 = mesh.halfedge(idMid1).attributes().position();
+    typename M::point_type positionUpper0 = mesh.halfedge(idPartnerUpper0).attributes().position();
+    typename M::vector_type normal = normalize(cross(positionMid1 - positionUpper0, positionMid0 - positionUpper0));
 
     id_type idFace = mesh.create_face(idSurface, nh, {normal});
 
@@ -1695,19 +1689,18 @@ void quetzal::model::close_side_flat(M& mesh, size_type na, size_type nb, bool b
     for (size_type j = 0; j < nb; ++j)
     {
         id_type idNext0 = nh + 2;
+        id_type idPrev1 = nh + 3;
         if (j == nb - 1)
         {
-            idNext0 = bCuspUpper ? nh + 1 : idUpper;
-
             if (bCuspUpper)
             {
                 idPartner0 -= na;
             }
-        }
 
-        id_type idPrev1 = nh + 3;
-        if (j == 0)
-        {
+            assert(idPartner0 == idPartnerUpper0);
+            assert(idPartner1 == idPartnerUpper1);
+
+            idNext0 = bCuspUpper ? nh + 1 : idUpper;
             idPrev1 = bCuspUpper ? nh : idUpper;
         }
 
@@ -1749,10 +1742,11 @@ void quetzal::model::close_side_flat(M& mesh, size_type na, size_type nb, bool b
 template<typename M>
 void quetzal::model::close_side_center(M& mesh, size_type na, size_type nb, bool bCuspLower, bool bCuspUpper, id_type idSurface0, id_type idSurface1, std::function<typename M::point_type(const typename M::point_type&)> center_position, bool bPlanar)
 {
+    assert(bPlanar);
+
     using T = typename M::value_type;
 
     size_type nh = mesh.halfedge_store_count();
-    size_type nv = mesh.vertex_store_count();
 
     id_type idPartnerLower0 = bCuspLower ? 2 * na : 3 * na;
     id_type idPartnerLower1 = bCuspLower ? na - 1 : 2 * na - 1;
@@ -1760,64 +1754,42 @@ void quetzal::model::close_side_center(M& mesh, size_type na, size_type nb, bool
     id_type idPartnerUpper1 = bCuspUpper ? nh - na - 1 : nh - 2 * na - 1;
 
     id_type idMid0 = idPartnerLower0;
-    id_type idMid1 = idPartnerLower1 - bCuspLower ? na : 0;
-    for (size_t i = 0; i < nb / 2; ++i)
-    {
-        idMid0 += 4 * na;
-        idMid1 += 4 * na;
-    }
+    id_type idMid1 = idPartnerLower1;
+    idMid0 += (nb / 2) * 4 * na;
+    idMid1 += (nb / 2) * 4 * na;
 
-    auto calculate_normal = [](const M& mesh, id_type idHalfedge0, id_type idHalfedge1, id_type idHalfedge2) -> typename M::vector_type { return normalize(cross(idHalfedge1 - idHalfedge0, idHalfedge2 - idHalfedge0)); };
-    typename M::vector_type normal0 = calculate_normal(mesh, idMid0, idPartnerUpper0, idPartnerLower1);
-    typename M::vector_type normal1 = calculate_normal(mesh, idMid1, idPartnerLower1, idPartnerUpper0);
+    typename M::point_type positionMid0 = mesh.halfedge(idMid0).next().attributes().position();
+    typename M::point_type positionMid1 = mesh.halfedge(idMid1).attributes().position();
+
+    typename M::point_type positionCenterUpper = center_position(mesh.halfedge(idPartnerUpper0).attributes().position());
+    typename M::point_type positionCenterLower = center_position(mesh.halfedge(idPartnerLower1).attributes().position());
+
+    typename M::vector_type normal0 = normalize(cross(positionCenterUpper - positionMid0, positionCenterLower - positionMid0));
+    typename M::vector_type normal1 = normalize(cross(positionCenterLower - positionMid1, positionCenterUpper - positionMid1));
+
+    typename M::vertex_attributes_type av0 = {positionCenterUpper, normal0, {T(0), T(0)}};
+    typename M::vertex_attributes_type av1 = {positionCenterLower, normal1, {T(1), T(1)}};
 
     id_type idFace0 = mesh.create_face(idSurface0, nh, {normal0});
     id_type idFace1 = mesh.create_face(idSurface1, nh + 1, {normal1});
 
-    id_type idCenter0 = mesh.create_halfedge(nh + 1, nh + 2, nullid, nv, idFace0); // nullid prev ...
-    id_type idCenter1 = mesh.create_halfedge(nh, nullid, nh + 3, nv + 1, idFace1); // nullid next ...
-
-    typename M::vertex_attributes_type av0 = {center_position(mesh.halfedge(idPartnerUpper0).attributes().position()), normal0, {T(0), T(0)}};
-    typename M::vertex_attributes_type av1 = {center_position(mesh.halfedge(idPartnerLower1).attributes().position()), normal1, {T(1), T(1)}};
-
-    mesh.create_vertex(nh, av0);
-    mesh.create_vertex(nh + 1, av1);
+    id_type idCenter0 = mesh.create_halfedge_vertex(nh + 1, nh + 2, nullid, idFace0, av0);
+    id_type idCenter1 = mesh.create_halfedge_vertex(nh, nullid, nh + 3, idFace1, av1);
 
     nh += 2;
-    nv += 2;
-
-    id_type idUpper0 = nullid;
-    id_type idUpper1 = nullid;
 
     id_type idPrev0 = idCenter0;
     id_type idNext1 = idCenter1;
 
     if (!bCuspLower)
     {
-        av0 = {mesh.halfedge(idCenter1).attributes().position(), normal0, {T(0), T(1)}};
-        idPrev0 = mesh.create_halfedge(nullid, nh + 2, idCenter0, nv, idFace0);
-        mesh.create_vertex(nh, av0);
+        av0 = {positionCenterLower, normal0, {T(0), T(1)}};
+        idPrev0 = mesh.create_halfedge_vertex(nullid, nh + 2, idPrev0, idFace0, av0);
 
         av1 = {mesh.halfedge(idPartnerLower1).attributes().position(), normal1, {T(0), T(1)}};
-        idNext1 = mesh.create_halfedge(nullid, idCenter1, nh + 3, nv + 1, idFace1);
-        mesh.create_vertex(nh + 1, av0);
+        idNext1 = mesh.create_halfedge_vertex(nullid, idNext1, nh + 3, idFace1, av1);
 
         nh += 2;
-        nv += 2;
-    }
-
-    if (!bCuspUpper)
-    {
-        typename M::vertex_attributes_type av0 = {mesh.halfedge(idPartnerUpper0).attributes().position, normal0, {T(1), T(0)}};
-        idUpper0 = mesh.create_halfedge(nullid, nh + 2 * nb - 2, idCenter0, nv, idFace0);
-        mesh.create_vertex(nh, av0);
-
-        typename M::vertex_attributes_type av1 = {mesh.halfedge(idCenter1).attributes().position(), normal1, {T(1), T(0)}};
-        idUpper1 = mesh.create_halfedge(nullid, idCenter1, nh + 2 * nb - 1, nv + 1, idFace1);
-        mesh.create_vertex(nh + 1, av1);
-
-        nh += 2;
-        nv += 2;
     }
 
     id_type idPartner0 = idPartnerLower0;
@@ -1826,30 +1798,23 @@ void quetzal::model::close_side_center(M& mesh, size_type na, size_type nb, bool
     for (size_type j = 0; j < nb; ++j)
     {
         id_type idNext0 = nh + 2;
+        id_type idPrev1 = nh + 3;
         if (j == nb - 1)
         {
-            idNext0 = bCuspUpper ? idCenter0 : idUpper0;
-
             if (bCuspUpper)
             {
                 idPartner0 -= na;
             }
+
+            assert(idPartner0 == idPartnerUpper0);
+            assert(idPartner1 == idPartnerUpper1);
+
+            idNext0 = idCenter0;
+            idPrev1 = idCenter1;
         }
 
-        id_type idPrev1 = nh + 3;
-        if (j == 0)
-        {
-            idPrev1 = bCuspUpper ? idCenter1 : idUpper1;
-        }
-
-        idPrev0 = mesh.create_halfedge(idPartner0, idNext0, idPrev0, nv, idFace0);
-        idNext1 = mesh.create_halfedge(idPartner1, idNext1, idPrev1, nv + 1, idFace1);
-
-        mesh.halfedge(idPartner0).set_partner_id(nh);
-        mesh.halfedge(idPartner1).set_partner_id(nh + 1);
-
-        typename M::vertex_attributes_type av0 = mesh.halfedge(idPartner0).next().attributes();
-        typename M::vertex_attributes_type av1 = mesh.halfedge(idPartner1).next().attributes();
+        av0 = mesh.halfedge(idPartner0).next().attributes();
+        av1 = mesh.halfedge(idPartner1).next().attributes();
 
         av0.set_normal(normal0);
         av1.set_normal(normal1);
@@ -1862,14 +1827,38 @@ void quetzal::model::close_side_center(M& mesh, size_type na, size_type nb, bool
         av1.set_texcoord({tsProto[0], tsProto[2]});
         assert(mesh.halfedge(idPartner1).next().attributes().texcoord().y() == tsProto[2]);
 
-        mesh.create_vertex(nh, av0);
-        mesh.create_vertex(nh + 1, av1);
+        idPrev0 = mesh.create_halfedge_vertex(idPartner0, idNext0, idPrev0, idFace0, av0);
+        idNext1 = mesh.create_halfedge_vertex(idPartner1, idNext1, idPrev1, idFace1, av1);
+
+        mesh.halfedge(idPartner0).set_partner_id(idPrev0);
+        mesh.halfedge(idPartner1).set_partner_id(idNext1);
 
         idPartner0 += 4 * na;
         idPartner1 += 4 * na;
 
         nh += 2;
-        nv += 2;
+    }
+
+    if (!bCuspUpper)
+    {
+        av0 = {mesh.halfedge(idPartnerUpper0).attributes().position(), normal0, {T(1), T(0)}};
+        id_type idUpper0 = mesh.create_halfedge_vertex(nullid, idCenter0, idPrev0, idFace0, av0);
+
+        av1 = {positionCenterUpper, normal1, {T(1), T(0)}};
+        id_type idUpper1 = mesh.create_halfedge_vertex(nullid, idNext1, idCenter1, idFace1, av1);
+
+        mesh.halfedge(idPrev0).set_next_id(idUpper0);
+        mesh.halfedge(idNext1).set_prev_id(idUpper1);
+
+        mesh.halfedge(idCenter0).set_prev_id(idUpper0);
+        mesh.halfedge(idCenter1).set_next_id(idUpper1);
+
+        nh += 2;
+    }
+    else
+    {
+        mesh.halfedge(idCenter0).set_prev_id(idPrev0);
+        mesh.halfedge(idCenter1).set_next_id(idNext1);
     }
 
     mesh.surface(idSurface0).attributes().set_normal(normal0);
@@ -1889,26 +1878,42 @@ void quetzal::model::seal_cylinder(M& mesh, size_type nAzimuth, size_type nz, bo
 
     if (bOpenSide)
     {
-        if (extentAzimuth.termination() == Termination::Flat)
+        if (extentAzimuth.termination().type == Termination::Type::Flat)
         {
             id_type idSurface = mesh.create_surface(idSubmesh, extentAzimuth.name());
-            connect_side_flat(mesh, nAzimuth, nz, bCuspLower, bCuspUpper, idSurface, true);
+            if (extentAzimuth.termination().banded)
+            {
+                connect_side_flat(mesh, nAzimuth, nz, bCuspLower, bCuspUpper, idSurface, true);
+            }
+            else
+            {
+                close_side_flat(mesh, nAzimuth, nz, bCuspLower, bCuspUpper, idSurface, true);
+            }
             bOpenSide = false;
         }
-        else if (extentAzimuth.termination() == Termination::Center)
+        else if (extentAzimuth.termination().type == Termination::Type::Center)
         {
             id_type idSurface0 = mesh.create_surface(idSubmesh, extentAzimuth.lower_name());
             id_type idSurface1 = mesh.create_surface(idSubmesh, extentAzimuth.upper_name());
-            connect_side_center(mesh, nAzimuth, nz, bCuspLower, bCuspUpper, idSurface0, idSurface1,
-                    [](const typename M::point_type& point) -> typename M::point_type { return {T(0), T(0), point.z()}; },
-                    true);
+            if (extentAzimuth.termination().banded)
+            {
+                connect_side_center(mesh, nAzimuth, nz, bCuspLower, bCuspUpper, idSurface0, idSurface1,
+                        [](const typename M::point_type& point) -> typename M::point_type { return {T(0), T(0), point.z()}; },
+                        true);
+            }
+            else
+            {
+                close_side_center(mesh, nAzimuth, nz, bCuspLower, bCuspUpper, idSurface0, idSurface1,
+                        [](const typename M::point_type& point) -> typename M::point_type { return {T(0), T(0), point.z()}; },
+                        true);
+            }
             bOpenSide = false;
         }
     }
 
     if (!bCuspLower)
     {
-        if (extentZ.lower_termination() == Termination::Flat)
+        if (extentZ.lower_termination().type == Termination::Type::Flat)
         {
             typename M::vector_type normal {T(0), T(0), T(-1)};
             id_type idSurface0 = mesh.create_surface(idSubmesh, extentZ.lower_name(), {normal});
@@ -1925,7 +1930,7 @@ void quetzal::model::seal_cylinder(M& mesh, size_type nAzimuth, size_type nz, bo
 
     if (!bCuspUpper)
     {
-        if (extentZ.upper_termination() == Termination::Flat)
+        if (extentZ.upper_termination().type == Termination::Type::Flat)
         {
             typename M::vector_type normal {T(0), T(0), T(1)};
             id_type idSurface1 = mesh.create_surface(idSubmesh, extentZ.upper_name(), {normal});
@@ -1953,9 +1958,9 @@ void quetzal::model::seal_sphere(M& mesh, size_type nAzimuth, size_type nElevati
     id_type idLowerFirst = 0;
     id_type idUpperFirst = mesh.halfedge_store_count() - 2 * nAzimuth;
 
-    if (bOpenSide) // Elevation Termination::Center will affect side generation ...
+    if (bOpenSide) // Elevation Termination::Type::Center will affect side generation ...
     {
-        if (extentAzimuth.termination() == Termination::Flat)
+        if (extentAzimuth.termination().type == Termination::Type::Flat)
         {
             id_type idSurface = mesh.create_surface(idSubmesh, extentAzimuth.name());
             bool bPlanar = math::float_eq(extentAzimuth.interval().length(), T(0.5));
@@ -1970,13 +1975,22 @@ void quetzal::model::seal_sphere(M& mesh, size_type nAzimuth, size_type nElevati
             }
             bOpenSide = false;
         }
-        else if (extentAzimuth.termination() == Termination::Center)
+        else if (extentAzimuth.termination().type == Termination::Type::Center)
         {
             id_type idSurface0 = mesh.create_surface(idSubmesh, extentAzimuth.lower_name());
             id_type idSurface1 = mesh.create_surface(idSubmesh, extentAzimuth.upper_name());
-            connect_side_center(mesh, nAzimuth, nElevation, bCuspLower, bCuspUpper, idSurface0, idSurface1,
-                    [](const typename M::point_type& point) -> typename M::point_type { return {T(0), T(0), point.z()}; },
-                    true);
+            if (extentAzimuth.termination().banded)
+            {
+                connect_side_center(mesh, nAzimuth, nElevation, bCuspLower, bCuspUpper, idSurface0, idSurface1,
+                        [](const typename M::point_type& point) -> typename M::point_type { return {T(0), T(0), point.z()}; },
+                        true);
+            }
+            else
+            {
+                close_side_center(mesh, nAzimuth, nElevation, bCuspLower, bCuspUpper, idSurface0, idSurface1,
+                        [](const typename M::point_type& point) -> typename M::point_type { return {T(0), T(0), point.z()}; },
+                        true);
+            }
             calculate_planar_surface_texcoords(mesh, idSurface0); // really just need right x ...
             calculate_planar_surface_texcoords(mesh, idSurface1); // really just need left x ...
             bOpenSide = false;
@@ -1985,7 +1999,7 @@ void quetzal::model::seal_sphere(M& mesh, size_type nAzimuth, size_type nElevati
 
     if (!bCuspLower)
     {
-        if (extentElevation.lower_termination() == Termination::Flat)
+        if (extentElevation.lower_termination().type == Termination::Type::Flat)
         {
             typename M::vector_type normal {T(0), T(0), T(-1)};
             id_type idSurface0 = mesh.create_surface(idSubmesh, extentElevation.lower_name(), {normal});
@@ -1998,15 +2012,15 @@ void quetzal::model::seal_sphere(M& mesh, size_type nAzimuth, size_type nElevati
                 create_border_face(mesh, idLowerFirst + nAzimuth - 1, idLowerFirst, normal, idSurface0);
             }
         }
-        else if (extentElevation.lower_termination() == Termination::Center)
+        else if (extentElevation.lower_termination().type == Termination::Type::Center)
         {
-            assert(false); // Termination::Center ...
+            assert(false); // Termination::Type::Center ...
         }
     }
 
     if (!bCuspUpper)
     {
-        if (extentElevation.upper_termination() == Termination::Flat)
+        if (extentElevation.upper_termination().type == Termination::Type::Flat)
         {
             typename M::vector_type normal {T(0), T(0), T(1)};
             id_type idSurface1 = mesh.create_surface(idSubmesh, extentElevation.upper_name(), {normal});
@@ -2019,9 +2033,9 @@ void quetzal::model::seal_sphere(M& mesh, size_type nAzimuth, size_type nElevati
                 create_border_face(mesh, idUpperFirst, idUpperFirst + nAzimuth - 1, normal, idSurface1);
             }
         }
-        else if (extentElevation.upper_termination() == Termination::Center)
+        else if (extentElevation.upper_termination().type == Termination::Type::Center)
         {
-            assert(false); // Termination::Center ...
+            assert(false); // Termination::Type::Center ...
         }
     }
 
@@ -2044,7 +2058,7 @@ void quetzal::model::seal_torus(M& mesh, size_type nMinor, size_type nMajor, val
 
     if (bOpenMinor)
     {
-        if (extentMinor.termination() == Termination::Flat)
+        if (extentMinor.termination().type == Termination::Type::Flat)
         {
             id_type idSurfaceSide = mesh.create_surface(idSubmesh, extentMinor.name());
             T sum = extentMinor.interval().lower() + extentMinor.interval().upper();
@@ -2062,7 +2076,7 @@ void quetzal::model::seal_torus(M& mesh, size_type nMinor, size_type nMajor, val
 //                surface_vertex_normal(mesh.vertex(id0)); // ...
             }
         }
-        else if (extentMinor.termination() == Termination::Center)
+        else if (extentMinor.termination().type == Termination::Type::Center)
         {
             id_type idSurfaceSideLower = mesh.create_surface(idSubmesh, extentMinor.lower_name());
             id_type idSurfaceSideUpper = mesh.create_surface(idSubmesh, extentMinor.upper_name());
@@ -2109,7 +2123,7 @@ void quetzal::model::seal_torus(M& mesh, size_type nMinor, size_type nMajor, val
     {
         if (!bCuspLower)
         {
-            if (extentMajor.lower_termination() == Termination::Flat)
+            if (extentMajor.lower_termination().type == Termination::Type::Flat)
             {
                 typename M::vector_type normal {sin(theta0), -cos(theta0), T(0)};
                 id_type idSurface0 = mesh.create_surface(idSubmesh, extentMajor.lower_name(), {normal});
@@ -2126,7 +2140,7 @@ void quetzal::model::seal_torus(M& mesh, size_type nMinor, size_type nMajor, val
 
         if (!bCuspUpper)
         {
-            if (extentMajor.upper_termination() == Termination::Flat)
+            if (extentMajor.upper_termination().type == Termination::Type::Flat)
             {
                 typename M::vector_type normal = {-sin(theta1), cos(theta1), T(0)};
                 id_type idSurface1 = mesh.create_surface(idSubmesh, extentMajor.upper_name(), {normal});

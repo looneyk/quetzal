@@ -948,9 +948,6 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Ra
     auto [s, t] = closest_point_parameters(ray.endpoint(), ray.direction(), segment.endpoint(0), segment.direction());
     if (math::float_ge0(s) && math::float_clamped01(t) && math::float_eq0((ray.point(s) - segment.point(t)).norm_squared())) // pointA == pointB ...
     {
-std::cout << "intersection" << std::endl;
-std::cout << "    ray " << ray << std::endl;
-std::cout << "    segment " << segment << std::endl;
         if (parallel(ray.direction(), normalize(segment.direction())))
         {
             if (segment.contains(ray.endpoint()))
@@ -1417,7 +1414,7 @@ bool quetzal::geometry::intersects_coplanar(const Point<Traits>& point, const Po
 //            // Don't consider second segment endpoint so vertex intersections don't get counted twice, unless the intersection is the entire segment
 //            if (vector_eq(inter.point(), segment.endpoint(0)) || !vector_eq(inter.point(), segment.endpoint(1)))
             // Don't consider second segment endpoint so vertex intersections don't get counted twice
-            if (!vector_eq(inter.point(), segment.endpoint(1)))
+            if (!vector_eq(inter.point(), segment.endpoint(1), 10000)) // see if this can be reduced, otherwise go back to 2D projection? ...
             {
                 ++n;
             }
@@ -1430,7 +1427,7 @@ bool quetzal::geometry::intersects_coplanar(const Point<Traits>& point, const Po
         // Also handle the edge case where the ray is tangent to the polygon at a vertex ...
         // if point0, then don't count if prev and next are both to the right or left of the ray ...
     }
-
+/*
 if (math::odd(n))
 {
     std::cout << "intersects_coplanar" << std::endl;
@@ -1444,7 +1441,7 @@ if (math::odd(n))
 //    }
 //    std::cout << std::endl;
 }
-
+*/
     return math::odd(n);
 }
 

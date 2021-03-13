@@ -13,12 +13,23 @@ namespace quetzal::model
 {
 
     //--------------------------------------------------------------------------
-    enum class Termination
+    struct Termination
     {
-        None,
-        Flat,
-        Center
+        enum class Type
+        {
+            None,
+            Flat,
+            Center
+        };
+
+        Type type = Type::None;
+        bool banded = true;
     };
+
+    bool operator==(Termination lhs, Termination rhs)
+    {
+        return lhs.type == rhs.type && lhs.banded == rhs.banded;
+    }
 
     //--------------------------------------------------------------------------
     template<typename T>
@@ -28,11 +39,11 @@ namespace quetzal::model
 
         using value_type = T;
 
-        Extent(); // Termination::None
-        Extent(const math::Interval<T>& interval); // Termination::None
-        Extent(const T& tLower, const T& tUpper); // Termination::None
-        Extent(const T& tLower, const T& tUpper, const std::string& name); // Termination::Flat
-        Extent(const T& tLower, const T& tUpper, const std::string& nameLower, const std::string& nameUpper); // Termination::Center
+        Extent(); // Termination::Type::None
+        Extent(const math::Interval<T>& interval); // Termination::Type::None
+        Extent(const T& tLower, const T& tUpper); // Termination::Type::None
+        Extent(const T& tLower, const T& tUpper, const std::string& name); // Termination::Type::Flat
+        Extent(const T& tLower, const T& tUpper, const std::string& nameLower, const std::string& nameUpper); // Termination::Type::Center
         Extent(const T& tLower, const T& tUpper, Termination termination, const std::string& nameLower, const std::string& nameUpper);
         Extent(const T& tLower, const T& tUpper, Termination terminationLower, Termination terminationUpper, const std::string& nameLower, const std::string& nameUpper);
         Extent(const Extent&) = default;
@@ -143,8 +154,8 @@ quetzal::model::Extent<T>::Extent() :
 template<typename T>
 quetzal::model::Extent<T>::Extent(const math::Interval<T>& interval) :
     m_interval(interval),
-    m_terminationLower(Termination::None),
-    m_terminationUpper(Termination::None),
+    m_terminationLower({Termination::Type::None}),
+    m_terminationUpper({Termination::Type::None}),
     m_nameLower(),
     m_nameUpper()
 {
@@ -153,21 +164,21 @@ quetzal::model::Extent<T>::Extent(const math::Interval<T>& interval) :
 //------------------------------------------------------------------------------
 template<typename T>
 quetzal::model::Extent<T>::Extent(const T& tLower, const T& tUpper) :
-    Extent(tLower, tUpper, Termination::None, Termination::None, "", "")
+    Extent(tLower, tUpper, {Termination::Type::None}, {Termination::Type::None}, "", "")
 {
 }
 
 //------------------------------------------------------------------------------
 template<typename T>
 quetzal::model::Extent<T>::Extent(const T& tLower, const T& tUpper, const std::string& name) :
-    Extent(tLower, tUpper, Termination::Flat, Termination::Flat, name, name)
+    Extent(tLower, tUpper, {Termination::Type::Flat}, {Termination::Type::Flat}, name, name)
 {
 }
 
 //------------------------------------------------------------------------------
 template<typename T>
 quetzal::model::Extent<T>::Extent(const T& tLower, const T& tUpper, const std::string& nameLower, const std::string& nameUpper) :
-    Extent(tLower, tUpper, Termination::Center, Termination::Center, nameLower, nameUpper)
+    Extent(tLower, tUpper, {Termination::Type::Center}, {Termination::Type::Center}, nameLower, nameUpper)
 {
 }
 
@@ -344,7 +355,7 @@ quetzal::model::ExtentEndsFlat<T>::ExtentEndsFlat() :
 //------------------------------------------------------------------------------
 template<typename T>
 quetzal::model::ExtentEndsFlat<T>::ExtentEndsFlat(const T& tLower, const T& tUpper) :
-    Extent<T>(tLower, tUpper, Termination::Flat, SurfaceName::End0, SurfaceName::End1)
+    Extent<T>(tLower, tUpper, {Termination::Type::Flat}, SurfaceName::End0, SurfaceName::End1)
 {
 }
 
@@ -358,7 +369,7 @@ quetzal::model::ExtentEndsCenter<T>::ExtentEndsCenter() :
 //------------------------------------------------------------------------------
 template<typename T>
 quetzal::model::ExtentEndsCenter<T>::ExtentEndsCenter(const T& tLower, const T& tUpper) :
-    Extent<T>(tLower, tUpper, Termination::Center, SurfaceName::End0, SurfaceName::End1)
+    Extent<T>(tLower, tUpper, {Termination::Type::Center}, SurfaceName::End0, SurfaceName::End1)
 {
 }
 

@@ -1,5 +1,5 @@
 
-#include "advancing_front.hpp"
+#include "AdvancingFront.hpp"
 
 p2t::AdvancingFront::AdvancingFront() :
     head_(nullptr),

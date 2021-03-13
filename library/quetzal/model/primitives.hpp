@@ -30,8 +30,8 @@ namespace quetzal::model
     // Primitives are created with planar, but not necessarily triangulated faces
     // Any normals and texture coordinates are continuous within each surface
     // All angles and intervals that represent angles are measured in turns, 0..1 representing one turn and/or full range
-    // Cylindrical coordinates: radius, azimuth, z (r, phi, z) with azimuth interval 0..1 -> phi 0..2Pi
-    // Spherical coordinates: radius, azimuth, elevation (r, phi, theta) with azimuth interval 0..1 -> phi 0..2Pi; elevation interval 0..1 -> theta -Pi/2..Pi/2 ({0, 0, -1}..{0, 0, 1})
+    // Cylindrical coordinates: radius, azimuth, z (r, phi, z) with azimuth interval 0..1 -> phi: 0..2Pi
+    // Spherical coordinates: radius, azimuth, elevation (r, phi, theta) with azimuth interval 0..1 -> phi: 0..2Pi; elevation interval 0..1 -> theta: -Pi/2..Pi/2 ({0, 0, -1}..{0, 0, 1})
     // Each primitive given a unique submesh name produces a single submesh with that name
     // Primitives given a submesh name that already exists in the mesh will be merged into that submesh
 
@@ -53,7 +53,7 @@ namespace quetzal::model
     void create_disk(M& mesh, const std::string& name, size_type nAzimuth, size_type nRadial, value_type<M> radius, const azimuth_interval_type<M>& intervalAzimuth = math::Interval(value_type<M>(1)));
 
     // Create a box (rectangular cuboid) centered at the origin
-    // Surfaces: "left", "right", "front", "back", "bottom", "top"
+    // Surfaces: "left", "right", "back", "front", "bottom", "top"
     template<typename M>
     void create_box(M& mesh, const std::string& name, value_type<M> dx, value_type<M> dy, value_type<M> dz);
 
@@ -392,9 +392,9 @@ void quetzal::model::create_box(M& mesh, const std::string& name, value_type<M> 
     {
         "bottom",
         "right",
-        "back",
-        "left",
         "front",
+        "left",
+        "back",
         "top"
     };
 
@@ -419,7 +419,7 @@ void quetzal::model::create_box(M& mesh, const std::string& name, value_type<M> 
         {{x1, y1, z1}, {T(1), T(0), T(0)}, {T(1), T(0)}},
         {{x1, y0, z1}, {T(1), T(0), T(0)}, {T(0), T(0)}},
 
-        // Back
+        // Front
         {{x1, y1, z0}, {T(0), T(1), T(0)}, {T(0), T(1)}},
         {{x0, y1, z0}, {T(0), T(1), T(0)}, {T(1), T(1)}},
         {{x0, y1, z1}, {T(0), T(1), T(0)}, {T(1), T(0)}},
@@ -431,7 +431,7 @@ void quetzal::model::create_box(M& mesh, const std::string& name, value_type<M> 
         {{x0, y0, z1}, {T(-1), T(0), T(0)}, {T(1), T(0)}},
         {{x0, y1, z1}, {T(-1), T(0), T(0)}, {T(0), T(0)}},
 
-        // Front
+        // Back
         {{x0, y0, z0}, {T(0), T(-1), T(0)}, {T(0), T(1)}},
         {{x1, y0, z0}, {T(0), T(-1), T(0)}, {T(1), T(1)}},
         {{x1, y0, z1}, {T(0), T(-1), T(0)}, {T(1), T(0)}},
@@ -575,7 +575,7 @@ void quetzal::model::create_antiprism(M& mesh, const std::string& name, size_typ
         ++nh;
     }
 
-    seal_cylinder(m, nAzimuth, 1, false, false, false, ExtentSideFlat<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, 1, false, false, false, Extent<T>(), extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -801,8 +801,11 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 
     std::vector<typename M::vertex_attributes_type> avs0 = vertices_attributes<M>(polygon, z0, ty0);
     std::vector<typename M::vertex_attributes_type> avs1 = vertices_attributes<M>(polygon, z1, ty1);
+    
+    auto tsProto0 = texture_span<T>(0, nz, false, false);
+    auto tsProto1 = texture_span<T>(1, nz, false, false);
 
-    create_band(m, avs0, avs1, true, idSurface0, bSurfacesDistinct);
+    create_band(m, avs0, avs1, tsProto0, tsProto1, true, idSurface0, bSurfacesDistinct);
 
     for (size_type i = 2; i <= nz; ++i)
     {
@@ -815,10 +818,12 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
             attributes.texcoord().set_y(ty1);
         }
 
-        connect_band(m, avs1, true, idSurface0, bSurfacesDistinct, true);
+        tsProto1 = texture_span<T>(i, nz, false, false); // use this instead of above ...
+
+        connect_band(m, avs1, tsProto1, true, idSurface0, bSurfacesDistinct, true);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, false, false, ExtentSideFlat<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -893,7 +898,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 	    connect_band(m, avs1, tsProto1, true, idSurface0, bSurfacesDistinct, bLinear);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, false, false, ExtentSideFlat<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, false, false, Extent<T>(), extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -947,7 +952,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
         connect_band(m, avs1, true, idSurface0, bSurfacesDistinct, true);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, false, false, ExtentSideFlat<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, false, false, Extent<T>(), extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -963,8 +968,11 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
     assert(nz > 0);
     assert(extentZ.proper());
 
+    std::string nameSurface = SurfaceName::BodySection + "_" + to_string(0); // surface for cylinder ...
+
     M m;
-    id_type idSubmesh = create_cylinder(m, name, nz, zLower, zUpper, polygons.polygon(), SurfaceName::BodySection + "_" + to_string(0), Extent<typename M::value_type>());
+    create_cylinder(m, name, nz, zLower, zUpper, polygons.polygon(), {});
+    id_type idSubmesh = m.submesh_id(name);
 
     id_type idHalfedgeLower = 0;
     assert(m.halfedge(idHalfedgeLower).border());
@@ -979,8 +987,10 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 
         idHalfedgeHolesLower[i] = m.halfedge_store_count();
 
+        nameSurface = SurfaceName::BodySection + "_" + to_string(i + 1); // surface for cylinder ...
+
         M mm;
-        create_cylinder(mm, name, nz, zLower, zUpper, polygon, SurfaceName::BodySection + "_" + to_string(i + 1), Extent<typename M::value_type>());
+        create_cylinder(mm, name, nz, zLower, zUpper, polygon, {});
         brep::invert(mm);
         m.append(mm);
 
@@ -991,7 +1001,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 
     // make sure that the orientation of holes is correct due the the reversed winding order ...
 
-    if (extentZ.lower_termination() == Termination::Flat)
+    if (extentZ.lower_termination().type == Termination::Type::Flat)
     {
         typename M::vector_type normal = {T(0), T(0), T(-1)};
         id_type idSurfaceLower = m.create_surface(idSubmesh, extentZ.lower_name(), {normal});
@@ -1000,7 +1010,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
         calculate_surface_texcoords(m, idSurfaceLower);
     }
 
-    if (extentZ.upper_termination() == Termination::Flat)
+    if (extentZ.upper_termination().type == Termination::Type::Flat)
     {
         typename M::vector_type normal = {T(0), T(0), T(1)};
         id_type idSurfaceUpper = m.create_surface(idSubmesh, extentZ.upper_name(), {normal});
@@ -1174,7 +1184,7 @@ void quetzal::model::create_anticylinder(M& mesh, const std::string& name, size_
         connect_antiband(m, nAzimuth, r1, z1, ty1, idSurface0, bSurfacesDistinct);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, false, false, ExtentSideFlat<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, false, false, Extent<T>(), extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -2562,13 +2572,16 @@ assert(texcoord.y() == T(0) || texcoord.y() == T(1));
     M m;
     id_type idSubmesh = m.create_submesh(name);
 
-    id_type idSurface0 = m.surface_count();
+    id_type idSurface0 = m.surface_store_count();
     for (size_t i = 0; i < nAzimuth; ++i)
     {
         m.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(i));
     }
 
-    create_band(m, avs0, avs1, true, idSurface0, true);
+    auto tsProto0 = texture_span<T>(0, 1, false, false);
+    auto tsProto1 = texture_span<T>(1, 1, false, false);
+
+    create_band(m, avs0, avs1, tsProto0, tsProto1, true, idSurface0, true);
 for (const auto& face : m.faces())
 {
 for (const auto& halfedge : face.halfedges())
@@ -2586,7 +2599,7 @@ assert(texcoord.y() == T(0) || texcoord.y() == T(1));
     id_type idLowerFirst = 0;
     id_type idUpperFirst = m.halfedge_store_count() - 2 * nAzimuth;
 
-    if (extentZ.lower_termination() == Termination::Flat)
+    if (extentZ.lower_termination().type == Termination::Type::Flat)
     {
         id_type idSurface = m.create_surface(idSubmesh, extentZ.lower_name(), {-normal});
         create_border_face(m, idLowerFirst, -normal, idSurface);
@@ -2603,7 +2616,7 @@ assert(texcoord.y() == T(0) || texcoord.y() == T(1));
 }
 }
 
-    if (extentZ.upper_termination() == Termination::Flat)
+    if (extentZ.upper_termination().type == Termination::Type::Flat)
     {
         id_type idSurface = m.create_surface(idSubmesh, extentZ.upper_name(), {normal});
         create_border_face(m, idUpperFirst, normal, idSurface);
@@ -2634,8 +2647,11 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
     id_type idSubmesh = m.create_submesh(name);
     id_type idSurface0 = mesh.surface_count();
 
+    auto tsProto0 = texture_span<T>(0, 1, false, false);
+    auto tsProto1 = texture_span<T>(1, 1, false, false);
+
     id_type idSurface = m.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(idSurface0));
-    create_band(m, avs0, avs1, true, idSurface, false);
+    create_band(m, avs0, avs1, tsProto0, tsProto1, true, idSurface, false);
 
     id_type idHalfedgeLower = 0;
     assert(m.halfedge(idHalfedgeLower).border());
@@ -2658,7 +2674,7 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
 
         M mm;
         idSurface = mm.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(idSurface0 + 1 + i));
-        create_band(mm, avs0, avs1, true, idSurface, false);
+        create_band(mm, avs0, avs1, tsProto0, tsProto1, true, idSurface, false);
         brep::invert(mm);
         m.append(mm);
 
@@ -2669,7 +2685,7 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
 
     // make sure that the orientation of holes is correct due to the reversed winding order ...
 
-    if (extentZ.lower_termination() == Termination::Flat)
+    if (extentZ.lower_termination().type == Termination::Type::Flat)
     {
         id_type idSurfaceLower = m.create_surface(idSubmesh, extentZ.lower_name(), {-normal});
 
@@ -2677,7 +2693,7 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
         calculate_surface_texcoords(m, idSurfaceLower);
     }
 
-    if (extentZ.upper_termination() == Termination::Flat)
+    if (extentZ.upper_termination().type == Termination::Type::Flat)
     {
         id_type idSurfaceUpper = m.create_surface(idSubmesh, extentZ.upper_name(), {normal});
 
@@ -2734,14 +2750,14 @@ void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const
 
     size_type nh = m.halfedge_store_count();
 
-    if (extentZ.lower_termination() == Termination::Flat)
+    if (extentZ.lower_termination().type == Termination::Type::Flat)
     {
         typename M::vector_type normal = math::normalize(-path.front().orientation().up());
         id_type idSurfaceLower = m.create_surface(idSubmesh, extentZ.lower_name(), {normal});
         create_border_face(m, 0, normal, idSurfaceLower);
     }
 
-    if (extentZ.upper_termination() == Termination::Flat)
+    if (extentZ.upper_termination().type == Termination::Type::Flat)
     {
         typename M::vector_type normal = math::normalize(path.back().orientation().up());
         id_type idSurfaceUpper = m.create_surface(idSubmesh, extentZ.upper_name(), {normal});
@@ -2801,14 +2817,14 @@ void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const
 
     size_type nh = m.halfedge_store_count();
 
-    if (extentZ.lower_termination() == Termination::Flat)
+    if (extentZ.lower_termination().type == Termination::Type::Flat)
     {
         typename M::vector_type normal = normalize(-path.front().orientation().up());
         id_type idSurfaceLower = m.create_surface(idSubmesh, extentZ.lower_name(), {normal});
         create_border_face(m, 0, normal, idSurfaceLower);
     }
 
-    if (extentZ.upper_termination() == Termination::Flat)
+    if (extentZ.upper_termination().type == Termination::Type::Flat)
     {
         typename M::vector_type normal = normalize(path.back().orientation().up());
         id_type idSurfaceUpper = m.create_surface(idSubmesh, extentZ.upper_name(), {normal});

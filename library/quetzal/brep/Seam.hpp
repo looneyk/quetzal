@@ -13,10 +13,7 @@
 #include <iostream>
 #include <cassert>
 
-namespace quetzal
-{
-
-namespace brep
+namespace quetzal::brep
 {
 
     template<typename Traits>
@@ -47,8 +44,6 @@ namespace brep
 
         const std::string& name() const;
         void set_name(const std::string& name);
-
-        std::string extended_name() const;
 
         id_type partner_id() const;
         void set_partner_id(id_type idSeam);
@@ -125,9 +120,7 @@ namespace brep
     template<typename Traits, typename M>
     std::ostream& operator<<(std::ostream& os, const Seam<Traits, M>& Seam);
 
-} // namespace brep
-
-} // namespace quetzal
+} // namespace quetzal::brep
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
@@ -181,20 +174,6 @@ void quetzal::brep::Seam<Traits, M>::set_name(const std::string& name)
 {
     m_name = name;
     return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-std::string quetzal::brep::Seam<Traits, M>::extended_name() const
-{
-    const auto& s = surface();
-
-    if (surface_id() == nullid)
-    {
-        return "//" + m_name;
-    }
-
-    return (s.submesh_id() != nullid ? s.submesh().name() : "") + "/" + s.name() + "/" + m_name;
 }
 
 //------------------------------------------------------------------------------

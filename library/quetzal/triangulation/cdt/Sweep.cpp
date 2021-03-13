@@ -1,7 +1,7 @@
 
-#include "sweep.hpp"
-#include "sweep_context.hpp"
-#include "advancing_front.hpp"
+#include "AdvancingFront.hpp"
+#include "Sweep.hpp"
+#include "SweepContext.hpp"
 #include "quetzal/math/floating_point.hpp"
 #include "quetzal/math/math_util.hpp"
 

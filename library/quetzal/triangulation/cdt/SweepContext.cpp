@@ -1,6 +1,6 @@
 
-#include "sweep_context.hpp"
-#include "advancing_front.hpp"
+#include "SweepContext.hpp"
+#include "AdvancingFront.hpp"
 #include <algorithm>
 
 namespace
@@ -57,20 +57,20 @@ p2t::SweepContext::~SweepContext()
     }
 }
 
-void p2t::SweepContext::AddFace(std::vector<Point*> polyline)
+void p2t::SweepContext::AddFace(std::vector<Point*> points)
 {
-    points_ = polyline;
+    points_ = points;
     InitEdges(points_);
 }
 
-void p2t::SweepContext::AddHole(std::vector<Point*> polyline)
+void p2t::SweepContext::AddHole(std::vector<Point*> points)
 {
-    InitEdges(polyline);
-//    for(unsigned int i = 0; i < polyline.size(); ++i)
+    InitEdges(points);
+//    for(unsigned int i = 0; i < points.size(); ++i)
 //    {
 //        points_.push_back(pollyline[i]);
 //    }
-    points_.insert(end(points_), begin(polyline), end(polyline));
+    points_.insert(end(points_), begin(points), end(points));
 }
 
 void p2t::SweepContext::AddPoint(Point* point)
@@ -145,13 +145,13 @@ void p2t::SweepContext::InitTriangulation()
     CreateAdvancingFront();
 }
 
-void p2t::SweepContext::InitEdges(std::vector<Point*> polyline)
+void p2t::SweepContext::InitEdges(std::vector<Point*> points)
 {
-    size_t num_points = polyline.size();
+    size_t num_points = points.size();
     for (size_t i = 0; i < num_points; ++i)
     {
         size_t j = i < num_points - 1 ? i + 1 : 0;
-        edge_list.push_back(new Edge(*polyline[i], *polyline[j]));
+        edge_list.push_back(new Edge(*points[i], *points[j]));
     }
 }
 

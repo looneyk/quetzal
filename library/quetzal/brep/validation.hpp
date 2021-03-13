@@ -1367,7 +1367,7 @@ template<typename M>
 void quetzal::brep::write_halfedge(const typename M::halfedge_type& halfedge, const std::string& label)
 {
     std::cout << std::setw(16) << std::left << label;
-    std::cout << " " << static_cast<Flags>(halfedge);
+    std::cout << " " << static_cast<const Flags&>(halfedge);
     std::cout << " " << std::right << std::setw(5) << halfedge.id();
     if (!halfedge.deleted())
     {
@@ -1395,7 +1395,7 @@ template<typename M>
 void quetzal::brep::write_vertex(const typename M::vertex_type& vertex, const std::string& label)
 {
     std::cout << std::setw(16) << std::left << label;
-    std::cout << " " << static_cast<Flags>(vertex);
+    std::cout << " " << static_cast<const Flags&>(vertex);
     std::cout << " " << std::right << std::setw(5) << vertex.id();
     if (!vertex.deleted())
     {
@@ -1421,7 +1421,7 @@ template<typename M>
 void quetzal::brep::write_face(const typename M::face_type& face, const std::string& label)
 {
     std::cout << std::setw(16) << std::left << label;
-    std::cout << " " << static_cast<Flags>(face);
+    std::cout << " " << static_cast<const Flags&>(face);
     std::cout << " " << std::right << std::setw(5) << face.id();
     if (!face.deleted())
     {
@@ -1551,7 +1551,7 @@ template<typename M>
 void quetzal::brep::write_surface(const typename M::surface_type& surface, const std::string& label)
 {
     std::cout << std::setw(16) << std::left << label;
-    std::cout << " " << static_cast<Flags>(surface);
+    std::cout << " " << static_cast<const Flags&>(surface);
     std::cout << " " << std::right << std::setw(5) << surface.id();
     if (!surface.deleted())
     {
@@ -1583,7 +1583,7 @@ template<typename M>
 void quetzal::brep::write_submesh(const typename M::submesh_type& submesh, const std::string& label)
 {
     std::cout << std::setw(16) << std::left << label;
-    std::cout << " " << static_cast<Flags>(submesh);
+    std::cout << " " << static_cast<const Flags&>(submesh);
     std::cout << " " << std::right << std::setw(5) << submesh.id();
     if (!submesh.deleted())
     {
