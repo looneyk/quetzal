@@ -1,20 +1,24 @@
 //------------------------------------------------------------------------------
-// primitives_test
+// sandbox
 // main.cpp
 //------------------------------------------------------------------------------
 
 #include "quetzal/brep/Mesh.hpp"
 #include "quetzal/brep/MeshTraits.hpp"
-#include "quetzal/brep/mesh_util.hpp"
+#include "quetzal/brep/mesh_connection.hpp"
 #include "quetzal/brep/triangulation.hpp"
 #include "quetzal/common/FileValidator.hpp"
 #include "quetzal/math/Interval.hpp"
 #include "quetzal/math/VectorTraits.hpp"
+#include "quetzal/math/transformation_matrix.hpp"
+#include "quetzal/model/mesh_attributes.hpp"
 #include "quetzal/model/obj_io.hpp"
 #include "quetzal/model/primitives.hpp"
 #include <iostream>
 #include <string>
 #include <cassert>
+
+#include "quetzal/brep/mesh_util_x.hpp"
 
 using namespace std;
 using namespace quetzal;
@@ -47,7 +51,7 @@ int main(int argc, char* argv)
 
     string name;
     mesh_type mesh;
-
+/*
     name = "first_layer_block";
     cout << name << endl;
     mesh.clear();
@@ -99,6 +103,128 @@ int main(int argc, char* argv)
     cout << name << endl;
     mesh.clear();
     model::create_geodesic_sphere(mesh, name, 1.0f, 2, true, true);
+    model::write_obj(mesh, to_filename(name));
+*/
+    mesh_type m;
+
+    name = "cubes_attach1";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_box(m, "box1", 20.0f, 20.0f, 20.0f);
+    model::transform(m, math::translation(10.0f, 10.0f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "box1/bottom");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach2";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_box(m, "box1", 20.0f, 20.0f, 20.0f);
+    model::transform(m, math::rotation_z(math::PiFourth<float>) * math::translation(7.0f, 7.0f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "box1/bottom");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach3";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_box(m, "box1", 20.0f, 20.0f, 20.0f);
+    model::transform(m, math::rotation_z(math::PiFourth<float>) * math::translation(13.0f, 13.0f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "box1/bottom");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach4";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_box(m, "box1", 20.0f, 20.0f, 20.0f);
+    model::transform(m, math::rotation_z(math::PiFourth<float>) * math::translation(0.0f, 0.0f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "box1/bottom");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach5";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_box(m, "box1", 20.0f, 20.0f, 20.0f);
+    model::transform(m, math::rotation_z(math::PiFourth<float>) * math::translation(10.0f, 10.0f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "box1/bottom");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach6";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_box(m, "box1", 20.0f, 20.0f, 20.0f);
+    model::transform(m, math::rotation_z(math::PiFourth<float>) * math::translation(-10.0f, 10.0f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "box1/bottom");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach7";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_box(m, "box1", 20.0f, 20.0f, 20.0f);
+    model::transform(m, math::rotation_z(math::PiFourth<float>) * math::translation(10.0f, -4.1421356f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "box1/bottom");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach8";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_box(m, "box1", 20.0f, 20.0f, 20.0f);
+    model::transform(m, math::rotation_z(math::PiFourth<float>) * math::translation(-10.0f, -4.1421356f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "box1/bottom");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach9";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_cylinder(m, "hex1", 6, 1, 10.0f, 10.0f, -10.0f, 10.0);
+    model::transform(m, math::translation(10.0f, 1.339746f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "hex1/end0");
+    triangulate(mesh);
+    model::write_obj(mesh, to_filename(name));
+
+    name = "cubes_attach10";
+    cout << name << endl;
+    mesh.clear();
+    model::create_box(mesh, "box0", 20.0f, 20.0f, 20.0f);
+    m.clear();
+    model::create_cylinder(m, "hex1", 6, 1, 10.0f, 10.0f, -10.0f, 10.0);
+    model::transform(m, math::translation(-10.0f, 1.339746f, 20.0f));
+    mesh.append(m);
+    attach_x(mesh, "box0/top", "hex1/end0");
+    triangulate(mesh);
     model::write_obj(mesh, to_filename(name));
 
     validator.report_results();
