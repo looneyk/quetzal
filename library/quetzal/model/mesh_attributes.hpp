@@ -312,7 +312,7 @@ void quetzal::model::transform(M& m, std::function<void(typename M::vertex_attri
     {
         for (auto& halfedge : face.halfedges())
         {
-            fav(halfedge.vertex().attributes());
+            fav(halfedge.attributes());
         }
 
         faf(face.attributes());
@@ -345,7 +345,7 @@ void quetzal::model::transform_border_section_positions(M& mesh, id_type idHalfe
             transform_border_section_positions(mesh, halfedge.partner_id(), matrix, false);
         }
 
-        halfedge.attributes().position() *= matrix;
+        halfedge.vertex().attributes().position() *= matrix;
     }
 
     return;
@@ -367,9 +367,9 @@ void quetzal::model::calculate_face_normals(M& mesh)
 template<typename Traits>
 void quetzal::model::calculate_face_normal(brep::Face<Traits>& face)
 {
-    if (face.vertex_count() == 3)
+    if (face.halfedge_count() == 3)
     {
-        // for best accuracy, choose the vertex that forms an angle closest to 1/2 Pi ...
+        // for best accuracy, choose the vertex that forms an angle closest to Pi/2 (dot product 0) and similar/minimum lengths ...
 
         const auto& positionPrev = face.halfedge().prev().attributes().position();
         const auto& position = face.halfedge().attributes().position();
@@ -379,7 +379,7 @@ void quetzal::model::calculate_face_normal(brep::Face<Traits>& face)
         face.attributes().set_normal(normal);
         for (auto& halfedge : face.halfedges())
         {
-            halfedge.attributes().set_normal(normal);
+            halfedge.vertex().attributes().set_normal(normal);
         }
 
         return;
@@ -407,7 +407,7 @@ void quetzal::model::calculate_face_normal(brep::Face<Traits>& face)
     face.attributes().set_normal(normal);
     for (auto& halfedge : face.halfedges())
     {
-        halfedge.attributes().set_normal(normal);
+        halfedge.vertex().attributes().set_normal(normal);
     }
 
     return;
@@ -495,7 +495,7 @@ void quetzal::model::calculate_planar_surface_normals(brep::Surface<Traits>& sur
 
         for (auto& halfedge : face.halfedges())
         {
-            halfedge.attributes().set_normal(normal);
+            halfedge.vertex().attributes().set_normal(normal);
         }
     }
 
@@ -525,7 +525,7 @@ void quetzal::model::calculate_spherical_face_normal(M& mesh, id_type idFace)
     // Set all vertex normals to the face normal
     for (auto& halfedge : face.halfedges())
     {
-        halfedge.attributes().set_normal(normal);
+        halfedge.vertex().attributes().set_normal(normal);
     }
 
     return;
@@ -661,7 +661,7 @@ void quetzal::model::calculate_axial_vertex_normals(M& mesh, size_t nAzimuth)
         size_t n = 0;
         for (const auto& halfedge : face.halfedges())
         {
-            normalSum += halfedge.vertex().attributes().normal();
+            normalSum += halfedge.attributes().normal();
             ++n;
         }
 
@@ -684,7 +684,7 @@ void quetzal::model::set_planar_surface_vertex_normals(M& mesh, id_type idSurfac
     {
         for (auto& halfedge : face.halfedges())
         {
-            halfedge.attributes().set_normal(normal);
+            halfedge.vertex().attributes().set_normal(normal);
         }
     }
 
@@ -697,11 +697,11 @@ void quetzal::model::apply_triangular_face_texcoords(M& mesh)
 {
     for (auto& face : mesh.faces())
     {
-        assert(face.vertex_count() == 3);
+        assert(face.halfedge_count() == 3);
 
-        face.halfedge().attributes().set_texcoord({M::traits_type::val(0), M::traits_type::val(1)});
-        face.halfedge().next().attributes().set_texcoord({M::traits_type::val(1), M::traits_type::val(1)});
-        face.halfedge().next().next().attributes().set_texcoord({M::traits_type::val(0.5), M::traits_type::val(0)});
+        face.halfedge().vertex().attributes().set_texcoord({M::traits_type::val(0), M::traits_type::val(1)});
+        face.halfedge().next().vertex().attributes().set_texcoord({M::traits_type::val(1), M::traits_type::val(1)});
+        face.halfedge().next().next().vertex().attributes().set_texcoord({M::traits_type::val(0.5), M::traits_type::val(0)});
     }
 
     return;
@@ -733,8 +733,8 @@ void quetzal::model::unify_vertex_position(V& vertex, const typename V::mesh_typ
 {
     for (auto& halfedge : vertex.halfedges())
     {
-        assert(vector_eq(halfedge.attributes().position(), position, 1000)); // 1000 ...
-        halfedge.attributes().set_position(position);
+        assert(vector_eq(halfedge.vertex().attributes().position(), position, 1000)); // 1000 ...
+        halfedge.vertex().attributes().set_position(position);
     }
 
     return;
@@ -746,9 +746,9 @@ void quetzal::model::unify_vertex_pairs(M& mesh, id_type idHalfedgeA, id_type id
 {
     typename M::face_type& faceA = mesh.halfedge(idHalfedgeA).face();
     typename M::face_type& faceB = mesh.halfedge(idHalfedgeB).face();
-    assert(faceA.vertex_count() == faceB.vertex_count());
+    assert(faceA.halfedge_count() == faceB.halfedge_count());
 
-    size_t n = faceA.vertex_count();
+    size_t n = faceA.halfedge_count();
     for (size_t i = 0; i < n; ++i)
     {
         typename M::point_type position = mesh.halfedge(idHalfedgeA).attributes().position();

@@ -11,10 +11,7 @@
 #include <array>
 #include <iostream>
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
     //--------------------------------------------------------------------------
@@ -35,17 +32,13 @@ namespace math
         Matrix() = default;
         Matrix(std::initializer_list<value_type> elements);
 
-        template<typename = std::enable_if_t<(M == 1)>>
-        Matrix(const row_type& row0);
+        Matrix(const row_type& row0) requires (M == 1);
 
-        template<typename = std::enable_if_t<(M == 2)>>
-        Matrix(const row_type& row0, const row_type& row1);
+        Matrix(const row_type& row0, const row_type& row1) requires (M == 2);
 
-        template<typename = std::enable_if_t<(M == 3)>>
-        Matrix(const row_type& row0, const row_type& row1, const row_type& row2);
+        Matrix(const row_type& row0, const row_type& row1, const row_type& row2) requires (M == 3);
 
-        template<typename = std::enable_if_t<(M == 4)>>
-        Matrix(const row_type& row0, const row_type& row1, const row_type& row2, const row_type& row3);
+        Matrix(const row_type& row0, const row_type& row1, const row_type& row2, const row_type& row3) requires (M == 4);
 
         Matrix(const Matrix&) = default;
         Matrix(Matrix&& other) = default;
@@ -150,9 +143,7 @@ namespace math
     template<typename T, size_t M, size_t N>
     std::ostream& operator<<(std::ostream& os, const Matrix<T, M, N>& matrix);
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
@@ -171,32 +162,28 @@ quetzal::math::Matrix<T, M, N>::Matrix(std::initializer_list<value_type> element
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-template<typename>
-quetzal::math::Matrix<T, M, N>::Matrix(const row_type& row0) :
+quetzal::math::Matrix<T, M, N>::Matrix(const row_type& row0) requires (M == 1) :
     m_rows{row0}
 {
 }
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-template<typename>
-quetzal::math::Matrix<T, M, N>::Matrix(const row_type& row0, const row_type& row1) :
+quetzal::math::Matrix<T, M, N>::Matrix(const row_type& row0, const row_type& row1) requires (M == 2) :
     m_rows{row0, row1}
 {
 }
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-template<typename>
-quetzal::math::Matrix<T, M, N>::Matrix(const row_type& row0, const row_type& row1, const row_type& row2) :
+quetzal::math::Matrix<T, M, N>::Matrix(const row_type& row0, const row_type& row1, const row_type& row2) requires (M == 3) :
     m_rows{row0, row1, row2}
 {
 }
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-template<typename>
-quetzal::math::Matrix<T, M, N>::Matrix(const row_type& row0, const row_type& row1, const row_type& row2, const row_type& row3) :
+quetzal::math::Matrix<T, M, N>::Matrix(const row_type& row0, const row_type& row1, const row_type& row2, const row_type& row3) requires (M == 4) :
     m_rows{row0, row1, row2, row3}
 {
 }

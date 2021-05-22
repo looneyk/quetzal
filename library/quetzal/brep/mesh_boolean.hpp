@@ -24,10 +24,7 @@
 #include <algorithm>
 #include "validation.hpp"
 
-namespace quetzal
-{
-
-namespace brep
+namespace quetzal::brep
 {
 
     // template parameters: intersections[idFaceA] = idHalfedgeB is the outward directed halfedge from faceA in the exterior direction
@@ -125,9 +122,7 @@ namespace brep
     template<typename Traits>
     void dump_border(Mesh<Traits>& mesh, id_type idHalfedge);
 
-} // namespace brep
-
-} // namespace quetzal
+} // namespace quetzal::brep
 
 //------------------------------------------------------------------------------
 template<typename Traits>
@@ -267,8 +262,8 @@ quetzal::id_type quetzal::brep::boolean_operation(Mesh<Traits>& mesh, id_type id
     {
         // No intersection, so only a single vertex position needs to be checked
 
-        bool bInteriorA = surface_contains(mesh.submesh(idSubmeshB), mesh.submesh(idSubmeshA).faces().front().halfedge().vertex().attributes().position());
-        bool bInteriorB = surface_contains(mesh.submesh(idSubmeshA), mesh.submesh(idSubmeshB).faces().front().halfedge().vertex().attributes().position());
+        bool bInteriorA = surface_contains(mesh.submesh(idSubmeshB), mesh.submesh(idSubmeshA).faces().front().halfedge().attributes().position());
+        bool bInteriorB = surface_contains(mesh.submesh(idSubmeshA), mesh.submesh(idSubmeshB).faces().front().halfedge().attributes().position());
 
         if (bInteriorA || bInteriorB)
         {
@@ -752,7 +747,7 @@ bool quetzal::brep::submesh_contains(const Mesh<Traits>& mesh, const Submesh<Tra
                 continue;
             }
 
-            if (!submesh_contains(submeshA, halfedge.vertex().attributes().position()))
+            if (!submesh_contains(submeshA, halfedge.attributes().position()))
             {
                 return false;
             }

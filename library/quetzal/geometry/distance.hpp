@@ -8,12 +8,10 @@
 #include "Point.hpp"
 #include "Line.hpp"
 #include "Plane.hpp"
+#include "relationships.hpp"
 #include <cmath>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     template<typename Traits>
@@ -43,9 +41,7 @@ namespace geometry
     template<typename Traits>
     typename Traits::value_type distance(const Plane<Traits>& planeA, const Plane<Traits>& planeB);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>
@@ -79,7 +75,7 @@ typename Traits::value_type quetzal::geometry::distance(const Line<Traits>& line
 template<typename Traits>
 typename Traits::value_type quetzal::geometry::distance(const Line<Traits>& lineA, const Line<Traits>& lineB)
 {
-    if (parallel(lineA.direction(), lineB.direction()))
+    if (parallel(lineA, lineB))
     {
         return distance(lineA.point(), lineB);
     }
@@ -110,7 +106,7 @@ std::cout << "worked" << std::endl;
 template<typename Traits>
 typename Traits::value_type quetzal::geometry::distance(const Line<Traits>& line, const Plane<Traits>& plane)
 {
-    if (perpendicular(line.direction(), plane.normal()))
+    if (parallel(line, plane))
     {
         return distance(line.point(), plane);
     }
@@ -136,7 +132,7 @@ typename Traits::value_type quetzal::geometry::distance(const Plane<Traits>& pla
 template<typename Traits>
 typename Traits::value_type quetzal::geometry::distance(const Plane<Traits>& planeA, const Plane<Traits>& planeB)
 {
-    if (parallel(planeA.normal(), planeB.normal()))
+    if (parallel(planeA, planeB))
     {
         return distance(planeA.point(), planeB);
     }

@@ -2,77 +2,73 @@
 #define QUETZAL_MATH_FLOATING_POINT_HPP
 //------------------------------------------------------------------------------
 // math
-// floating_point.hpp
+// std::floating_point.hpp
 //------------------------------------------------------------------------------
 
 // originally based on cppreference.com epsilon example
 // updated with Boost implementation of Knuth algorithm
 
+#include <concepts>
 #include <limits>
 #include <cmath>
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
     constexpr int ulpDefault = 64;
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_eq(T lhs, T rhs, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_ne(T lhs, T rhs, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_lt(T lhs, T rhs, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_le(T lhs, T rhs, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_gt(T lhs, T rhs, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_ge(T lhs, T rhs, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_eq0(T t, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_ne0(T t, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_lt0(T t, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_le0(T t, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_gt0(T t, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_ge0(T t, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_clamped(T t, T tMin, T tMax, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     bool float_clamped01(T t, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     int float_sign(T t, int ulp = ulpDefault);
 
-    template<typename T, typename = typename std::enable_if_t<std::is_floating_point_v<T>>>
+    template<typename T> requires std::floating_point<T>
     T round_zero(T t, int ulp = ulpDefault);
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_eq(T lhs, T rhs, int ulp)
 {
     // the machine epsilon has to be scaled to the magnitude of the values used
@@ -91,108 +87,109 @@ bool quetzal::math::float_eq(T lhs, T rhs, int ulp)
         return false;
     }
 
-    return abs(lhs - rhs) / abs(lhs) <= std::numeric_limits<T>::epsilon() * ulp
-        || abs(lhs - rhs) / abs(rhs) <= std::numeric_limits<T>::epsilon() * ulp;
-/*
     T diff = std::abs(lhs - rhs);
-    return diff <= abs(lhs) * std::numeric_limits<T>::epsilon() * ulp
-        || diff <= abs(rhs) * std::numeric_limits<T>::epsilon() * ulp;
-*/
+    T elp = std::numeric_limits<T>::epsilon() * ulp;
+    bool bMultiply = diff <= abs(lhs) * elp || diff <= abs(rhs) * elp;
+
+//    bool bDivide = diff / abs(lhs) <= elp || diff / abs(rhs) <= elp; // ...
+//    assert (bDivide == bMultiply); // ...
+
+    return bMultiply;
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_ne(T lhs, T rhs, int ulp)
 {
     return !float_eq(lhs, rhs, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_lt(T lhs, T rhs, int ulp)
 {
     return lhs <= rhs && !float_eq(lhs, rhs, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_le(T lhs, T rhs, int ulp)
 {
     return lhs <= rhs || float_eq(lhs, rhs, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_gt(T lhs, T rhs, int ulp)
 {
     return lhs > rhs && !float_eq(lhs, rhs, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_ge(T lhs, T rhs, int ulp)
 {
     return lhs >= rhs || float_eq(lhs, rhs, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_eq0(T t, int ulp)
 {
     return abs(t) <= std::numeric_limits<T>::epsilon() * ulp;
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_ne0(T t, int ulp)
 {
     return !float_eq0(t, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_lt0(T t, int ulp)
 {
     return t < T(0) && !float_eq0(t, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_le0(T t, int ulp)
 {
     return t <= T(0) || float_eq0(t, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_gt0(T t, int ulp)
 {
     return t > T(0) && !float_eq0(t, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_ge0(T t, int ulp)
 {
     return t >= T(0) || float_eq0(t, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_clamped(T t, T tMin, T tMax, int ulp)
 {
     return float_ge(t, tMin, ulp) && float_le(t, tMax, ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 bool quetzal::math::float_clamped01(T t, int ulp)
 {
     return float_ge0(t, ulp) && float_le(t, T(1), ulp);
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 int quetzal::math::float_sign(T t, int ulp)
 {
     if (float_eq0(t, ulp))
@@ -204,7 +201,7 @@ int quetzal::math::float_sign(T t, int ulp)
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::floating_point<T>
 T quetzal::math::round_zero(T t, int ulp)
 {
     return float_eq0(t, ulp) ? T(0) : t;

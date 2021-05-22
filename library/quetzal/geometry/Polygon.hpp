@@ -8,23 +8,24 @@
 #include "Point.hpp"
 #include "Points.hpp"
 #include "Plane.hpp"
+#include "Segment.hpp"
 #include "triangle_util.hpp"
+#include "quetzal/math/DimensionReducer.hpp"
 #include "quetzal/math/Matrix.hpp"
 #include "quetzal/math/Vector.hpp"
+#include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <vector>
 #include <cassert>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     // Polygon is an ordered set of vertices
     // Each sequential pair of vertices defines an edge, with an implied edge between the last and first vertices
     // edge count == vertex count
-    // Results of center, area, contains, normal, and plane are undefined if the polygon is not planar or vertices are not in CCW order
+    // Results of center, area, normal, and plane are undefined if the polygon is not planar or vertices are not in CCW order
 
     //--------------------------------------------------------------------------
     template<typename Traits>
@@ -32,17 +33,19 @@ namespace geometry
     {
     public:
 
+        using traits_type = Traits;
         using value_type = typename Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
         using vertex_type = Point<Traits>;
         using vertices_type = Points<Traits>;
+        using edge_type = Segment<Traits>;
         using size_type = typename Traits::size_type;
 
         // this may be enough to disable plane ...
         // but requires the ugly plane_type<> ...
 //        template<typename = std::enable_if_t<(Traits::dimension == 3)>>
-        using plane_type = Plane<Traits>;
+//        using plane_type = Plane<Traits> requires (Traits::dimension >= 3);
 
         Polygon() = default;
         explicit Polygon(size_type n);
@@ -57,44 +60,43 @@ namespace geometry
         Polygon& operator=(const Polygon&) = default;
         Polygon& operator=(Polygon&&) = default;
 
+        const vertices_type& vertices() const;
+        vertices_type& vertices();
+
+        size_t vertex_count() const noexcept;
         const vertex_type& vertex(size_type n) const;
         vertex_type& vertex(size_type n);
         void set_vertex(size_type n, const point_type& point);
 
-        const vertices_type& vertices() const;
-        vertices_type& vertices();
-
-        // These will be the same but are provided for clarity in different contexts
-        size_t vertex_count() const noexcept;
         size_t edge_count() const noexcept;
+        edge_type edge(size_type n) const;
 
         bool planar() const;
-        bool contains(const point_type& point) const;
 
         point_type center() const;
         vector_type extent() const;
         std::array<point_type, 2> bounds() const;
 
-        // Based on implied winding around positive z-axis
-        template<typename = std::enable_if_t<(Traits::dimension == 2)>>
-        value_type area() const;
+        value_type area() const requires (Traits::dimension == 2);
+        value_type area(const vector_type& normal) const requires (Traits::dimension == 3);
 
-        template<typename = std::enable_if_t<(Traits::dimension == 3)>>
-        value_type area(const vector_type& normal) const;
-
-        // Based on implied winding around positive z-axis
-        template<typename = std::enable_if_t<(Traits::dimension == 2)>>
-        value_type signed_area() const;
-
-        template<typename = std::enable_if_t<(Traits::dimension == 3)>>
-        value_type signed_area(const vector_type& normal) const;
+        // Based on expressed or implied CCW winding order
+        value_type signed_area() const requires (Traits::dimension == 2);
+        value_type signed_area(const vector_type& normal) const requires (Traits::dimension == 3);
 
         // Assumes CCW winding order
-        template<typename = std::enable_if_t<(Traits::dimension == 3)>>
-        vector_type normal() const;
+        vector_type normal() const requires (Traits::dimension == 3);
+        Plane<Traits> plane() const requires (Traits::dimension == 3);
 
-        template<typename = std::enable_if_t<(Traits::dimension == 3)>>
-        plane_type plane() const;
+        // Returns -1, 0, 1: interior, on, exterior
+        // Exterior is defined by the direction of the normal as defined by the winding order
+        // This is more accurate than contains for points on the polygon edges
+        int compare(const point_type& point) const;
+
+        // Point is in the region defined by the polygon
+        // Results are indeterminate if the point is on a polygon edge
+        bool contains(const point_type& point) const requires (Traits::dimension == 2);
+        bool contains(const point_type& point) const requires (Traits::dimension == 3);
 
         virtual void clear();
 
@@ -127,9 +129,7 @@ namespace geometry
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, const Polygon<Traits>& polygon);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>
@@ -159,6 +159,27 @@ quetzal::geometry::Polygon<Traits>::Polygon(InputIterator first, InputIterator l
 
 //------------------------------------------------------------------------------
 template<typename Traits>
+typename quetzal::geometry::Polygon<Traits>::vertices_type& quetzal::geometry::Polygon<Traits>::vertices()
+{
+    return m_vertices;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+const typename quetzal::geometry::Polygon<Traits>::vertices_type& quetzal::geometry::Polygon<Traits>::vertices() const
+{
+    return m_vertices;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+size_t quetzal::geometry::Polygon<Traits>::vertex_count() const noexcept
+{
+    return m_vertices.size();
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
 typename const quetzal::geometry::Polygon<Traits>::vertex_type& quetzal::geometry::Polygon<Traits>::vertex(size_type n) const
 {
     assert(n < m_vertices.size());
@@ -184,30 +205,17 @@ void quetzal::geometry::Polygon<Traits>::set_vertex(size_type n, const point_typ
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::geometry::Polygon<Traits>::vertices_type& quetzal::geometry::Polygon<Traits>::vertices()
-{
-    return m_vertices;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-const typename quetzal::geometry::Polygon<Traits>::vertices_type& quetzal::geometry::Polygon<Traits>::vertices() const
-{
-    return m_vertices;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-size_t quetzal::geometry::Polygon<Traits>::vertex_count() const noexcept
-{
-    return m_vertices.size();
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
 size_t quetzal::geometry::Polygon<Traits>::edge_count() const noexcept
 {
     return m_vertices.size();
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+typename quetzal::geometry::Polygon<Traits>::edge_type quetzal::geometry::Polygon<Traits>::edge(size_type n) const
+{
+    assert(n < m_vertices.size());
+    return {m_vertices[n], m_vertices[(n + 1) % m_vertices.size()]};
 }
 
 //------------------------------------------------------------------------------
@@ -232,16 +240,6 @@ bool quetzal::geometry::Polygon<Traits>::planar() const
     }
 
     return true;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const
-{
-    point; // ...
-//    assert(false); // ...
-//    return false; // ...
-return true; // ...
 }
 
 //------------------------------------------------------------------------------
@@ -287,24 +285,21 @@ std::array<typename quetzal::geometry::Polygon<Traits>::point_type, 2> quetzal::
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename>
-typename Traits::value_type quetzal::geometry::Polygon<Traits>::area() const
+typename Traits::value_type quetzal::geometry::Polygon<Traits>::area() const requires (Traits::dimension == 2)
 {
     return std::abs(signed_area());
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename>
-typename Traits::value_type quetzal::geometry::Polygon<Traits>::area(const vector_type& normal) const
+typename Traits::value_type quetzal::geometry::Polygon<Traits>::area(const vector_type& normal) const requires (Traits::dimension == 3)
 {
     return std::abs(signed_area(normal));
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename>
-typename Traits::value_type quetzal::geometry::Polygon<Traits>::signed_area() const
+typename Traits::value_type quetzal::geometry::Polygon<Traits>::signed_area() const requires (Traits::dimension == 2)
 {
     typename Traits::value_type area = 0;
 
@@ -319,8 +314,7 @@ typename Traits::value_type quetzal::geometry::Polygon<Traits>::signed_area() co
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename>
-typename Traits::value_type quetzal::geometry::Polygon<Traits>::signed_area(const vector_type& normal) const
+typename Traits::value_type quetzal::geometry::Polygon<Traits>::signed_area(const vector_type& normal) const requires (Traits::dimension == 3)
 {
     typename Traits::value_type area = 0;
 
@@ -335,8 +329,7 @@ typename Traits::value_type quetzal::geometry::Polygon<Traits>::signed_area(cons
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename>
-typename quetzal::geometry::Polygon<Traits>::vector_type quetzal::geometry::Polygon<Traits>::normal() const
+typename quetzal::geometry::Polygon<Traits>::vector_type quetzal::geometry::Polygon<Traits>::normal() const requires (Traits::dimension == 3)
 {
     size_t n = m_vertices.size();
     for (size_t i = 0; i < n; ++i)
@@ -357,10 +350,79 @@ typename quetzal::geometry::Polygon<Traits>::vector_type quetzal::geometry::Poly
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename>
-typename quetzal::geometry::Polygon<Traits>::plane_type quetzal::geometry::Polygon<Traits>::plane() const
+quetzal::geometry::Plane<Traits> quetzal::geometry::Polygon<Traits>::plane() const requires (Traits::dimension == 3)
 {
-    return plane_type(m_vertices[0], normal());
+    return Plane<Traits>(m_vertices[0], normal());
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+int quetzal::geometry::Polygon<Traits>::compare(const point_type& point) const
+{
+    for (size_t i = 0; i < edge_count(); ++i)
+    {
+        Segment<Traits> segment(m_vertices[i], m_vertices[(i + 1) % vertex_count()]);
+        if (segment.contains(point))
+        {
+            return 0;
+        }
+    }
+
+    return contains(point) ? -1 : 1;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const requires (Traits::dimension == 2)
+{
+    // Return >0: left, ==0: on, <0: right for p2 relative to the line through p0 and p1
+    auto left = [](point_type p0, point_type p1, point_type p2) -> int
+    {
+        auto t = (p1.x() - p0.x()) * (p2.y() - p0.y()) - (p2.x() -  p0.x()) * (p1.y() - p0.y());
+        if (math::float_eq0(t))
+            return 0;
+        return t < 0 ? -1 : 1;
+    };
+
+    auto vertices = m_vertices;
+    vertices.push_back(m_vertices[0]);
+
+    int n = 0; // the  winding number counter
+
+    for (int i = 0; i < edge_count(); ++i)
+    {
+        if (math::float_le(vertices[i].y(), point.y()))
+        {
+            if (math::float_gt(vertices[i + 1].y(), point.y())) // upward crossing
+                 if (left(vertices[i], vertices[i + 1], point) > 0)
+                     ++n; // valid up intersect
+        }
+        else
+        {
+            if (math::float_le(vertices[i + 1].y(), point.y())) // downward crossing
+                 if (left(vertices[i], vertices[i + 1], point) < 0)
+                     --n; // valid down intersect
+        }
+    }
+
+    return n != 0;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const requires (Traits::dimension == 3)
+{
+    if (!plane().contains(point)) // polygon.planar() test, assert? ...
+    {
+        return false;
+    }
+
+	math::DimensionReducer<Traits> dr(normal());
+
+    Polygon<typename Traits::reduced_traits> polygon;
+    std::transform(m_vertices.begin(), m_vertices.end(), std::back_inserter(polygon.vertices()), [](const math::Vector<Traits>& v) -> math::Vector<Traits> { return dr.reduce(v); });
+
+    return polygon.contains(dr.reduce(point));
 }
 
 //------------------------------------------------------------------------------

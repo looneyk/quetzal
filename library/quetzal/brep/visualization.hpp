@@ -11,10 +11,7 @@
 #include <iomanip>
 #include <sstream>
 
-namespace quetzal
-{
-
-namespace brep
+namespace quetzal::brep
 {
 
     template<typename M>
@@ -44,9 +41,7 @@ namespace brep
     template<typename M>
     void draw_edge(svg::Document& document, const typename M::halfedge_type& halfedge, const math::Matrix<typename M::value_type>& matrix);
 
-} // namespace brep
-
-} // namespace quetzal
+} // namespace quetzal::brep
 
 //--------------------------------------------------------------------------
 template<typename M>
@@ -70,7 +65,7 @@ void quetzal::brep::draw_face(const std::string& filename, const typename M::fac
 {
     svg::Document document({0.15, 0.15});
     document.set_viewport({800.0, 800.0});
-if (face.vertex_count() > 20)
+if (face.halfedge_count() > 20)
 document.set_viewport({8000.0, 8000.0});
 //    document.open_symbol("vertex", {2.0, 2.0}, xml::Attribute("viewBox", "-1 -1 2 2"));
 //    document.circle({0.0, 0.0}, 1.0, xml::Attribute("style", "stroke:black;stroke-width:2;fill:none;vector-effect:non-scaling-stroke;"));

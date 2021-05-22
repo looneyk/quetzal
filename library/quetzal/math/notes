@@ -7,6 +7,9 @@ geometry: triangles, but no angles
 model: angles in turns
 
 
+instead of ulp parameter, a traits class to manage that
+
+
 move change_of_basis from transformation_matrix to Matrix, ...
 
 
@@ -52,6 +55,8 @@ will need matrix counterparts too
 
 
 keep reduced traits limited to vector traits
+projection_traits?
+DimensionReducer is a specific type of projection transformation, not a general parallel or central projection
 
 
 Matrix
@@ -83,7 +88,7 @@ more DirectX math, provision for chained operations to minimize conversions
 activate or implement DAZ, FTZ
 
 is there a way to ensure that sin and cos are symmetrical? is that even an issue?
-for cos shift pi..2pi to pi..0
+for cos shift pi..2pi to -pi..0
 for sin ...
 even so, calculations involving pi will probably throw things off anyway
 

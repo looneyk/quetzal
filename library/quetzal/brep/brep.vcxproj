@@ -166,6 +166,7 @@
     <ClInclude Include="Face.hpp" />
     <ClInclude Include="Flags.hpp" />
     <ClInclude Include="HalfEdge.hpp" />
+    <ClInclude Include="Hole.hpp" />
     <ClInclude Include="id.hpp" />
     <ClInclude Include="Mesh.hpp" />
     <ClInclude Include="MeshTraits.hpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="mesh_geometry.hpp" />
     <ClInclude Include="mesh_inversion.hpp" />
     <ClInclude Include="mesh_util.hpp" />
+    <ClInclude Include="mesh_util_x.hpp" />
     <ClInclude Include="Seam.hpp" />
     <ClInclude Include="Submesh.hpp" />
     <ClInclude Include="Surface.hpp" />

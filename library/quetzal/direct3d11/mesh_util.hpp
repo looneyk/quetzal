@@ -49,10 +49,10 @@ std::tuple<std::vector<V>, std::vector<I>> quetzal::direct3d11::mesh_geometry(co
 
     for (const auto& face : m.faces())
     {
-        assert(face.halfedges().size() == 3);
+        assert(face.halfedge_count() == 3);
         for (const auto& halfedge : face.halfedges())
         {
-            const auto& av = halfedge.vertex().attributes();
+            const auto& av = halfedge.attributes();
             Vector3 position = {av.position().x(), av.position().y(), -300.0f - av.position().z()}; // ...
 
             V v = transfer_vertex(av);

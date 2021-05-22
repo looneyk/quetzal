@@ -6,6 +6,7 @@
 //------------------------------------------------------------------------------
 
 #include "Flags.hpp"
+#include "Hole.hpp"
 #include "id.hpp"
 #include "quetzal/common/Elements.hpp"
 #include "quetzal/common/Properties.hpp"
@@ -29,7 +30,7 @@ namespace quetzal::brep
         using halfedge_type = typename mesh_type::halfedge_type;
         using surface_type = typename mesh_type::surface_type;
         using submesh_type = typename mesh_type::submesh_type;
-        using hole_ids_type = std::vector<id_type>; // halfedge ids ...
+        using holes_type = std::vector<Hole<Traits, M>>;
         using halfedges_type = Elements<mesh_type, halfedge_type, id_type>;
         using attributes_type = typename mesh_type::face_attributes_type;
         using size_type = typename mesh_type::size_type;
@@ -58,6 +59,11 @@ namespace quetzal::brep
         const halfedge_type& halfedge() const;
         halfedge_type& halfedge();
 
+        // Virtual container interface, iterators for halfedges connected to this face
+        size_type halfedge_count() const;
+        const halfedges_type& halfedges() const;
+        halfedges_type& halfedges();
+
         id_type surface_id() const;
         void set_surface_id(id_type idSurface);
 
@@ -70,8 +76,11 @@ namespace quetzal::brep
         const submesh_type& submesh() const;
         submesh_type& submesh();
 
-        const hole_ids_type& hole_ids() const;
-        hole_ids_type& hole_ids();
+        size_type hole_count() const;
+        const holes_type& holes() const;
+        holes_type& holes();
+
+        void create_hole(id_type idHalfedge);
 
         const attributes_type& attributes() const;
         attributes_type& attributes();
@@ -80,22 +89,16 @@ namespace quetzal::brep
         const Properties& properties() const;
         Properties& properties();
 
-        // Virtual container interface, iterators for halfedges connected to this face
-        const halfedges_type& halfedges() const;
-        halfedges_type& halfedges();
-
         bool border() const;
         void set_border();
-
-        size_type vertex_count() const;
-        size_type hole_count() const;
 
         bool check() const;
 
         // Internal use, only by Mesh
         void set_mesh(mesh_type& mesh);
         void set_id(id_type id);
-        const mesh_type* mesh() const;
+        const mesh_type& mesh() const;
+        mesh_type& mesh();
         void check_mesh(const mesh_type* const pmesh) const;
 
     private:
@@ -106,12 +109,10 @@ namespace quetzal::brep
         id_type m_idHalfedge;
         id_type m_idSurface;
         id_type m_idSubmesh;
+        halfedges_type m_halfedges;
+        holes_type m_holes;
         attributes_type m_attributes;
         Properties m_properties;
-
-        hole_ids_type m_hole_ids;
-
-        Elements<mesh_type, halfedge_type, id_type> m_halfedges;
 
         static typename halfedges_type::size_function_type m_halfedges_size;
         static typename halfedges_type::terminal_function_type m_halfedges_first;
@@ -138,10 +139,10 @@ quetzal::brep::Face<Traits, M>::Face() :
     m_idHalfedge(nullid),
     m_idSurface(nullid),
     m_idSubmesh(nullid),
+    m_halfedges(*m_pmesh, nullid, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element),
+    m_holes(),
     m_attributes(),
-    m_properties(),
-    m_hole_ids(),
-    m_halfedges(*m_pmesh, nullid, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element)
+    m_properties()
 {
 }
 
@@ -155,10 +156,10 @@ quetzal::brep::Face<Traits, M>::Face(mesh_type& mesh, id_type id, id_type idSurf
     m_idHalfedge(idHalfedge),
     m_idSurface(idSurface),
     m_idSubmesh(idSubmesh),
+    m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element),
+    m_holes(),
     m_attributes(),
-    m_properties(),
-    m_hole_ids(),
-    m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element)
+    m_properties()
 {
 }
 
@@ -172,10 +173,10 @@ quetzal::brep::Face<Traits, M>::Face(mesh_type& mesh, id_type id, id_type idSurf
     m_idHalfedge(idHalfedge),
     m_idSurface(idSurface),
     m_idSubmesh(idSubmesh),
+    m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element),
+    m_holes(),
     m_attributes(attributes),
-    m_properties(),
-    m_hole_ids(),
-    m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element)
+    m_properties()
 {
 }
 
@@ -250,6 +251,27 @@ typename quetzal::brep::Face<Traits, M>::halfedge_type& quetzal::brep::Face<Trai
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
+typename quetzal::brep::Face<Traits, M>::size_type quetzal::brep::Face<Traits, M>::halfedge_count() const
+{
+    return m_halfedges.size();
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+const typename quetzal::brep::Face<Traits, M>::halfedges_type& quetzal::brep::Face<Traits, M>::halfedges() const
+{
+    return m_halfedges;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename quetzal::brep::Face<Traits, M>::halfedges_type& quetzal::brep::Face<Traits, M>::halfedges()
+{
+    return m_halfedges;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
 quetzal::id_type quetzal::brep::Face<Traits, M>::surface_id() const
 {
     return m_idSurface;
@@ -312,16 +334,32 @@ typename quetzal::brep::Face<Traits, M>::submesh_type& quetzal::brep::Face<Trait
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const typename quetzal::brep::Face<Traits, M>::hole_ids_type& quetzal::brep::Face<Traits, M>::hole_ids() const
+typename quetzal::brep::Face<Traits, M>::size_type quetzal::brep::Face<Traits, M>::hole_count() const
 {
-    return m_hole_ids;
+    return m_holes.size();
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename quetzal::brep::Face<Traits, M>::hole_ids_type& quetzal::brep::Face<Traits, M>::hole_ids()
+const typename quetzal::brep::Face<Traits, M>::holes_type& quetzal::brep::Face<Traits, M>::holes() const
 {
-    return m_hole_ids;
+    return m_holes;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename quetzal::brep::Face<Traits, M>::holes_type& quetzal::brep::Face<Traits, M>::holes()
+{
+    return m_holes;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+void quetzal::brep::Face<Traits, M>::create_hole(id_type idHalfedge)
+{
+    assert(m_pmesh != nullptr);
+    m_holes.emplace_back(*m_pmesh, m_id, idHalfedge);
+    return;
 }
 
 //------------------------------------------------------------------------------
@@ -362,20 +400,6 @@ typename quetzal::Properties& quetzal::brep::Face<Traits, M>::properties()
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const typename quetzal::brep::Face<Traits, M>::halfedges_type& quetzal::brep::Face<Traits, M>::halfedges() const
-{
-    return m_halfedges;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-typename quetzal::brep::Face<Traits, M>::halfedges_type& quetzal::brep::Face<Traits, M>::halfedges()
-{
-    return m_halfedges;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
 bool quetzal::brep::Face<Traits, M>::border() const
 {
     return m_idPartner == nullid;
@@ -387,20 +411,6 @@ void quetzal::brep::Face<Traits, M>::set_border()
 {
     m_idPartner = nullid;
     return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-typename quetzal::brep::Face<Traits, M>::size_type quetzal::brep::Face<Traits, M>::vertex_count() const
-{
-    return m_halfedges.size();
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-typename quetzal::brep::Face<Traits, M>::size_type quetzal::brep::Face<Traits, M>::hole_count() const
-{
-    return m_hole_ids.size();
 }
 
 //------------------------------------------------------------------------------
@@ -425,6 +435,12 @@ void quetzal::brep::Face<Traits, M>::set_mesh(mesh_type& mesh)
 {
     m_pmesh = &mesh;
     m_halfedges.set_source(mesh);
+
+    for (auto& hole : m_holes)
+    {
+        hole.set_mesh(mesh);
+    }
+
     return;
 }
 
@@ -439,9 +455,18 @@ void quetzal::brep::Face<Traits, M>::set_id(id_type id)
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const typename quetzal::brep::Face<Traits, M>::mesh_type* quetzal::brep::Face<Traits, M>::mesh() const
+typename quetzal::brep::Face<Traits, M>::mesh_type& quetzal::brep::Face<Traits, M>::mesh()
 {
-    return m_pmesh;
+    assert(m_pmesh != nullptr);
+    return *m_pmesh;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+const typename quetzal::brep::Face<Traits, M>::mesh_type& quetzal::brep::Face<Traits, M>::mesh() const
+{
+    assert(m_pmesh != nullptr);
+    return *m_pmesh;
 }
 
 //------------------------------------------------------------------------------
@@ -449,7 +474,7 @@ template<typename Traits, typename M>
 void quetzal::brep::Face<Traits, M>::check_mesh(const mesh_type* const pmesh) const
 {
     assert(m_pmesh == pmesh);
-    assert(m_halfedges.mesh() == pmesh);
+    assert(m_halfedges.source() == pmesh);
     return;
 }
 
@@ -536,7 +561,7 @@ std::ostream& quetzal::brep::operator<<(std::ostream& os, const Face<Traits, M>&
 
     if (!face.deleted())
     {
-        os << "\t" << face.vertex_count() << " edges";
+        os << "\t" << face.halfedge_count() << " edges";
         os << "\t" << face.halfedge_id();
 
         os << "\t";

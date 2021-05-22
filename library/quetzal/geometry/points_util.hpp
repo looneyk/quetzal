@@ -12,19 +12,15 @@
 #include <fstream>
 #include <vector>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     // Load a list of point positions from an XML file with a top-level points element
     template<typename Traits>
-    void load_points(const std::filesystem::path& filepath, std::vector<Point<Traits>>& points);
+    void load_points(const std::filesystem::path& filepath, Points<Traits>& points);
 
-} // namespace geometry
 
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

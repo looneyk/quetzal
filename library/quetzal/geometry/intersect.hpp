@@ -16,6 +16,7 @@
 #include "Ray.hpp"
 #include "Segment.hpp"
 #include "distance.hpp"
+#include "relationships.hpp"
 #include "quetzal/math/DimensionReducer.hpp"
 #include "quetzal/math/Vector.hpp"
 #include "quetzal/math/floating_point.hpp"
@@ -24,10 +25,7 @@
 
 #include "quetzal/math/VectorTraits.hpp" // ...
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     template<typename Traits>
@@ -252,9 +250,7 @@ namespace geometry
     template<typename Traits>
     bool intersects_coplanar(const Point<Traits>& point, const Polygon<Traits>& polygon);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>
@@ -295,15 +291,7 @@ bool quetzal::geometry::intersects(const Point<Traits>& point, const Plane<Trait
 template<typename Traits>
 bool quetzal::geometry::intersects(const Point<Traits>& point, const Polygon<Traits>& polygon)
 {
-    if constexpr (Traits::dimension >= 3)
-    {
-        if (!polygon.planar() || !polygon.plane().contains(point))
-        {
-            return false;
-        }
-    }
-
-    return intersects_coplanar(point, polygon);
+    return polygon.contains(point);
 }
 
 //------------------------------------------------------------------------------
@@ -317,7 +305,7 @@ bool quetzal::geometry::intersects(const Line<Traits>& line, const Point<Traits>
 template<typename Traits>
 bool quetzal::geometry::intersects(const Line<Traits>& lineA, const Line<Traits>& lineB)
 {
-    if (parallel(lineA.direction(), lineB.direction()))
+    if (parallel(lineA, lineB))
     {
         return lineB.contains(lineA.point());
     }
@@ -340,7 +328,12 @@ bool quetzal::geometry::intersects(const Line<Traits>& lineA, const Line<Traits>
 template<typename Traits>
 bool quetzal::geometry::intersects(const Line<Traits>& line, const Ray<Traits>& ray)
 {
-    auto [s, t] = closest_point_parameters(line.point(), line.direction(), ray.endpoint(), ray.direction());
+    if (parallel(line, ray))
+    {
+        return line.contains(ray.point());
+    }
+
+    auto [s, t] = closest_point_parameters(line, Line<Traits>(ray.endpoint(), ray.direction()));
     return math::float_ge0(t) && math::float_eq0((line.point(s) - ray.endpoint(t)).norm_squared()); // pointA == pointB ...
 }
 
@@ -348,7 +341,12 @@ bool quetzal::geometry::intersects(const Line<Traits>& line, const Ray<Traits>& 
 template<typename Traits>
 bool quetzal::geometry::intersects(const Line<Traits>& line, const Segment<Traits>& segment)
 {
-    auto [s, t] = closest_point_parameters(line.point(), line.direction(), segment.endpoint(0), segment.direction());
+    if (parallel(line, segment))
+    {
+        return line.contains(segment.endpoint(0));
+    }
+
+    auto [s, t] = closest_point_parameters(line.point(), line.direction(), segment.endpoint(0), segment.vector());
     return math::float_clamped01(t) && math::float_eq0((line.point(s) - segment.point(t)).norm_squared()); // pointA == pointB ...
 }
 
@@ -356,7 +354,7 @@ bool quetzal::geometry::intersects(const Line<Traits>& line, const Segment<Trait
 template<typename Traits>
 bool quetzal::geometry::intersects(const Line<Traits>& line, const Plane<Traits>& plane)
 {
-    return !perpendicular(line.direction(), plane.normal()) || plane.contains(line.point());
+    return !parallel(line, plane) || plane.contains(line.point());
 }
 
 //------------------------------------------------------------------------------
@@ -372,7 +370,7 @@ bool quetzal::geometry::intersects(const Line<Traits>& line, const Polygon<Trait
         }
         else if (inter.locus() == Locus::Point)
         {
-            return intersects_coplanar(inter.point(), polygon);
+            return polygon.contains(inter.point()); // but no need for plane check ...
         }
 
         assert(inter.locus() == Locus::Line);
@@ -412,7 +410,12 @@ bool quetzal::geometry::intersects(const Ray<Traits>& ray, const Line<Traits>& l
 template<typename Traits>
 bool quetzal::geometry::intersects(const Ray<Traits>& rayA, const Ray<Traits>& rayB)
 {
-    auto [s, t] = closest_point_parameters(rayA.point(), rayA.direction(), rayB.point(), rayB.direction());
+    if (parallel(rayA, rayB))
+    {
+        return rayA.contains(rayB.point()) || rayB.contains(rayA.point());
+    }
+
+    auto [s, t] = closest_point_parameters(Line<Traits>(rayA.point(), rayA.direction()), Line<Traits>(rayB.point(), rayB.direction()));
     return math::float_ge0(s) && math::float_ge0(t) && math::float_eq0((rayA.point(s) - rayB.point(t)).norm_squared()); // pointA == pointB ...
 }
 
@@ -420,7 +423,12 @@ bool quetzal::geometry::intersects(const Ray<Traits>& rayA, const Ray<Traits>& r
 template<typename Traits>
 bool quetzal::geometry::intersects(const Ray<Traits>& ray, const Segment<Traits>& segment)
 {
-    auto [s, t] = closest_point_parameters(ray.endpoint(), ray.direction(), segment.endpoint(0), segment.direction());
+    if (parallel(ray, segment))
+    {
+        return ray.contains(segment.endpoint(0)) || ray.contains(segment.endpoint(1));
+    }
+
+    auto [s, t] = closest_point_parameters(ray.endpoint(), ray.direction(), segment.endpoint(0), segment.vector());
     return math::float_ge0(s) && math::float_clamped01(t) && math::float_eq0((ray.point(s) - segment.point(t)).norm_squared()); // pointA == pointB ...
 }
 
@@ -428,7 +436,7 @@ bool quetzal::geometry::intersects(const Ray<Traits>& ray, const Segment<Traits>
 template<typename Traits>
 bool quetzal::geometry::intersects(const Ray<Traits>& ray, const Plane<Traits>& plane)
 {
-    if (perpendicular(ray.direction(), plane.normal())) // Parallel
+    if (parallel(ray, plane))
     {
         return plane.contains(ray.endpoint());
     }
@@ -449,7 +457,7 @@ bool quetzal::geometry::intersects(const Ray<Traits>& ray, const Polygon<Traits>
         }
         else if (inter.locus() == Locus::Point)
         {
-            return intersects_coplanar(inter.point(), polygon);
+            return polygon.contains(inter.point()); // but no need for plane check ...
         }
 
         assert(inter.locus() == Locus::Ray);
@@ -496,7 +504,13 @@ bool quetzal::geometry::intersects(const Segment<Traits>& segment, const Ray<Tra
 template<typename Traits>
 bool quetzal::geometry::intersects(const Segment<Traits>& segmentA, const Segment<Traits>& segmentB)
 {
-    auto [s, t] = closest_point_parameters(segmentA.endpoint(0), segmentA.direction(), segmentB.endpoint(0), segmentB.direction());
+    if (parallel(segmentA, segmentB))
+    {
+        return segmentA.contains(segmentB.endpoint(0)) || segmentA.contains(segmentB.endpoint(1))
+            || segmentB.contains(segmentA.endpoint(0)) || segmentB.contains(segmentA.endpoint(1));
+    }
+
+    auto [s, t] = closest_point_parameters(segmentA.endpoint(0), segmentA.vector(), segmentB.endpoint(0), segmentB.vector());
     return math::float_clamped01(s) && math::float_clamped01(t) && math::float_eq0((segmentA.point(s) - segmentB.point(t)).norm_squared()); // pointA == pointB ...
 }
 
@@ -522,7 +536,7 @@ bool quetzal::geometry::intersects(const Segment<Traits>& segment, const Polygon
         }
         else if (inter.locus() == Locus::Point)
         {
-            return intersects_coplanar(inter.point(), polygon);
+            return polygon.contains(inter.point()); // but no need for plane check ...
         }
 
         assert(inter.locus() == Locus::Segment);
@@ -581,7 +595,7 @@ bool quetzal::geometry::intersects(const Plane<Traits>& plane, const Segment<Tra
 template<typename Traits>
 bool quetzal::geometry::intersects(const Plane<Traits>& planeA, const Plane<Traits>& planeB)
 {
-    return !parallel(planeA.normal(), planeB.normal()) || planeA.contains(planeB.point());
+    return !parallel(planeA, planeB) || planeA.contains(planeB.point());
 }
 
 //------------------------------------------------------------------------------
@@ -771,7 +785,7 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Li
     auto [s, t] = closest_point_parameters(lineA.point(), lineA.direction(), lineB.point(), lineB.direction());
     if (math::float_eq0((lineA.point(s) - lineB.point(t)).norm_squared())) // pointA == pointB ...
     {
-        if (parallel(lineA.direction(), lineB.direction()))
+        if (parallel(lineA, lineB))
         {
             return Intersection<Traits>(lineA);
         }
@@ -786,10 +800,10 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Li
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Line<Traits>& line, const Ray<Traits>& ray)
 {
-    auto [s, t] = closest_point_parameters(line.point(), line.direction(), ray.endpoint(), ray.direction());
-    if (math::float_ge0(t)&& math::float_eq0((line.point(s) - ray.point(t)).norm_squared())) // pointA == pointB ...
+    auto [s, t] = closest_point_parameters(line, Line<Traits>(ray.endpoint(), ray.direction()));
+    if (math::float_ge0(t) && math::float_eq0((line.point(s) - ray.point(t)).norm_squared())) // pointA == pointB ...
     {
-        if (parallel(line.direction(), ray.direction()))
+        if (parallel(line, ray))
         {
             return Intersection<Traits>(ray);
         }
@@ -804,10 +818,10 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Li
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Line<Traits>& line, const Segment<Traits>& segment)
 {
-    auto [s, t] = closest_point_parameters(line.point(), line.direction(), segment.endpoint(0), segment.direction());
+    auto [s, t] = closest_point_parameters(line.point(), line.direction(), segment.endpoint(0), segment.vector());
     if (math::float_clamped01(t) && math::float_eq0((line.point(s) - segment.point(t)).norm_squared())) // pointA == pointB ...
     {
-        if (parallel(line.direction(), normalize(segment.direction())))
+        if (parallel(line, segment))
         {
             return Intersection<Traits>(segment);
         }
@@ -825,7 +839,7 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Li
     typename Traits::value_type num = dot(plane.point() - line.point(), plane.normal());
     typename Traits::value_type denom = dot(line.direction(), plane.normal());
 
-    if (math::float_eq0(denom))
+    if (math::float_eq0(denom)) // parallel
 //if (abs(denom < 0.1f)) // ...
     {
         if (math::float_eq0(num))
@@ -915,10 +929,10 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Ra
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Ray<Traits>& rayA, const Ray<Traits>& rayB)
 {
-    auto [s, t] = closest_point_parameters(rayA.point(), rayA.direction(), rayB.point(), rayB.direction());
+    auto [s, t] = closest_point_parameters(Line<Traits>(rayA.point(), rayA.direction()), Line<Traits>(rayB.point(), rayB.direction()));
     if (math::float_ge0(s) && math::float_ge0(t) && math::float_eq0((rayA.point(s) - rayB.point(t)).norm_squared())) // pointA == pointB ...
     {
-        if (parallel(rayA.direction(), rayB.direction()))
+        if (parallel(rayA, rayB))
         {
             bool bIntersectsA = rayA.contains(rayB.point());
             bool bIntersectsB = rayB.contains(rayA.point());
@@ -945,10 +959,10 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Ra
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Ray<Traits>& ray, const Segment<Traits>& segment)
 {
-    auto [s, t] = closest_point_parameters(ray.endpoint(), ray.direction(), segment.endpoint(0), segment.direction());
+    auto [s, t] = closest_point_parameters(ray.endpoint(), ray.direction(), segment.endpoint(0), segment.vector());
     if (math::float_ge0(s) && math::float_clamped01(t) && math::float_eq0((ray.point(s) - segment.point(t)).norm_squared())) // pointA == pointB ...
     {
-        if (parallel(ray.direction(), normalize(segment.direction())))
+        if (parallel(ray, segment))
         {
             if (segment.contains(ray.endpoint()))
             {
@@ -1068,10 +1082,10 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Se
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Segment<Traits>& segmentA, const Segment<Traits>& segmentB)
 {
-    auto [s, t] = closest_point_parameters(segmentA.endpoint(0), segmentA.direction(), segmentB.endpoint(0), segmentB.direction());
+    auto [s, t] = closest_point_parameters(segmentA.endpoint(0), segmentA.vector(), segmentB.endpoint(0), segmentB.vector());
     if (math::float_clamped01(s) && math::float_clamped01(t) && math::float_eq0((segmentA.point(s) - segmentB.point(t)).norm_squared())) // pointA == pointB ...
     {
-        if (parallel(segmentA.direction(), segmentB.direction()))
+        if (parallel(segmentA, segmentB))
         {
             bool a0b = segmentB.contains(segmentA.endpoint(0));
             bool a1b = segmentB.contains(segmentA.endpoint(1));
@@ -1218,7 +1232,7 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Pl
 {
     using T = typename Traits::value_type;
 
-    if (parallel(planeA.normal(), planeB.normal()))
+    if (parallel(planeA, planeB))
     {
         if (planeA.contains(planeB.point()))
         {
@@ -1271,7 +1285,7 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Pl
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Plane<Traits>& plane, const Polygon<Traits>& polygon)
 {
-    if (parallel(plane.normal(), polygon.normal()))
+    if (parallel(plane, polygon))
     {
         if (intersects(polygon.vertex(0), plane))
         {
@@ -1392,7 +1406,6 @@ bool quetzal::geometry::intersects_coplanar(const Point<Traits>& point, const Po
 */
 //    Ray ray(initial_point, normalize(vertices[1] - vertices[0]));
     Ray ray(point, normalize(polygon.vertex(1) - polygon.vertex(0)));
-//    Ray ray(initial_point, {1.0f, 0.0f});
 
     size_t n = 0;
     for (size_t i = 0; i < polygon.vertex_count(); ++i)
@@ -1402,19 +1415,23 @@ bool quetzal::geometry::intersects_coplanar(const Point<Traits>& point, const Po
         auto inter = intersection(ray, segment);
         if (inter.locus() == Locus::Segment)
         {
+            if (intersects(ray.endpoint(), segment))
+            {
+                return true;
+            }
+
             ++n;
         }
         else if (inter.locus() == Locus::Point)
         {
             if (vector_eq(inter.point(), ray.endpoint())) // for this check exact equality probably ok ...
             {
+//                assert(inter.point() == ray.endpoint());
                 return true;
             }
 
-//            // Don't consider second segment endpoint so vertex intersections don't get counted twice, unless the intersection is the entire segment
-//            if (vector_eq(inter.point(), segment.endpoint(0)) || !vector_eq(inter.point(), segment.endpoint(1)))
             // Don't consider second segment endpoint so vertex intersections don't get counted twice
-            if (!vector_eq(inter.point(), segment.endpoint(1), 10000)) // see if this can be reduced, otherwise go back to 2D projection? ...
+            if (!vector_eq(inter.point(), segment.endpoint(1), 10000)) // see if this can be reduced ...
             {
                 ++n;
             }
@@ -1425,28 +1442,15 @@ bool quetzal::geometry::intersects_coplanar(const Point<Traits>& point, const Po
         }
 
         // Also handle the edge case where the ray is tangent to the polygon at a vertex ...
+        // tangent points should not be counted ...
         // if point0, then don't count if prev and next are both to the right or left of the ray ...
     }
-/*
-if (math::odd(n))
-{
-    std::cout << "intersects_coplanar" << std::endl;
-    std::cout << "point " << point << std::endl;
-    std::cout << "polygon " << polygon << std::endl;
-//    std::cout << "initial_point " << initial_point << std::endl;
-//    std::cout << "vertices";
-//    for (const auto& vertex : vertices)
-//    {
-//        std::cout << " [" << vertex << "]";
-//    }
-//    std::cout << std::endl;
-}
-*/
+
+assert(polygon.contains(point) == math::odd(n));
     return math::odd(n);
 }
 
 /*
-
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Segment<Traits>& segment, const Polygon<Traits>& polygon)
@@ -1503,7 +1507,6 @@ typename quetzal::geometry::Plane<Traits>::line_type quetzal::geometry::Plane<Tr
 
     return Line(c0 * m_normal + c1 * plane.normal(), cross(m_normal, plane.m_normal));
 }
-
 */
 
 #endif // QUETZAL_GEOMETRY_INTERSECT_HPP

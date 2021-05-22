@@ -50,6 +50,11 @@ namespace quetzal::brep
         const halfedge_type& halfedge() const;
         halfedge_type& halfedge();
 
+        // Virtual container interface, iterators for halfedges based at this vertex position
+        size_type halfedge_count() const;
+        const halfedges_type& halfedges() const;
+        halfedges_type& halfedges();
+
         const attributes_type& attributes() const;
         attributes_type& attributes();
         void set_attributes(const attributes_type& attributes);
@@ -59,12 +64,6 @@ namespace quetzal::brep
 
         const halfedge_ids_type& halfedge_ids() const; // Not implemented, only makes sense in the unique vertex position case ...
         halfedge_ids_type& halfedge_ids(); // Not implemented, only makes sense in the unique vertex position case ...
-
-        // Virtual container interface, iterators for halfedges based at this vertex position
-        const halfedges_type& halfedges() const;
-        halfedges_type& halfedges();
-
-        size_type halfedge_count() const;
 
         bool check() const;
 
@@ -182,6 +181,27 @@ typename quetzal::brep::Vertex<Traits, M>::halfedge_type& quetzal::brep::Vertex<
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
+typename quetzal::brep::Vertex<Traits, M>::size_type quetzal::brep::Vertex<Traits, M>::halfedge_count() const
+{
+    return m_halfedges.size();
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+const typename quetzal::brep::Vertex<Traits, M>::halfedges_type& quetzal::brep::Vertex<Traits, M>::halfedges() const
+{
+    return m_halfedges;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename quetzal::brep::Vertex<Traits, M>::halfedges_type& quetzal::brep::Vertex<Traits, M>::halfedges()
+{
+    return m_halfedges;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
 typename const quetzal::brep::Vertex<Traits, M>::attributes_type& quetzal::brep::Vertex<Traits, M>::attributes() const
 {
     return m_attributes;
@@ -232,27 +252,6 @@ typename quetzal::brep::Vertex<Traits, M>::halfedge_ids_type& quetzal::brep::Ver
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const typename quetzal::brep::Vertex<Traits, M>::halfedges_type& quetzal::brep::Vertex<Traits, M>::halfedges() const
-{
-    return m_halfedges;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-typename quetzal::brep::Vertex<Traits, M>::halfedges_type& quetzal::brep::Vertex<Traits, M>::halfedges()
-{
-    return m_halfedges;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-typename quetzal::brep::Vertex<Traits, M>::size_type quetzal::brep::Vertex<Traits, M>::halfedge_count() const
-{
-    return m_halfedges.size();
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
 bool quetzal::brep::Vertex<Traits, M>::check() const
 {
     assert(m_pmesh != nullptr);
@@ -297,7 +296,7 @@ template<typename Traits, typename M>
 void quetzal::brep::Vertex<Traits, M>::check_mesh(const mesh_type* const pmesh) const
 {
     assert(m_pmesh == pmesh);
-    assert(m_halfedges.mesh() == pmesh);
+    assert(m_halfedges.source() == pmesh);
     return;
 }
 

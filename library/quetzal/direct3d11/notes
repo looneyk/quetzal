@@ -20,6 +20,9 @@ if (!pEffect)
 }
 
 
+mesh_geometry separate from other mesh_util?
+consolidate brep and obj utils (separately)
+
 move create_input_layout, index_format, ... to Renderer or other grouping?
 
 rendertarget

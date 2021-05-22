@@ -12,10 +12,7 @@
 #include <iostream>
 #include <cassert>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     // Client responsibility to ensure that the direction vector is unit length
@@ -26,6 +23,7 @@ namespace geometry
     {
     public:
 
+        using traits_type = Traits;
         using value_type = typename Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
@@ -59,9 +57,7 @@ namespace geometry
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, Ray<Traits> ray);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

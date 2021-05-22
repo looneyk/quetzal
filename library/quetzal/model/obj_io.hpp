@@ -230,7 +230,7 @@ void quetzal::model::write_obj(const M& mesh, const std::filesystem::path& pathn
         writer.set_face();
         for (const auto& halfedge : face.halfedges())
         {
-            const auto& attributes = halfedge.vertex().attributes();
+            const auto& attributes = halfedge.attributes();
             writer.set_face_vertex(attributes.position(), attributes.normal(), attributes.texcoord());
         }
     };

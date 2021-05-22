@@ -17,14 +17,13 @@
 #include <sstream>
 #include <string>
 
-namespace quetzal
+namespace quetzal::brep
 {
 
-namespace brep
-{
-
-//    constexpr int v_ulp = 64;
-    constexpr int v_ulp = 1;
+    constexpr int v_ulp = math::ulpDefault;
+//    constexpr int v_ulp = 1;
+    template<typename M>
+    constexpr typename M::value_type v_max = M::val(1000);
 
     template<typename M>
     bool check_halfedge(const M& mesh, const typename M::halfedge_type& halfedge, bool bBorderOK = true);
@@ -154,9 +153,7 @@ namespace brep
     template<typename M>
     std::map<typename M::value_type, size_t> count_edge_lengths(const M& mesh); // Returns count of each distinct length
 
-} // namespace brep
-
-} // namespace quetzal
+} // namespace quetzal::brep
 
 //--------------------------------------------------------------------------
 template<typename M>
@@ -293,7 +290,7 @@ bool quetzal::brep::check_vertex(const M& mesh, const typename M::vertex_type& v
         return bOK;
     }
 
-    typename M::value_type coordMax = M::val(1000);
+    typename M::value_type coordMax = v_max<M>;
     const auto position = vertex.attributes().position();
     if (std::abs(position.x()) > coordMax || std::abs(position.y()) > coordMax || std::abs(position.z()) > coordMax)
     {
@@ -359,12 +356,13 @@ bool quetzal::brep::check_vertex(const M& mesh, const typename M::vertex_type& v
             std::cout << "Bad: !vector_eq(attributes.position(), position) : " << vertex.id() << " [" << attributes.position() << "] [" << position << "]" << std::endl;
             bOK = false;
         }
+/* work on this ...
         else if (attributes.position() != position)
         {
             std::cout << "Warn: attributes.position() != position : " << vertex.id() << " [" << attributes.position() << "] [" << position << "]" << std::endl;
             bOK = false;
         }
-
+*/
         if (!vector_eq(halfedge.attributes().position(), halfedge.partner().next().attributes().position(), v_ulp))
         {
             std::cout << "Bad: !vector_eq(halfedge.attributes().position(), halfedge.partner().next().attributes().position())" << "  " << halfedge.id() << " [" << halfedge.attributes().position() << "] [" << halfedge.partner().next().attributes().position() << "]" << std::endl;
@@ -442,12 +440,6 @@ bool quetzal::brep::check_face(const M& mesh, const typename M::face_type& face)
         bOK = false;
     }
 
-    if (face.halfedges().size() != face.vertex_count())
-    {
-        std::cout << "Bad: face.halfedges().size() != face.vertex_count()" << "\t" << face.halfedges().size() << "\t" << face.vertex_count() << std::endl;
-        bOK = false;
-    }
-
     typename M::point_type positionPrev = face.halfedge().prev().attributes().position();
 
     for (const auto& halfedge : face.halfedges())
@@ -504,14 +496,14 @@ bool quetzal::brep::check_face(const M& mesh, const typename M::face_type& face)
         ++counts[halfedge.vertex_id()];
     }
 
-    if (n != face.vertex_count())
+    if (n != face.halfedge_count())
     {
-        std::cout << "    Bad halfedge face ids, " << n << " / " << face.vertex_count() << " face id " << face.id() << " references found." << std::endl;
+        std::cout << "    Bad halfedge face ids, " << n << " / " << face.halfedge_count() << " face id " << face.id() << " references found." << std::endl;
     }
 
-    if (counts.size() < face.vertex_count())
+    if (counts.size() < face.halfedge_count())
     {
-        std::cout << "Bad: counts.size() < face.vertex_count()" << std::endl;
+        std::cout << "Bad: counts.size() < face.halfedge_count()" << std::endl;
         bOK = false;
     }
 
@@ -1232,10 +1224,10 @@ bool quetzal::brep::check_split_face(const M& mesh, id_type idHalfedgeA, id_type
 
     std::cout << "Checking split_face: " << idHalfedgeA << " " << idHalfedgeB << " " << nEdgesOrig << std::endl;
 
-    if (faceA.vertex_count() + faceB.vertex_count() != nEdgesOrig + 2)
+    if (faceA.halfedge_count() + faceB.halfedge_count() != nEdgesOrig + 2)
     {
-        std::cout << "Bad: faceA.vertex_count() + faceB.vertex_count() != nEdgesOrig + 2";
-        std::cout << ": " << faceA.vertex_count() << " + " << faceB.vertex_count() << " != " << nEdgesOrig << " + 2" << std::endl;
+        std::cout << "Bad: faceA.halfedge_count() + faceB.halfedge_count() != nEdgesOrig + 2";
+        std::cout << ": " << faceA.halfedge_count() << " + " << faceB.halfedge_count() << " != " << nEdgesOrig << " + 2" << std::endl;
         bOK = false;
     }
 
@@ -1426,7 +1418,7 @@ void quetzal::brep::write_face(const typename M::face_type& face, const std::str
     if (!face.deleted())
     {
         std::cout << " " << std::setw(5) << face.halfedge_id();
-        std::cout << " " << std::setw(3) << face.vertex_count() << " edges";
+        std::cout << " " << std::setw(3) << face.halfedge_count() << " edges";
         std::cout << " " << std::setw(3) << face.hole_count() << " holes";
 
         std::cout << ", s ";
@@ -1466,7 +1458,7 @@ void quetzal::brep::write_face_vertices(const M& mesh, id_type idHalfedge)
 
     const auto normal = face.attributes().normal();
 
-    std::cout << "Face " << "\t" << face.id() << " of " << mesh.face_store_count() << "\t" << face.vertex_count() << " edges, surface ";
+    std::cout << "Face " << "\t" << face.id() << " of " << mesh.face_store_count() << "\t" << face.halfedge_count() << " edges, surface ";
     if (face.surface_id() != nullid)
     {
         std::cout << face.surface_id() << " " << face.surface().name();
@@ -1958,7 +1950,7 @@ bool quetzal::brep::check_face_angles(const M& mesh, const typename M::face_type
 
     using T = typename M::value_type;
 
-    size_t n = face.vertex_count();
+    size_t n = face.halfedge_count();
     T sum = 0;
 
     for (const auto& halfedge : face.halfedges())

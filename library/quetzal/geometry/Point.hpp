@@ -8,10 +8,7 @@
 #include "quetzal/math/Vector.hpp"
 #include "quetzal/math/floating_point.hpp"
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     template<typename Traits>
@@ -20,9 +17,7 @@ namespace geometry
     template<typename Traits>
     bool colinear(const Point<Traits>& a, const Point<Traits>& b, const Point<Traits>& c);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

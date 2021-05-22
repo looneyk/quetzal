@@ -228,7 +228,7 @@ namespace quetzal::brep
         const seam_store_type& seam_store() const;
         seam_store_type& seam_store();
 
-        id_type create_seam(const std::string& name, id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge);
+        id_type create_seam(id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge);
 
         void clear_seams(id_type idSurface);
         void generate_seams();
@@ -854,11 +854,11 @@ quetzal::id_type quetzal::brep::Mesh<Traits>::surface_id(id_type idSubmesh, cons
     auto i = m_surface_index.find(extended_surface_name(idSubmesh, name));
     if (i != m_surface_index.end())
     {
-        assert(submesh(idSubmesh).surface_id(name) != nullid);
+        assert(submesh(idSubmesh).contains_surface(name));
         return i->second;
     }
 
-    assert(submesh(idSubmesh).surface_id(name) == nullid);
+    assert(!submesh(idSubmesh).contains_surface(name));
     return nullid;
 }
 
@@ -867,7 +867,6 @@ template<typename Traits>
 const typename quetzal::brep::Mesh<Traits>::surface_type& quetzal::brep::Mesh<Traits>::surface(id_type idSubmesh, const std::string& name) const
 {
     assert(contains_surface(idSubmesh, name));
-    assert(submesh(idSubmesh).surface_id(name) == nullid);
 
     id_type idSurface = m_surface_index[extended_surface_name(idSubmesh, name)];
     return surface(idSurface);
@@ -878,7 +877,6 @@ template<typename Traits>
 typename quetzal::brep::Mesh<Traits>::surface_type& quetzal::brep::Mesh<Traits>::surface(id_type idSubmesh, const std::string& name)
 {
     assert(contains_surface(idSubmesh, name));
-    assert(submesh(idSubmesh).surface_id(name) == nullid);
 
     id_type idSurface = m_surface_index[extended_surface_name(idSubmesh, name)];
     return surface(idSurface);
@@ -1708,10 +1706,10 @@ typename quetzal::brep::Mesh<Traits>::seam_store_type& quetzal::brep::Mesh<Trait
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::id_type quetzal::brep::Mesh<Traits>::create_seam(const std::string& name, id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge)
+quetzal::id_type quetzal::brep::Mesh<Traits>::create_seam(id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge)
 {
     id_type idSeam = m_seam_store.size();
-    m_seam_store.emplace_back(*this, idSeam, name, idPartner, idNext, idPrev, idHalfedge);
+    m_seam_store.emplace_back(*this, idSeam, idPartner, idNext, idPrev, idHalfedge);
     return idSeam;
 }
 
@@ -2192,10 +2190,10 @@ void quetzal::brep::Mesh<Traits>::pack()
         assert(halfedge_mapping.contains(face.halfedge_id()));
         face.set_halfedge_id(halfedge_mapping[face.halfedge_id()]);
 
-        for (id_type& idHalfedgeHole : face.hole_ids())
+        for (auto& hole : face.holes())
         {
-            assert(halfedge_mapping.contains(idHalfedgeHole));
-            idHalfedgeHole = halfedge_mapping[idHalfedgeHole];
+            assert(halfedge_mapping.contains(hole.halfedge_id()));
+            hole.set_halfedge_id(halfedge_mapping[hole.halfedge_id()]);
         }
 
         if (face.surface_id() != nullid)
@@ -2516,37 +2514,37 @@ void quetzal::brep::Mesh<Traits>::check_mesh() const
     {
         halfedge.check_mesh(this);
     }
-    m_halfedges.check_mesh(this);
+    m_halfedges.check_source(this);
 
     for (const vertex_type& vertex : m_vertex_store)
     {
         vertex.check_mesh(this);
     }
-    m_vertices.check_mesh(this);
+    m_vertices.check_source(this);
 
     for (const face_type& face : m_face_store)
     {
         face.check_mesh(this);
     }
-    m_faces.check_mesh(this);
+    m_faces.check_source(this);
 
     for (const surface_type& surface : m_surface_store)
     {
         surface.check_mesh(this);
     }
-    m_surfaces.check_mesh(this);
+    m_surfaces.check_source(this);
 
     for (const submesh_type& submesh : m_submesh_store)
     {
         submesh.check_mesh(this);
     }
-    m_submeshes.check_mesh(this);
+    m_submeshes.check_source(this);
 
     for (const seam_type& seam : m_seam_store)
     {
         seam.check_mesh(this);
     }
-    m_seams.check_mesh(this);
+    m_seams.check_source(this);
     return;
 }
 

@@ -7,6 +7,7 @@
 
 #include "floating_point.hpp"
 #include <algorithm>
+#include <concepts>
 #include <cmath>
 
 namespace quetzal::math
@@ -33,10 +34,10 @@ namespace quetzal::math
     template<typename T>
     constexpr T GoldenRatio = T(1.6180339887498948482045868343656);
 
-    template<typename T, typename = std::enable_if_t<(std::is_integral_v<T>)>>
+    template<typename T> requires std::integral<T>
 	bool even(T t);
 
-    template<typename T, typename = std::enable_if_t<(std::is_integral_v<T>)>>
+    template<typename T> requires std::integral<T>
 	bool odd(T t);
 
     template<typename T>
@@ -102,7 +103,7 @@ namespace quetzal::math
 } // namespace quetzal::math
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::integral<T>
 bool quetzal::math::even(T t)
 {
 	static_assert(std::is_integral_v<T>);
@@ -110,7 +111,7 @@ bool quetzal::math::even(T t)
 }
 
 //------------------------------------------------------------------------------
-template<typename T, typename>
+template<typename T> requires std::integral<T>
 bool quetzal::math::odd(T t)
 {
 	static_assert(std::is_integral_v<T>);

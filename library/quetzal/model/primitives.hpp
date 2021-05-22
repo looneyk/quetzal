@@ -104,6 +104,16 @@ namespace quetzal::model
     template<typename M>
     void create_cylinder(M& mesh, const std::string& name, size_type nz, value_type<M> zLower, value_type<M> zUpper, value_type<M> revsLower, value_type<M> revsUpper, const geometry::Polygon<typename M::vector_traits>& polygon, const Extent<value_type<M>>& extentZ = ExtentEndsFlat<value_type<M>>(), bool bSurfacesDistinct = false);
 
+    // Create a cylinder given a cross section in the form of a simple polygon with variable scaling and rotation at each z
+    // fr - polygon radius function, scale factor
+    // fa - polygon azimuthal rotation function
+    // The nz parameter controls the degree of tessellation along with polygon
+    // Polygon vertices should be in ccw order relative to normal vector of 2D projection
+    // Surfaces: "body", "end0", "end1"
+    // bSurfacesDistinct not currently supported
+    template<typename M>
+    void create_cylinder(M& mesh, const std::string& name, size_type nz, float zLower, float zUpper, const geometry::Polygon<typename M::vector_traits>& polygon, std::function<float(float)> fr, std::function<float(float)> fa, const Extent<float>& extentZ = ExtentEndsFlat<float>(), bool bSurfacesDistinct = false);
+
     // Create a cylinder given a cross section of bottom and top in the form of simple polygons
     // The nz parameter controls the degree of tessellation along with polygon
     // Polygon vertices should be in ccw order relative to normal vector of 2D projection
@@ -408,10 +418,10 @@ void quetzal::model::create_box(M& mesh, const std::string& name, value_type<M> 
     std::vector<typename M::vertex_attributes_type> avs =
     {
         // Bottom
+        {{x1, y1, z0}, {T(0), T(0), T(-1)}, {T(0), T(0)}},
         {{x1, y0, z0}, {T(0), T(0), T(-1)}, {T(0), T(1)}},
         {{x0, y0, z0}, {T(0), T(0), T(-1)}, {T(1), T(1)}},
         {{x0, y1, z0}, {T(0), T(0), T(-1)}, {T(1), T(0)}},
-        {{x1, y1, z0}, {T(0), T(0), T(-1)}, {T(0), T(0)}},
 
         // Right
         {{x1, y0, z0}, {T(1), T(0), T(0)}, {T(0), T(1)}},
@@ -438,10 +448,10 @@ void quetzal::model::create_box(M& mesh, const std::string& name, value_type<M> 
         {{x0, y0, z1}, {T(0), T(-1), T(0)}, {T(0), T(0)}},
 
         // Top
-        {{x0, y0, z1}, {T(0), T(0), T(1)}, {T(0), T(1)}},
         {{x1, y0, z1}, {T(0), T(0), T(1)}, {T(1), T(1)}},
         {{x1, y1, z1}, {T(0), T(0), T(1)}, {T(1), T(0)}},
         {{x0, y1, z1}, {T(0), T(0), T(1)}, {T(0), T(0)}},
+        {{x0, y0, z1}, {T(0), T(0), T(1)}, {T(0), T(1)}},
     };
 
     for (size_t i = 0; i < 6; ++i)
@@ -456,30 +466,30 @@ void quetzal::model::create_box(M& mesh, const std::string& name, value_type<M> 
         m.create_vertex(i, avs[i]);
     }
 
-    m.create_halfedge(16,  1,  3,  0,  0);
-    m.create_halfedge(12,  2,  0,  1,  0);
-    m.create_halfedge( 8,  3,  1,  2,  0);
-    m.create_halfedge( 4,  0,  2,  3,  0);
-    m.create_halfedge( 3,  5,  7,  4,  1);
+    m.create_halfedge( 4,  1,  3,  0,  0);
+    m.create_halfedge(16,  2,  0,  1,  0);
+    m.create_halfedge(12,  3,  1,  2,  0);
+    m.create_halfedge( 8,  0,  2,  3,  0);
+    m.create_halfedge( 0,  5,  7,  4,  1);
     m.create_halfedge(11,  6,  4,  5,  1);
-    m.create_halfedge(21,  7,  5,  6,  1);
+    m.create_halfedge(20,  7,  5,  6,  1);
     m.create_halfedge(17,  4,  6,  7,  1);
-    m.create_halfedge( 2,  9, 11,  8,  2);
+    m.create_halfedge( 3,  9, 11,  8,  2);
     m.create_halfedge(15, 10,  8,  9,  2);
-    m.create_halfedge(22, 11,  9, 10,  2);
+    m.create_halfedge(21, 11,  9, 10,  2);
     m.create_halfedge( 5,  8, 10, 11,  2);
-    m.create_halfedge( 1, 13, 15, 12,  3);
+    m.create_halfedge( 2, 13, 15, 12,  3);
     m.create_halfedge(19, 14, 12, 13,  3);
-    m.create_halfedge(23, 15, 13, 14,  3);
+    m.create_halfedge(22, 15, 13, 14,  3);
     m.create_halfedge( 9, 12, 14, 15,  3);
-    m.create_halfedge( 0, 17, 19, 16,  4);
+    m.create_halfedge( 1, 17, 19, 16,  4);
     m.create_halfedge( 7, 18, 16, 17,  4);
-    m.create_halfedge(20, 19, 17, 18,  4);
+    m.create_halfedge(23, 19, 17, 18,  4);
     m.create_halfedge(13, 16, 18, 19,  4);
-    m.create_halfedge(18, 21, 23, 20,  5);
-    m.create_halfedge( 6, 22, 20, 21,  5);
-    m.create_halfedge(10, 23, 21, 22,  5);
-    m.create_halfedge(14, 20, 22, 23,  5);
+    m.create_halfedge( 6, 21, 23, 20,  5);
+    m.create_halfedge(10, 22, 20, 21,  5);
+    m.create_halfedge(14, 23, 21, 22,  5);
+    m.create_halfedge(18, 20, 22, 23,  5);
 
     m.check();
     mesh.append(m);
@@ -612,13 +622,13 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 
     T t = T(1) / T(nz);
 
-    T dr = rUpper - rLower;
-    T r0 = rLower;
-    T r1 = math::lerp(rLower, rUpper, t);
-
     T dz = zUpper - zLower;
     T z0 = zLower;
     T z1 = math::lerp(zLower, zUpper, t);
+
+    T dr = rUpper - rLower;
+    T r0 = rLower;
+    T r1 = math::lerp(rLower, rUpper, t);
 
     T azimuth0 = azimuthLower;
     T azimuth1 = math::lerp(azimuthLower, azimuthUpper, t);
@@ -842,14 +852,14 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 
     T t = T(1) / T(nz);
 
+    T z0 = zLower;
+    T z1 = math::lerp(zLower, zUpper, t);
+
     T scale0 = T(1);
     T scale1 = T(1);
 
     T rev0 = revsLower;
     T rev1 = math::lerp(revsLower, revsUpper, t);
-
-    T z0 = zLower;
-    T z1 = math::lerp(zLower, zUpper, t);
 
     auto vertex_normal = [](const typename M::point_type& point, T rev) -> typename M::vector_type
     {
@@ -899,6 +909,110 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
     }
 
     seal_cylinder(m, nAzimuth, nz, false, false, false, Extent<T>(), extentZ, idSubmesh);
+
+    m.check();
+    mesh.append(m);
+    return;
+}
+
+//------------------------------------------------------------------------------
+template<typename M>
+void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nz, float zLower, float zUpper, const geometry::Polygon<typename M::vector_traits>& polygon, std::function<float(float)> fr, std::function<float(float)> fa, const Extent<float>& extentZ, bool bSurfacesDistinct)
+{
+    using T = typename M::value_type;
+
+    size_type nAzimuth = polygon.edge_count();
+    assert(nAzimuth > 2);
+    assert(nz > 0);
+
+    T t = T(1) / T(nz);
+
+    T z0 = zLower;
+    T z1 = math::lerp(zLower, zUpper, t);
+
+    T ty0 = T(1);
+    T ty1 = ty0 - t;
+
+    T r0 = fr(T(0));
+    T r1 = fr(t);
+
+    T a0 = fa(T(0));
+    T a1 = fa(t);
+
+    auto matrix0 = quetzal::math::scaling(r0) * quetzal::math::rotation_z(math::PiTwo<T> * a0);
+    auto matrix1 = quetzal::math::scaling(r1) * quetzal::math::rotation_z(math::PiTwo<T> * a1);
+ 
+    bool bCuspLower = math::float_eq0(fr(T(0)));
+    bool bCuspUpper = math::float_eq0(fr(T(1)));
+    assert(nz > 1 || !bCuspLower || !bCuspUpper);
+
+    M m;
+    id_type idSubmesh = m.create_submesh(name);
+
+    id_type idSurface0 = nullid;
+    if (bSurfacesDistinct)
+    {
+        idSurface0 = m.surface_store_count();
+        for (size_t i = 0; i < nAzimuth; ++i)
+        {
+            m.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(i));
+        }
+    }
+    else
+    {
+        idSurface0 = m.create_surface(idSubmesh, SurfaceName::Body);
+    }
+
+    std::vector<typename M::vertex_attributes_type> avs0;
+    std::vector<typename M::vertex_attributes_type> avs1;
+
+    if (bCuspLower)
+    {
+        // point, revs? ...
+        avs0 = vertices_attributes<M>(polygon, T(0), T(0), z0, [](const typename M::point_type& point, T revs) -> typename M::vector_type { point; revs; return {T(0), T(0), T(-1)}; }, ty0); // vertex_normal ...
+        avs1 = vertices_attributes<M>(polygon * matrix1, z1, ty1);
+        auto tsProto1 = texture_span<T>(1, nz, bCuspLower, bCuspUpper);
+        create_base_cusp(m, avs0, avs1, tsProto1, true, idSurface0, bSurfacesDistinct);
+    }
+    else if (nz == 1 && bCuspUpper)
+    {
+        avs0 = vertices_attributes<M>(polygon * matrix0, z0, ty0);
+        avs1 = apex_vertices_attributes<M>(polygon, z1, 0.0f, z1); // revs ...
+        create_apex_cusp(m, avs0, avs1, true, idSurface0, bSurfacesDistinct);
+    }
+    else
+    {
+        avs0 = vertices_attributes<M>(polygon * matrix0, z0, ty0);
+        avs1 = vertices_attributes<M>(polygon * matrix1, z1, ty1);
+        auto tsProto0 = texture_span<T>(0, nz, bCuspLower, bCuspUpper);
+        auto tsProto1 = texture_span<T>(1, nz, bCuspLower, bCuspUpper);
+        create_band(m, avs0, avs1, tsProto0, tsProto1, true, idSurface0, bSurfacesDistinct);
+    }
+
+    for (size_type i = 2; i <= nz; ++i)
+    {
+        t = T(i) / T(nz);
+        z1 = math::lerp(zLower, zUpper, t);
+        ty1 = ty0 - t;
+
+        r1 = fr(t);
+        a1 = fa(t);
+        matrix1 = quetzal::math::scaling(r1) * quetzal::math::rotation_z(math::PiTwo<T> * a1);
+
+        if (i == nz && bCuspUpper)
+        {
+            avs1 = apex_vertices_attributes<M>(polygon, z1, 0.0f, z1); // revs ...
+            connect_apex_cusp(m, avs1, true, idSurface0, bSurfacesDistinct, false);
+        }
+        else
+        {
+            avs1 = vertices_attributes<M>(polygon * matrix1, z1, ty1);
+            auto tsProto1 = texture_span<T>(i, nz, bCuspLower, bCuspUpper);
+            connect_band(m, avs1, tsProto1, true, idSurface0, bSurfacesDistinct, false);
+        }
+    }
+
+    seal_cylinder(m, nAzimuth, nz, bCuspLower, bCuspUpper, false, {}, extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -1035,24 +1149,24 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
     assert(extentAzimuth.proper());
     assert(extentZ.proper());
 
+    T t0 = T(0);
+    T t1 = T(1) / T(nz);
+
+    T z0 = fz(t0);
+    T z1 = fz(t1);
+
+    T r0 = fr(t0);
+    T r1 = fr(t1);
+
+    T a0 = fa(t0);
+    T a1 = fa(t1);
+
     T rLower = fr(T(0));
     T rUpper = fr(T(1));
 
     bool bCuspLower = math::float_eq0(rLower);
     bool bCuspUpper = math::float_eq0(rUpper);
     bool bOpenSide = !extentAzimuth.full();
-
-    T t0 = T(0);
-    T t1 = T(1) / T(nz);
-
-    T r0 = rLower;
-    T r1 = fr(t1);
-
-    T z0 = fz(t0);
-    T z1 = fz(t1);
-
-    T a0 = fa(t0);
-    T a1 = fa(t1);
 
     M m;
     id_type idSubmesh = m.create_submesh(name);
@@ -1130,13 +1244,13 @@ void quetzal::model::create_anticylinder(M& mesh, const std::string& name, size_
 
     T t = T(1) / T(nz);
 
-    T dr = rUpper - rLower;
-    T r0 = rLower;
-    T r1 = math::lerp(rLower, rUpper, t);
-
     T dz = zUpper - zLower;
     T z0 = zLower;
     T z1 = math::lerp(zLower, zUpper, t);
+
+    T dr = rUpper - rLower;
+    T r0 = rLower;
+    T r1 = math::lerp(rLower, rUpper, t);
 
     math::Interval<T> azimuth(T(1));
 
@@ -1216,11 +1330,11 @@ void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type n
     T theta1 = math::Pi<T> * (t1 - T(0.5));
     assert(theta0 >= -math::PiHalf<T>);
 
-    T r0 = bCuspLower ? T(0) : radius * cos(theta0);
-    T r1 = radius * cos(theta1);
-
     T z0 = radius * sin(theta0);
     T z1 = radius * sin(theta1);
+
+    T r0 = bCuspLower ? T(0) : radius * cos(theta0);
+    T r1 = radius * cos(theta1);
 
     normal_vector_type<M> normalProto0 {r0, T(0), z0};
     normal_vector_type<M> normalProto1 {r1, T(0), z1};
@@ -1291,16 +1405,17 @@ void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type n
     T t1 = contour.vertex(1).x();
     T dt = contour.back().x() - t0;
 
-    T radius0 = contour.vertex(0).y();
-    T radius1 = contour.vertex(1).y();
-
     T theta0 = math::Pi<T> * (t0 - T(0.5));
     T theta1 = math::Pi<T> * (t1 - T(0.5));
 
-    T r0 = radius0 * cos(theta0);
+    T radius0 = contour.vertex(0).y();
+    T radius1 = contour.vertex(1).y();
+
     T z0 = radius0 * sin(theta0);
-    T r1 = radius1 * cos(theta1);
     T z1 = radius1 * sin(theta1);
+
+    T r0 = radius0 * cos(theta0);
+    T r1 = radius1 * cos(theta1);
 
     // normalProto not meaningful here ...
     normal_vector_type<M> normalProto0 {r0, T(0), z0};
@@ -1378,9 +1493,6 @@ void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type n
     assert(extentElevation.proper());
     assert(extentElevation.interval().lower() >= T(0) && extentElevation.interval().length() <= T(1));
 
-    T rLower = fr(T(0));
-    T rUpper = fr(T(1));
-
     bool bCuspLower = math::float_eq0(extentElevation.interval().lower());
     bool bCuspUpper = math::float_eq(extentElevation.interval().upper(), T(1));
     bool bOpenSide = !extentAzimuth.full();
@@ -1392,14 +1504,14 @@ void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type n
     T theta0 = math::Pi<T> * (t0 - T(0.5));
     T theta1 = math::Pi<T> * (t1 - T(0.5));
 
-    T radius0 = rLower;
+    T radius0 = fr(t0);
     T radius1 = fr(t1);
-
-    T r0 = radius0 * cos(theta0);
-    T r1 = radius1 * cos(theta1);
 
     T z0 = radius0 * sin(theta0);
     T z1 = radius1 * sin(theta1);
+
+    T r0 = radius0 * cos(theta0);
+    T r1 = radius1 * cos(theta1);
 
     // normalProto not meaningful here ...
     normal_vector_type<M> normalProto0 {r0, T(0), z0};
@@ -2479,7 +2591,7 @@ void quetzal::model::create_geodesic_sphere(M& mesh, const std::string& name, va
 
     if (nSubdivisions > 1)
     {
-        auto nFacesOrig = m.faces().size();
+        auto nFacesOrig = m.face_count();
         for (size_t i = 0; i < nFacesOrig; ++i)
         {
             // Split all unmarked edges
@@ -2606,7 +2718,7 @@ assert(texcoord.y() == T(0) || texcoord.y() == T(1));
     }
 for (const auto& face : m.faces())
 {
-if (face.vertex_count() == 4)
+if (face.halfedge_count() == 4)
 {
 for (const auto& halfedge : face.halfedges())
 {
@@ -2673,6 +2785,8 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
         idHalfedgeHolesLower[i] = m.halfedge_store_count();
 
         M mm;
+        // Careful, reusing variables here to prevent warning ...
+        idSubmesh = mm.create_submesh(name);
         idSurface = mm.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(idSurface0 + 1 + i));
         create_band(mm, avs0, avs1, tsProto0, tsProto1, true, idSurface, false);
         brep::invert(mm);

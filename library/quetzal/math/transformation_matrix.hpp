@@ -25,22 +25,22 @@ namespace math
     template<typename V>
     Matrix<typename V::value_type> translation(const V& v);
 
-    // should use enable_if_t, but lacking N ...
+    // should use constraint, but lacking N ...
     template<typename T>
     Matrix<T> translation(T tx, T ty, T tz);
 
-    // should use enable_if_t, but lacking N ...
+    // should use constraint, but lacking N ...
     template<typename T>
     Matrix<T> translation(T tx, T ty);
 
     template<typename T>
     Matrix<T> scaling(T factor);
 
-    // should use enable_if_t, but lacking N ...
+    // should use constraint, but lacking N ...
     template<typename T>
     Matrix<T> scaling(T sx, T sy, T sz);
 
-    // should use enable_if_t, but lacking N ...
+    // should use constraint, but lacking N ...
     template<typename T>
     Matrix<T> scaling(T sx, T sy);
 

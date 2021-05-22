@@ -259,6 +259,9 @@
     <ClInclude Include="DateTime.hpp" />
     <ClInclude Include="Elements.hpp" />
     <ClInclude Include="ElementsConstIterator.hpp" />
+    <ClInclude Include="ElementsDirect.hpp" />
+    <ClInclude Include="ElementsDirectConstIterator.hpp" />
+    <ClInclude Include="ElementsDirectIterator.hpp" />
     <ClInclude Include="ElementsIterator.hpp" />
     <ClInclude Include="error_util.hpp" />
     <ClInclude Include="Exception.hpp" />

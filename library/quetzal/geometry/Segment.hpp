@@ -13,10 +13,7 @@
 #include <iostream>
 #include <cassert>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     //--------------------------------------------------------------------------
@@ -25,6 +22,7 @@ namespace geometry
     {
     public:
 
+        using traits_type = Traits;
         using value_type = typename Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
@@ -47,7 +45,8 @@ namespace geometry
         void set_endpoints(const point_type& a, const point_type& b);
 
         value_type length() const;
-        vector_type direction() const; // vector connecting endpoints, not a unit vector
+        vector_type vector() const; // vector connecting endpoints
+        vector_type direction() const; // unit direction vector
 
         point_type point(value_type t) const;
 
@@ -56,26 +55,32 @@ namespace geometry
     private:
 
         points_type m_endpoints;
+
+        // Cached direction vector calculated only when needed
+        mutable bool m_bDirection;
+        mutable vector_type m_direction;
     };
 
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, Segment<Traits> segment);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Segment<Traits>::Segment(const points_type& points) :
-    m_endpoints(points)
+    m_endpoints(points),
+    m_bDirection(false),
+    m_direction()
 {
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Segment<Traits>::Segment(const point_type& a, const point_type& b) :
-    m_endpoints{a, b}
+    m_endpoints{a, b},
+    m_bDirection(false),
+    m_direction()
 {
 }
 
@@ -92,6 +97,7 @@ template<typename Traits>
 typename quetzal::geometry::Segment<Traits>::point_type& quetzal::geometry::Segment<Traits>::endpoint(size_type n)
 {
     assert(n <= 1);
+    m_bDirection = false;
     return m_endpoints[n];
 }
 
@@ -100,6 +106,7 @@ template<typename Traits>
 void quetzal::geometry::Segment<Traits>::set_endpoint(size_type n, const point_type& point)
 {
     assert(n <= 1);
+    m_bDirection = false;
     m_endpoints[n] = point;
     return;
 }
@@ -108,6 +115,7 @@ void quetzal::geometry::Segment<Traits>::set_endpoint(size_type n, const point_t
 template<typename Traits>
 void quetzal::geometry::Segment<Traits>::set_endpoints(const point_type& a, const point_type& b)
 {
+    m_bDirection = false;
     m_endpoints = {a, b};
     return;
 }
@@ -116,14 +124,27 @@ void quetzal::geometry::Segment<Traits>::set_endpoints(const point_type& a, cons
 template<typename Traits>
 typename quetzal::geometry::Segment<Traits>::value_type quetzal::geometry::Segment<Traits>::length() const
 {
-    return direction().norm();
+    return vector().norm();
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+typename quetzal::geometry::Segment<Traits>::vector_type quetzal::geometry::Segment<Traits>::vector() const
+{
+    return m_endpoints[1] - m_endpoints[0];
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
 typename quetzal::geometry::Segment<Traits>::vector_type quetzal::geometry::Segment<Traits>::direction() const
 {
-    return m_endpoints[1] - m_endpoints[0];
+    if (!m_bDirection)
+    {
+        m_direction = normalize(m_endpoints[1] - m_endpoints[0]);
+        m_bDirection = true;
+    }
+     
+    return m_direction;
 }
 
 //------------------------------------------------------------------------------
@@ -138,8 +159,8 @@ typename quetzal::geometry::Segment<Traits>::point_type quetzal::geometry::Segme
 template<typename Traits>
 bool quetzal::geometry::Segment<Traits>::contains(const point_type& point) const
 {
-    value_type t = dot(point - m_endpoints[0], direction()) / direction().norm_squared();
-    return math::float_ge0(t) && math::float_le(t, Traits::val(1)) && vector_eq(point, this->point(t));
+    value_type t = dot(point - m_endpoints[0], vector()) / vector().norm_squared();
+    return math::float_clamped01(t) && vector_eq(point, this->point(t));
 }
 
 //------------------------------------------------------------------------------

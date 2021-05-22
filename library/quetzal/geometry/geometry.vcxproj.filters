@@ -87,6 +87,9 @@
     <ClInclude Include="Points.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="relationships.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Locus.cpp">

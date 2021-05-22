@@ -71,12 +71,12 @@ void quetzal::brep::triangulate(M& mesh)
     {
         const typename M::face_type& face = mesh.face(i);
 
-        if (face.deleted() || (face.vertex_count() == 3 && face.hole_count() == 0))
+        if (face.deleted() || (face.halfedge_count() == 3 && face.hole_count() == 0))
         {
             continue;
         }
 
-        if (face.vertex_count() == 4 && face.hole_count() == 0)
+        if (face.halfedge_count() == 4 && face.hole_count() == 0)
         {
             triangulate_face_quad(mesh, i);
             continue;
@@ -96,7 +96,7 @@ void quetzal::brep::triangulate_face_quad(M& mesh, id_type idFace)
 {
     const auto& face = mesh.face(idFace);
     assert(!face.deleted());
-    assert(face.vertex_count() == 4);
+    assert(face.halfedge_count() == 4);
     assert(face.hole_count() == 0);
 
     id_type idHalfedges[4];
@@ -132,12 +132,12 @@ void quetzal::brep::triangulate_face_ear(M& mesh, id_type idFace)
 {
     const auto& face = mesh.face(idFace);
     assert(!face.deleted());
-    assert(face.vertex_count() > 3);
+    assert(face.halfedge_count() > 3);
     assert(face.hole_count() == 0);
 
 // mark reflex vertices ...
     typename M::vector_type normal = face.attributes().normal();
-    size_t nEdges = face.vertex_count();
+    size_t nEdges = face.halfedge_count();
     size_t n = 0; // Counts number of failed attempts to find ear vertex
 
     id_type idHalfedge = face.halfedge_id();
@@ -187,20 +187,16 @@ void quetzal::brep::triangulate_face_cdt(M& mesh, id_type idFace)
 
     p2t::CDT cdt(polygon);
 
-    for (id_type idHalfedgeHole : face.hole_ids())
+    for (const auto& hole : face.holes())
     {
-        id_type id = idHalfedgeHole;
-        std::vector<p2t::Point> hole;
-        do
+        std::vector<p2t::Point> p2tHole;
+        for (const auto& halfedge : hole.halfedges())
         {
-            const auto& halfedge = mesh.halfedge(id);
             const auto position = dr.reduce(halfedge.attributes().position());
-            hole.emplace_back(id, position.x(), position.y());
+            p2tHole.emplace_back(halfedge.id(), position.x(), position.y());
+        }
 
-            id = halfedge.next_id();
-        } while (id != idHalfedgeHole);
-
-        cdt.AddHole(hole);
+        cdt.AddHole(p2tHole);
     }
 
     cdt.Triangulate();
@@ -328,7 +324,7 @@ void quetzal::brep::triangulate_face_convex(M& mesh, id_type idFace)
 {
     const auto& face = mesh.face(idFace);
     assert(!face.deleted());
-    assert(face.vertex_count() > 3);
+    assert(face.halfedge_count() > 3);
     assert(face.hole_count() == 0);
 
     id_type idHalfedge = face.halfedge_id();
@@ -377,15 +373,15 @@ void quetzal::brep::triangulate_face_central_vertex(M& mesh, id_type idFace, con
 {
     const auto& face = mesh.face(idFace);
     assert(!face.deleted());
-    assert(face.vertex_count() >= 3);
+    assert(face.halfedge_count() >= 3);
     assert(face.hole_count() == 0);
 
     id_type idHalfedge = face.halfedge_id();
-    id_type n = face.vertex_count();
+    id_type n = face.halfedge_count();
     bool bPlanar = face_contains(face, position);
 
     typename M::vector_type normal = face.attributes().normal();
-    typename M::texcoord_type texcoord({0.5, 0.0});
+    typename M::texcoord_type texcoord({M::val(0.5), M::val(0.0)});
 
     if (!bSurfacesDistinct)
     {

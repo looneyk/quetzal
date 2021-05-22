@@ -32,7 +32,7 @@ namespace quetzal::brep
         using size_type = typename Traits::size_type;
 
         Seam();
-        Seam(mesh_type& mesh, id_type id, const std::string& name, id_type idPartner = nullid, id_type idNext = nullid, id_type idPrev = nullid, id_type idHalfedge = nullid);
+        Seam(mesh_type& mesh, id_type id, id_type idPartner = nullid, id_type idNext = nullid, id_type idPrev = nullid, id_type idHalfedge = nullid);
         Seam(const Seam&) = default;
         Seam(Seam&&) noexcept = default;
         ~Seam() = default;
@@ -42,8 +42,8 @@ namespace quetzal::brep
 
         id_type id() const;
 
-        const std::string& name() const;
-        void set_name(const std::string& name);
+        id_type perimeter_id() const;
+        void set_perimeter_id(id_type idPerimeter);
 
         id_type partner_id() const;
         void set_partner_id(id_type idSeam);
@@ -63,17 +63,11 @@ namespace quetzal::brep
         const Seam& prev() const;
         Seam& prev();
 
-        // with halfedges iterator, do we really need halfedge on its own? ...
-        // no, it's only used in iterators
-
         id_type halfedge_id() const;
         void set_halfedge_id(id_type idHalfedge);
 
         const halfedge_type& halfedge() const;
         halfedge_type& halfedge();
-
-        const Properties& properties() const;
-        Properties& properties();
 
         // Virtual container interface, iterators for halfedges on this seam
         size_type halfedge_count() const;
@@ -81,10 +75,12 @@ namespace quetzal::brep
         halfedges_type& halfedges();
 
         id_type surface_id() const;
-        id_type partner_surface_id() const;
 
         const surface_type& surface() const;
         surface_type& surface();
+
+        const Properties& properties() const;
+        Properties& properties();
 
         bool border() const;
 
@@ -98,14 +94,13 @@ namespace quetzal::brep
 
         mesh_type* m_pmesh;
         id_type m_id;
-        std::string m_name;
+        id_type m_idPerimeter;
         id_type m_idPartner;
         id_type m_idNext;
         id_type m_idPrev;
         id_type m_idHalfedge;
-        Properties m_properties;
-
         halfedges_type m_halfedges;
+        Properties m_properties;
 
         static typename halfedges_type::size_function_type m_halfedges_size;
         static typename halfedges_type::terminal_function_type m_halfedges_first;
@@ -128,29 +123,29 @@ quetzal::brep::Seam<Traits, M>::Seam() :
     Flags(),
     m_pmesh(nullptr),
     m_id(nullid),
-    m_name(),
+    m_idPerimeter(nullid),
     m_idPartner(nullid),
     m_idNext(nullid),
     m_idPrev(nullid),
     m_idHalfedge(nullid),
-    m_properties(),
-    m_halfedges(*m_pmesh, nullid, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element)
+    m_halfedges(*m_pmesh, nullid, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element),
+    m_properties()
 {
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-quetzal::brep::Seam<Traits, M>::Seam(mesh_type& mesh, id_type id, const std::string& name, id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge) :
+quetzal::brep::Seam<Traits, M>::Seam(mesh_type& mesh, id_type id, id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge) :
     Flags(),
     m_pmesh(&mesh),
     m_id(id),
-    m_name(name),
+    m_idPerimeter(nullid),
     m_idPartner(idPartner),
     m_idNext(idNext),
     m_idPrev(idPrev),
     m_idHalfedge(idHalfedge),
-    m_properties(),
-    m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element)
+    m_halfedges(mesh, id, m_halfedges_size, m_halfedges_first, m_halfedges_last, m_halfedges_end, m_halfedges_forward, m_halfedges_reverse, m_halfedges_element, m_halfedges_const_element),
+    m_properties()
 {
 }
 
@@ -163,16 +158,16 @@ quetzal::id_type quetzal::brep::Seam<Traits, M>::id() const
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const std::string& quetzal::brep::Seam<Traits, M>::name() const
+quetzal::id_type quetzal::brep::Seam<Traits, M>::perimeter_id() const
 {
-    return m_name;
+    return m_idPerimeter;
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-void quetzal::brep::Seam<Traits, M>::set_name(const std::string& name)
+void quetzal::brep::Seam<Traits, M>::set_perimeter_id(id_type idPerimeter)
 {
-    m_name = name;
+    m_idPerimeter = idPerimeter;
     return;
 }
 
@@ -302,20 +297,6 @@ typename quetzal::brep::Seam<Traits, M>::halfedge_type& quetzal::brep::Seam<Trai
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename const quetzal::Properties& quetzal::brep::Seam<Traits, M>::properties() const
-{
-    return m_properties;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-typename quetzal::Properties& quetzal::brep::Seam<Traits, M>::properties()
-{
-    return m_properties;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
 typename quetzal::brep::Seam<Traits, M>::size_type quetzal::brep::Seam<Traits, M>::halfedge_count() const
 {
     return m_halfedges.size();
@@ -344,18 +325,6 @@ quetzal::id_type quetzal::brep::Seam<Traits, M>::surface_id() const
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-quetzal::id_type quetzal::brep::Seam<Traits, M>::partner_surface_id() const
-{
-    if (border())
-    {
-        return nullid;
-    }
-
-    return halfedge().partner().face().surface_id();
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
 const typename quetzal::brep::Seam<Traits, M>::surface_type& quetzal::brep::Seam<Traits, M>::surface() const
 {
     assert(m_pmesh != nullptr);
@@ -368,6 +337,20 @@ typename quetzal::brep::Seam<Traits, M>::surface_type& quetzal::brep::Seam<Trait
 {
     assert(m_pmesh != nullptr);
     return m_pmesh->surface(surface_id());
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename const quetzal::Properties& quetzal::brep::Seam<Traits, M>::properties() const
+{
+    return m_properties;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+typename quetzal::Properties& quetzal::brep::Seam<Traits, M>::properties()
+{
+    return m_properties;
 }
 
 //------------------------------------------------------------------------------
@@ -407,7 +390,7 @@ template<typename Traits, typename M>
 void quetzal::brep::Seam<Traits, M>::check_mesh(const mesh_type* const pmesh) const
 {
     assert(m_pmesh == pmesh);
-    assert(m_halfedges.mesh() == pmesh);
+    assert(m_halfedges.source() == pmesh);
     return;
 }
 

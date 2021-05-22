@@ -22,10 +22,7 @@ namespace quetzal::brep
     // Halfedge A and B will be deleted, but their partners will form a new pair
     // Remove the adjoining faces
     template<typename M>
-    void weld(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB);
-
-    template<typename M>
-    void weld_faces(M& mesh, id_type idFaceA, id_type idFaceB);
+    void weld(M& mesh, id_type idFaceA, id_type idFaceB);
 
     // Connect bodies A and B at coincident matching surfaces; remove the original surfaces and their faces
     template<typename M>
@@ -36,10 +33,10 @@ namespace quetzal::brep
     // No new halfedges or vertices are added, only faces if there are any holes in B
     // Works by repurposing base B halfedges to form hole in face A and hole halfedges in base B to form new faces
     template<typename M>
-    void attach(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB, bool bHoleSurface = true);
+    void attach(M& mesh, id_type idFaceA, id_type idFaceB, bool bSurfacesDistinct = false);
 
     template<typename M>
-    void attach_faces(M& mesh, id_type idFaceA, id_type idFaceB);
+    void attach(M& mesh, const std::string& nameSurfaceA, const std::string& nameSurfaceB, bool bSurfacesDistinct = false);
 
     template<typename M>
     void clip(M& mesh, const geometry::Plane<typename M::vector_traits>& plane, const std::string& nameSurface = "clip");
@@ -52,8 +49,11 @@ namespace quetzal::brep
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::weld(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB)
+void quetzal::brep::weld(M& mesh, id_type idFaceA, id_type idFaceB)
 {
+    auto [idHalfedgeA, idHalfedgeB] = find_partner_halfedges(mesh, idFaceA, idFaceB);
+    assert(idHalfedgeA != nullid);
+    assert(idHalfedgeB != nullid);
     assert(!mesh.halfedge(idHalfedgeA).deleted());
     assert(!mesh.halfedge(idHalfedgeB).deleted());
 
@@ -61,7 +61,7 @@ void quetzal::brep::weld(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB)
     auto& faceB = mesh.halfedge(idHalfedgeB).face();
     assert(!faceA.deleted());
     assert(!faceB.deleted());
-    assert(faceA.vertex_count() == faceB.vertex_count());
+    assert(faceA.halfedge_count() == faceB.halfedge_count());
 
     for (auto& halfedgeA : faceA.halfedges())
     {
@@ -82,18 +82,6 @@ void quetzal::brep::weld(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB)
 
     mesh.delete_face(faceA.id());
     mesh.delete_face(faceB.id());
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename M>
-void quetzal::brep::weld_faces(M& mesh, id_type idFaceA, id_type idFaceB)
-{
-    const auto [idHalfedgeA, idHalfedgeB] = find_partner_halfedges(mesh, idFaceA, idFaceB);
-    assert(idHalfedgeA != nullid);
-    assert(idHalfedgeB != nullid);
-
-    weld(mesh, idHalfedgeA, idHalfedgeB);
     return;
 }
 
@@ -122,7 +110,7 @@ void quetzal::brep::weld(M& mesh, const std::string& nameSurfaceA, const std::st
     for (auto iA = indexFacesA.begin(), iB = indexFacesB.begin(); iA != indexFacesA.end(); ++iA, ++iB)
     {
         assert(vector_eq(iA->first, iB->first));
-        weld_faces(mesh, iA->second, iB->second);
+        weld(mesh, iA->second, iB->second);
     }
 
     return;
@@ -130,18 +118,17 @@ void quetzal::brep::weld(M& mesh, const std::string& nameSurfaceA, const std::st
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::attach(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB, bool bHoleSurface)
+void quetzal::brep::attach(M& mesh, id_type idFaceA, id_type idFaceB, bool bSurfacesDistinct)
 {
+    id_type idHalfedgeA = mesh.face(idFaceA).halfedge_id();
+    id_type idHalfedgeB = mesh.face(idFaceB).halfedge_id();
     assert(!mesh.halfedge(idHalfedgeA).deleted());
     assert(!mesh.halfedge(idHalfedgeB).deleted());
 
-    auto& faceA = mesh.halfedge(idHalfedgeA).face();
-    auto& faceB = mesh.halfedge(idHalfedgeB).face();
+    auto& faceA = mesh.face(idFaceA);
+    auto& faceB = mesh.face(idFaceB);
     assert(!faceA.deleted());
     assert(!faceB.deleted());
-
-    id_type idFaceA = faceA.id();
-    id_type idFaceB = faceB.id();
 
     // Apply face A normal to transferred vertices
     auto normal = faceA.attributes().normal();
@@ -153,18 +140,19 @@ void quetzal::brep::attach(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB, bo
         halfedge.attributes().set_normal(normal); // vertex ...
     }
 
-    faceA.hole_ids().push_back(idHalfedgeB);
+    faceA.create_hole(idHalfedgeB);
 
     interpolate_face_texcoords(faceA, faceB);
 
     // submesh should be reassigned, but faces should retain their surface membership ...
+    // retain existing submesh as well? ...
     id_type idSurface = faceA.surface_id();
     id_type idSubmesh = faceA.submesh_id();
     size_t i = 0;
 
-    for (id_type idHalfedgeHole : faceB.hole_ids())
+    for (const auto& hole : faceB.holes())
     {
-        id_type idFace = mesh.create_face(idSurface, idHalfedgeHole, {normal});
+        id_type idFace = mesh.create_face(idSurface, hole.halfedge_id(), {normal});
         auto& face = mesh.face(idFace);
 
         for (auto& halfedge : face.halfedges())
@@ -173,7 +161,7 @@ void quetzal::brep::attach(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB, bo
             halfedge.attributes().set_normal(normal); // vertex ...
         }
 
-        if (bHoleSurface)
+        if (bSurfacesDistinct)
         {
             id_type idSurfaceHole = mesh.create_surface(idSubmesh, mesh.surface(idSurface).name() + to_string(i), mesh.surface(idSurface).attributes(), mesh.surface(idSurface).properties());
             face.set_surface_id(idSurfaceHole);
@@ -192,12 +180,16 @@ void quetzal::brep::attach(M& mesh, id_type idHalfedgeA, id_type idHalfedgeB, bo
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::attach_faces(M& mesh, id_type idFaceA, id_type idFaceB)
+void quetzal::brep::attach(M& mesh, const std::string& nameSurfaceA, const std::string& nameSurfaceB, bool bSurfacesDistinct)
 {
-    id_type idHalfedgeA = mesh.face(idFaceA).halfedge_id();
-    id_type idHalfedgeB = mesh.face(idFaceB).halfedge_id();
+    auto& surfaceA = mesh.surface(nameSurfaceA);
+    auto& surfaceB = mesh.surface(nameSurfaceB);
 
-    attach(mesh, idHalfedgeA, idHalfedgeB);
+    // this only handles single face per surface case ...
+    assert(surfaceA.face_count() == surfaceB.face_count());
+    assert(surfaceA.face_count() == 1);
+
+    attach(mesh, surfaceA.faces().front().id(), surfaceB.faces().front().id(), bSurfacesDistinct);
     return;
 }
 

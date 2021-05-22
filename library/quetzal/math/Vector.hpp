@@ -6,15 +6,12 @@
 //------------------------------------------------------------------------------
 
 #include "floating_point.hpp"
+#include <concepts>
 #include <iosfwd>
-#include <type_traits>
 #include <cmath>
 #include <cassert>
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
     //--------------------------------------------------------------------------
@@ -30,19 +27,21 @@ namespace math
         using rep_type = typename Traits::rep_type;
 
         Vector();
-        Vector(const value_type(&components)[dimension]); // typename U ...
         Vector(const rep_type& rep);
 
-        template<typename U, typename = std::enable_if_t<(dimension == 1 && std::is_convertible_v<U, value_type>)>>
+        template<typename U> requires std::convertible_to<U, typename Traits::value_type>
+        Vector(const U (&components)[dimension]);
+
+        template<typename U> requires (Traits::dimension == 1) && std::convertible_to<U, typename Traits::value_type>
         Vector(const U& x);
 
-        template<typename U, typename = std::enable_if_t<(dimension == 2 && std::is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension == 2) && std::convertible_to<U, typename Traits::value_type>
         Vector(const U& x, const U& y);
 
-        template<typename U, typename = std::enable_if_t<(dimension == 3 && std::is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension == 3) && std::convertible_to<U, typename Traits::value_type>
         Vector(const U& x, const U& y, const U& z);
 
-        template<typename U, typename = std::enable_if_t<(dimension == 4 && std::is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension == 4) && std::convertible_to<U, typename Traits::value_type>
         Vector(const U& x, const U& y, const U& z, const U& w);
 
         Vector(const Vector&) = default;
@@ -63,72 +62,58 @@ namespace math
         value_type operator[](size_t i) const;
         value_type& operator[](size_t i);
 
-        template<typename = std::enable_if_t<(dimension >= 1)>>
-        value_type x() const;
+        value_type x() const requires (Traits::dimension >= 1);
+        value_type y() const requires (Traits::dimension >= 2);
+        value_type z() const requires (Traits::dimension >= 3);
+        value_type w() const requires (Traits::dimension >= 4);
 
-        template<typename = std::enable_if_t<(dimension >= 2)>>
-        value_type y() const;
+        value_type& x() requires (Traits::dimension >= 1);
+        value_type& y() requires (Traits::dimension >= 2);
+        value_type& z() requires (Traits::dimension >= 3);
+        value_type& w() requires (Traits::dimension >= 4);
 
-        template<typename = std::enable_if_t<(dimension >= 3)>>
-        value_type z() const;
-
-        template<typename = std::enable_if_t<(dimension >= 4)>>
-        value_type w() const;
-
-        template<typename = std::enable_if_t<(dimension >= 1)>>
-        value_type& x();
-
-        template<typename = std::enable_if_t<(dimension >= 2)>>
-        value_type& y();
-
-        template<typename = std::enable_if_t<(dimension >= 3)>>
-        value_type& z();
-
-        template<typename = std::enable_if_t<(dimension >= 4)>>
-        value_type& w();
-
-        template<typename U, typename = std::enable_if_t<(dimension >= 1 && is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension >= 1) && std::convertible_to<U, typename Traits::value_type>
         void set_x(const U& x);
 
-        template<typename U, typename = std::enable_if_t<(dimension >= 2 && is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension >= 2) && std::convertible_to<U, typename Traits::value_type>
         void set_y(const U& y);
 
-        template<typename U, typename = std::enable_if_t<(dimension >= 3 && is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension >= 3) && std::convertible_to<U, typename Traits::value_type>
         void set_z(const U& z);
 
-        template<typename U, typename = std::enable_if_t<(dimension >= 4 && is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension >= 4) && std::convertible_to<U, typename Traits::value_type>
         void set_w(const U& w);
 
-        template<typename U, typename = std::enable_if_t<(dimension == 1 && is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension >= 1) && std::convertible_to<U, typename Traits::value_type>
         void set(const U& x);
 
-        template<typename U, typename = std::enable_if_t<(dimension == 2 && is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension >= 2) && std::convertible_to<U, typename Traits::value_type>
         void set(const U& x, const U& y);
 
-        template<typename U, typename = std::enable_if_t<(dimension == 3 && is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension >= 3) && std::convertible_to<U, typename Traits::value_type>
         void set(const U& x, const U& y, const U& z);
 
-        template<typename U, typename = std::enable_if_t<(dimension == 4 && is_convertible_v<U, value_type>)>>
+        template<typename U> requires (Traits::dimension >= 4) && std::convertible_to<U, typename Traits::value_type>
         void set(const U& x, const U& y, const U& z, const U& w);
                 
-        template<size_t I, typename = std::enable_if_t<(I < dimension)>>
+        template<size_t I> requires (I < Traits::dimension)
         value_type get() const;
 
-        template<size_t I, typename = std::enable_if_t<(I < dimension)>>
+        template<size_t I> requires (I < Traits::dimension)
         value_type& get();
 
-        template<size_t I, typename U, typename = std::enable_if_t<(I < dimension && is_convertible_v<U, value_type>)>>
+        template<size_t I, typename U> requires (I < Traits::dimension) && std::convertible_to<U, typename Traits::value_type>
         void set(const U& u);
 
         value_type norm() const;
         value_type norm_squared() const;
 
         void normalize();
-        void round_zero(int ulp = 64);
+        void round_zero(int ulp = ulpDefault);
         void clear();
 
-        bool unit(int ulp = 64) const;
-        bool float_zero(int ulp = 64) const;
+        bool unit(int ulp = ulpDefault) const;
+        bool float_zero(int ulp = ulpDefault) const;
         bool zero() const;
 
         // rep may not have data(), traits for data extraction? Traits::data(rep) ...
@@ -154,13 +139,13 @@ namespace math
     Vector<Traits> operator-(Vector<Traits> lhs, const Vector<Traits>& rhs);
 
     template<typename Traits>
-    Vector<Traits> operator*(Vector<Traits> lhs, const typename Vector<Traits>::value_type& rhs);
+    Vector<Traits> operator*(Vector<Traits> lhs, const typename Traits::value_type& rhs);
 
     template<typename Traits>
-    Vector<Traits> operator*(const typename Vector<Traits>::value_type& lhs, Vector<Traits> rhs);
+    Vector<Traits> operator*(const typename Traits::value_type& lhs, Vector<Traits> rhs);
 
     template<typename Traits>
-    Vector<Traits> operator/(Vector<Traits> lhs, const typename Vector<Traits>::value_type& rhs);
+    Vector<Traits> operator/(Vector<Traits> lhs, const typename Traits::value_type& rhs);
 
     template<typename Traits>
     bool operator==(const Vector<Traits>& lhs, const Vector<Traits>& rhs);
@@ -181,26 +166,26 @@ namespace math
     bool operator>=(const Vector<Traits>& lhs, const Vector<Traits>& rhs);
 
     template<typename Traits>
-    typename Vector<Traits>::value_type norm(const Vector<Traits>& v);
+    typename Traits::value_type norm(const Vector<Traits>& v);
 
     template<typename Traits>
-    typename Vector<Traits>::value_type norm_squared(const Vector<Traits>& v);
+    typename Traits::value_type norm_squared(const Vector<Traits>& v);
 
     template<typename Traits>
-    typename Vector<Traits>::value_type dot(const Vector<Traits>& lhs, const Vector<Traits>& rhs);
+    typename Traits::value_type dot(const Vector<Traits>& lhs, const Vector<Traits>& rhs);
 
-    template<typename Traits>
+    template<typename Traits> requires (Traits::dimension == 3)
     Vector<Traits> cross(const Vector<Traits>& lhs, const Vector<Traits>& rhs);
 
-    template<typename Traits>
+    template<typename Traits> requires (Traits::dimension == 2)
     Vector<Traits> perp(const Vector<Traits>& v);
 
     // dot(perp(lhs), b)
-    template<typename Traits>
-    typename Vector<Traits>::value_type dot_perp(const Vector<Traits>& lhs, const Vector<Traits>& rhs);
+    template<typename Traits> requires (Traits::dimension == 2)
+    typename Traits::value_type dot_perp(const Vector<Traits>& lhs, const Vector<Traits>& rhs);
 
     template<typename Traits>
-    Vector<Traits> lerp(const Vector<Traits>& a, const Vector<Traits>& b, typename Vector<Traits>::value_type t);
+    Vector<Traits> lerp(const Vector<Traits>& a, const Vector<Traits>& b, typename Traits::value_type t);
 
     template<typename Traits>
     Vector<Traits> normalize(const Vector<Traits>& v);
@@ -215,16 +200,16 @@ namespace math
     bool perpendicular(const Vector<Traits>& lhs, const Vector<Traits>& rhs);
 
     template<typename Traits>
-    bool vector_eq(const Vector<Traits>& lhs, const Vector<Traits>& rhs, int ulp = 64);
+    bool vector_eq(const Vector<Traits>& lhs, const Vector<Traits>& rhs, int ulp = ulpDefault);
 
     template<typename Traits>
-    bool vector_eq0(const Vector<Traits>& v, int ulp = 64);
+    bool vector_eq0(const Vector<Traits>& v, int ulp = ulpDefault);
 
     template<typename Traits>
-    bool vector_unit(const Vector<Traits>& v, int ulp = 64);
+    bool vector_unit(const Vector<Traits>& v, int ulp = ulpDefault);
 
     template<typename Traits>
-    Vector<Traits> round_zero(Vector<Traits> v, int ulp = 64);
+    Vector<Traits> round_zero(Vector<Traits> v, int ulp = ulpDefault);
 
     template<typename Traits>
     std::istream& operator>>(std::istream& is, Vector<Traits>& v);
@@ -232,9 +217,7 @@ namespace math
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, const Vector<Traits>& v);
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename Traits>
@@ -246,14 +229,6 @@ quetzal::math::Vector<Traits>::Vector() :
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::math::Vector<Traits>::Vector(const value_type(&components)[dimension]) :
-    m_rep()
-{
-    Traits::assign(m_rep, components);
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
 quetzal::math::Vector<Traits>::Vector(const rep_type& rep) :
     m_rep(rep)
 {
@@ -261,7 +236,16 @@ quetzal::math::Vector<Traits>::Vector(const rep_type& rep) :
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires std::convertible_to<U, typename Traits::value_type>
+quetzal::math::Vector<Traits>::Vector(const U (&components)[dimension]) :
+    m_rep()
+{
+    Traits::assign(m_rep, components);
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+template<typename U> requires (Traits::dimension == 1) && std::convertible_to<U, typename Traits::value_type>
 quetzal::math::Vector<Traits>::Vector(const U& x) :
     m_rep()
 {
@@ -270,7 +254,7 @@ quetzal::math::Vector<Traits>::Vector(const U& x) :
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension == 2) && std::convertible_to<U, typename Traits::value_type>
 quetzal::math::Vector<Traits>::Vector(const U& x, const U& y) :
     m_rep()
 {
@@ -279,7 +263,7 @@ quetzal::math::Vector<Traits>::Vector(const U& x, const U& y) :
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension == 3) && std::convertible_to<U, typename Traits::value_type>
 quetzal::math::Vector<Traits>::Vector(const U& x, const U& y, const U& z) :
     m_rep()
 {
@@ -288,7 +272,7 @@ quetzal::math::Vector<Traits>::Vector(const U& x, const U& y, const U& z) :
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension == 4) && std::convertible_to<U, typename Traits::value_type>
 quetzal::math::Vector<Traits>::Vector(const U& x, const U& y, const U& z, const U& w) :
     m_rep()
 {
@@ -351,7 +335,7 @@ quetzal::math::Vector<Traits>& quetzal::math::Vector<Traits>::operator/=(value_t
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>::operator[](size_t i) const
+typename Traits::value_type quetzal::math::Vector<Traits>::operator[](size_t i) const
 {
     assert(i < dimension);
     return Traits::get(m_rep, i);
@@ -359,7 +343,7 @@ typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::math::Vector<Traits>::value_type& quetzal::math::Vector<Traits>::operator[](size_t i)
+typename Traits::value_type& quetzal::math::Vector<Traits>::operator[](size_t i)
 {
     assert(i < dimension);
     return Traits::get(m_rep, i);
@@ -367,79 +351,63 @@ typename quetzal::math::Vector<Traits>::value_type& quetzal::math::Vector<Traits
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-//template<typename Z, typename>
-template<typename>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>::x() const
+typename Traits::value_type quetzal::math::Vector<Traits>::x() const requires (Traits::dimension >= 1)
 {
     return Traits::get<0>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-//template<typename Z, typename>
-template<typename>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>::y() const
+typename Traits::value_type quetzal::math::Vector<Traits>::y() const requires (Traits::dimension >= 2)
 {
     return Traits::get<1>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-//template<typename Z, typename>
-template<typename>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>::z() const
+typename Traits::value_type quetzal::math::Vector<Traits>::z() const requires (Traits::dimension >= 3)
 {
     return Traits::get<2>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-//template<typename Z, typename>
-template<typename>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>::w() const
+typename Traits::value_type quetzal::math::Vector<Traits>::w() const requires (Traits::dimension >= 4)
 {
     return Traits::get<3>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-//template<typename Z, typename>
-template<typename>
-typename quetzal::math::Vector<Traits>::value_type& quetzal::math::Vector<Traits>::x()
+typename Traits::value_type& quetzal::math::Vector<Traits>::x() requires (Traits::dimension >= 1)
 {
     return Traits::get<0>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-//template<typename Z, typename>
-template<typename>
-typename quetzal::math::Vector<Traits>::value_type& quetzal::math::Vector<Traits>::y()
+typename Traits::value_type& quetzal::math::Vector<Traits>::y() requires (Traits::dimension >= 2)
 {
     return Traits::get<1>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-//template<typename Z, typename>
-template<typename>
-typename quetzal::math::Vector<Traits>::value_type& quetzal::math::Vector<Traits>::z()
+typename Traits::value_type& quetzal::math::Vector<Traits>::z() requires (Traits::dimension >= 3)
 {
     return Traits::get<2>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-//template<typename Z, typename>
-template<typename>
-typename quetzal::math::Vector<Traits>::value_type& quetzal::math::Vector<Traits>::w()
+typename Traits::value_type& quetzal::math::Vector<Traits>::w() requires (Traits::dimension >= 4)
 {
     return Traits::get<3>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension >= 1) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set_x(const U& x)
 {
     Traits::get<0>(m_rep) = value_type(x);
@@ -448,7 +416,7 @@ void quetzal::math::Vector<Traits>::set_x(const U& x)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension >= 2) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set_y(const U& y)
 {
     Traits::get<1>(m_rep) = value_type(y);
@@ -457,7 +425,7 @@ void quetzal::math::Vector<Traits>::set_y(const U& y)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension >= 3) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set_z(const U& z)
 {
     Traits::get<2>(m_rep) = value_type(z);
@@ -466,7 +434,7 @@ void quetzal::math::Vector<Traits>::set_z(const U& z)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension >= 4) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set_w(const U& w)
 {
     Traits::get<3>(m_rep) = value_type(w);
@@ -475,7 +443,7 @@ void quetzal::math::Vector<Traits>::set_w(const U& w)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension >= 1) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set(const U& x)
 {
     Traits::get<0>(m_rep) = value_type(x);
@@ -484,7 +452,7 @@ void quetzal::math::Vector<Traits>::set(const U& x)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension >= 2) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set(const U& x, const U& y)
 {
     Traits::get<0>(m_rep) = value_type(x);
@@ -494,7 +462,7 @@ void quetzal::math::Vector<Traits>::set(const U& x, const U& y)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension >= 3) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set(const U& x, const U& y, const U& z)
 {
     Traits::get<0>(m_rep) = value_type(x);
@@ -505,7 +473,7 @@ void quetzal::math::Vector<Traits>::set(const U& x, const U& y, const U& z)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<typename U, typename>
+template<typename U> requires (Traits::dimension >= 4) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set(const U& x, const U& y, const U& z, const U& w)
 {
     Traits::get<0>(m_rep) = value_type(x);
@@ -517,23 +485,23 @@ void quetzal::math::Vector<Traits>::set(const U& x, const U& y, const U& z, cons
                 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<size_t I, typename>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>::get() const
+template<size_t I> requires (I < Traits::dimension)
+typename Traits::value_type quetzal::math::Vector<Traits>::get() const
 {
     return Traits::get<I>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<size_t I, typename>
-typename quetzal::math::Vector<Traits>::value_type& quetzal::math::Vector<Traits>::get()
+template<size_t I> requires (I < Traits::dimension)
+typename Traits::value_type& quetzal::math::Vector<Traits>::get()
 {
     return Traits::get<I>(m_rep);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-template<size_t I, typename U, typename>
+template<size_t I, typename U> requires (I < Traits::dimension) && std::convertible_to<U, typename Traits::value_type>
 void quetzal::math::Vector<Traits>::set(const U& u)
 {
     Traits::get<I>(m_rep) = value_type(u);
@@ -541,14 +509,14 @@ void quetzal::math::Vector<Traits>::set(const U& u)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>::norm() const
+typename Traits::value_type quetzal::math::Vector<Traits>::norm() const
 {
     return std::sqrt(norm_squared());
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::Vector<Traits>::norm_squared() const
+typename Traits::value_type quetzal::math::Vector<Traits>::norm_squared() const
 {
     return Traits::dot_product(this->rep(), this->rep());
 }
@@ -631,21 +599,21 @@ quetzal::math::Vector<Traits> quetzal::math::operator-(Vector<Traits> lhs, const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::math::Vector<Traits> quetzal::math::operator*(Vector<Traits> lhs, const typename Vector<Traits>::value_type& rhs)
+quetzal::math::Vector<Traits> quetzal::math::operator*(Vector<Traits> lhs, const typename Traits::value_type& rhs)
 {
     return lhs *= rhs;
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::math::Vector<Traits> quetzal::math::operator*(const typename Vector<Traits>::value_type& lhs, Vector<Traits> rhs)
+quetzal::math::Vector<Traits> quetzal::math::operator*(const typename Traits::value_type& lhs, Vector<Traits> rhs)
 {
     return rhs *= lhs;
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::math::Vector<Traits> quetzal::math::operator/(Vector<Traits> lhs, const typename Vector<Traits>::value_type& rhs)
+quetzal::math::Vector<Traits> quetzal::math::operator/(Vector<Traits> lhs, const typename Traits::value_type& rhs)
 {
     return lhs /= rhs;
 }
@@ -694,55 +662,49 @@ bool quetzal::math::operator>=(const Vector<Traits>& lhs, const Vector<Traits>& 
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::norm(const Vector<Traits>& v)
+typename Traits::value_type quetzal::math::norm(const Vector<Traits>& v)
 {
     return v.norm();
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::norm_squared(const Vector<Traits>& v)
+typename Traits::value_type quetzal::math::norm_squared(const Vector<Traits>& v)
 {
     return v.norm_squared();
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::dot(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
+typename Traits::value_type quetzal::math::dot(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
 {
     return Traits::dot_product(lhs.rep(), rhs.rep());
 }
 
 //------------------------------------------------------------------------------
-template<typename Traits>
+template<typename Traits> requires (Traits::dimension == 3)
 quetzal::math::Vector<Traits> quetzal::math::cross(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
 {
-    static_assert(Traits::dimension == 3);
-
     return {lhs.y() * rhs.z() - lhs.z() * rhs.y(), lhs.z() * rhs.x() - lhs.x() * rhs.z(), lhs.x() * rhs.y() - lhs.y() * rhs.x()};
 }
 
 //------------------------------------------------------------------------------
-template<typename Traits>
+template<typename Traits> requires (Traits::dimension == 2)
 quetzal::math::Vector<Traits> quetzal::math::perp(const Vector<Traits>& v)
 {
-    static_assert(Traits::dimension == 2);
-
     return {-v.y(), v.x()};
 }
 
 //------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::math::Vector<Traits>::value_type quetzal::math::dot_perp(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
+template<typename Traits> requires (Traits::dimension == 2)
+typename Traits::value_type quetzal::math::dot_perp(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
 {
-    static_assert(Traits::dimension == 2);
-
     return lhs.y() * rhs.x() - lhs.x() * rhs.y();
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::math::Vector<Traits> quetzal::math::lerp(const Vector<Traits>& a, const Vector<Traits>& b, typename Vector<Traits>::value_type t)
+quetzal::math::Vector<Traits> quetzal::math::lerp(const Vector<Traits>& a, const Vector<Traits>& b, typename Traits::value_type t)
 {
     if (t == Traits::val(1))
     {
@@ -773,12 +735,7 @@ bool quetzal::math::parallel_unit(const Vector<Traits>& lhs, const Vector<Traits
 template<typename Traits>
 bool quetzal::math::parallel(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
 {
-    if (vector_eq0(lhs) || vector_eq0(rhs))
-    {
-        return true;
-    }
-
-    return parallel_unit(normalize(lhs), normalize(rhs));
+    return vector_eq0(cross(lhs, rhs));
 }
 
 //------------------------------------------------------------------------------

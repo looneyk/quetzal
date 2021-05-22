@@ -2,16 +2,13 @@
 #define QUETZAL_GEOMETRY_POINTS_HPP
 //------------------------------------------------------------------------------
 // geometry
-// Point.hpp
+// Points.hpp
 //------------------------------------------------------------------------------
 
 #include "Point.hpp"
 #include <vector>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     template<typename Traits>
@@ -20,9 +17,7 @@ namespace geometry
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, const Points<Traits>& points);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

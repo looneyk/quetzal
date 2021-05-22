@@ -74,7 +74,6 @@ namespace quetzal::brep
         void unlink_face(id_type idFace); // remove face from list and clear face submesh
 
         size_type surface_count() const;
-        size_type surface_index_count() const;
 
         const surface_ids_type& surface_ids() const;
         surface_ids_type& surface_ids();
@@ -110,6 +109,7 @@ namespace quetzal::brep
         void rename_surface(id_type idSurface, const std::string& replacement);
         void rename_surfaces(std::function<std::string(const std::string&)> renamer);
 
+        size_type surface_index_count() const;
         const index_type& surface_index() const; // debug, logging, ...
         index_type& surface_index(); // debug, logging, ...
         void regenerate_surface_index(); // Surfaces with the same name should have already been coalesced
@@ -329,13 +329,6 @@ typename quetzal::brep::Submesh<Traits, M>::size_type quetzal::brep::Submesh<Tra
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename quetzal::brep::Submesh<Traits, M>::size_type quetzal::brep::Submesh<Traits, M>::surface_index_count() const
-{
-    return m_surface_index.size();
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
 const typename quetzal::brep::Submesh<Traits, M>::surface_ids_type& quetzal::brep::Submesh<Traits, M>::surface_ids() const
 {
     return m_surface_ids;
@@ -550,6 +543,13 @@ void quetzal::brep::Submesh<Traits, M>::rename_surfaces(std::function<std::strin
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
+typename quetzal::brep::Submesh<Traits, M>::size_type quetzal::brep::Submesh<Traits, M>::surface_index_count() const
+{
+    return m_surface_index.size();
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
 const typename quetzal::brep::Submesh<Traits, M>::index_type& quetzal::brep::Submesh<Traits, M>::surface_index() const
 {
     return m_surface_index;
@@ -690,8 +690,8 @@ template<typename Traits, typename M>
 void quetzal::brep::Submesh<Traits, M>::check_mesh(const mesh_type* const pmesh) const
 {
     assert(m_pmesh == pmesh);
-    assert(m_faces.mesh() == pmesh);
-    assert(m_surfaces.mesh() == pmesh);
+    assert(m_faces.source() == pmesh);
+    assert(m_surfaces.source() == pmesh);
     return;
 }
 

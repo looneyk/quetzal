@@ -16,6 +16,13 @@ http://paulbourke.net/geometry/pointlineplane/
 //    return abs(dot(lineB.point() - lineA.point(), v) / v.norm());
 
 
+open line segment
+half-open line segment
+half line, does not include origin
+half plane, does not include edge line
+region, polygon (simple closed curve) and its interior
+
+
 Classes in this library are parameterized with a traits class which must supply:
 value_type
 size_type
@@ -25,6 +32,13 @@ reduced_traits
 
 
 normals in attributes should use rotational lerp
+
+
+intersection/contains failing
+required very high ulp
+work on accuracy
+
+point < = > polygon: interior, border, exterior, but only makes sense for planar
 
 
 closest_point_parameters

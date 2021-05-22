@@ -137,7 +137,7 @@ void quetzal::brep::reverse_winding_order(M& mesh, id_type idFace)
 {
     auto& face = mesh.face(idFace);
     assert(!face.deleted());
-    assert(face.vertex_count() >= 3);
+    assert(face.halfedge_count() >= 3);
 
     const id_type idHalfedge0 = face.halfedge_id();
     const id_type idVertex0 = face.halfedge().vertex_id();

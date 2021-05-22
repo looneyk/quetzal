@@ -2164,7 +2164,7 @@ template<typename M>
 void quetzal::model::triangulate_rows(M& mesh, id_type idHalfedge, size_type n)
 {
     id_type idFace = mesh.halfedge(idHalfedge).face_id();
-    if (mesh.face(idFace).halfedges().size() == 3)
+    if (mesh.face(idFace).halfedge_count() == 3)
     {
         assert(n == 1);
         return;

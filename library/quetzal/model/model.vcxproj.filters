@@ -36,9 +36,6 @@
     <ClInclude Include="geometry.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mesh_extraction.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="mesh_attributes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

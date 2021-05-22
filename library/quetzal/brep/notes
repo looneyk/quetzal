@@ -24,16 +24,13 @@ trivial changes except for attach and clip, particularly the latter
 create_face(Hole&)
 face.delete_hole()
 ...
-Holes are local to Face, not a Mesh managed list
+Holes are local to Face, not a Mesh managed list (but halfedges and vertices are)
 
-
-see what happens if I remove halfedge attributes
-since there is no override functionality, no vertex sharing
-does override even make sense? revisit this
 
 halfedge attributes is a convenient shortcut
 use it everywhere
-then if vertex sharing with halfedge comization is ever implemented, no change
+then if vertex sharing with halfedge customization is ever implemented, no change
+and stop changing back...
 
 
 seam names not currently supported
@@ -64,15 +61,11 @@ would be nice if path could also take advantage of this
 path should at least exactly parallel polyline?
 
 they're template classes, just need common point access interface
+maybe they can be vertices, but classes expose a points collection that can be used for generic functions
 
 *Points
 Polygon : Points
 Polyline : Points
-
-
-Properties
-added constructor, create parameter for Surface
-add for other types
 
 
 helix_cone test bed for face attributes?
@@ -528,9 +521,6 @@ need to set mesh on component copy/assignment
 this possibility should be handled though
 
 
-weld face/surface could be done using face partners
-
-
 Mesh add_x_y/remove_x_y handle only the linkage between x and y, but handle it completely
 other functions to handle cascading add/remove, _ex?
 
@@ -554,8 +544,6 @@ no, but it should be passed a submesh name to give the new surfaces
 new surfaces need to have keys made of submesh and surface names so that same named surfaces on different submeshes aren't merged on append
 **need to revisit surface, submesh naming in the context of merging into the same mesh
 
-
-**get double working
 
 *continue using T ...
 get rid of value_type<M>? at least when the typename issue gets fixed

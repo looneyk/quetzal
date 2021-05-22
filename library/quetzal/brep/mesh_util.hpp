@@ -247,7 +247,7 @@ void quetzal::brep::remove_degenerate_faces(M& mesh)
 
 //------------------------------------------------------------------------------
 template<typename M>
-quetzal::brep::id_type quetzal::brep::remove_vertex(M& mesh, id_type idVertex)
+quetzal::id_type quetzal::brep::remove_vertex(M& mesh, id_type idVertex)
 {
     auto& vertex = mesh.vertex(idVertex);
     assert(!vertex.deleted());
@@ -284,7 +284,7 @@ quetzal::brep::id_type quetzal::brep::remove_vertex(M& mesh, id_type idVertex)
 
 //------------------------------------------------------------------------------
 template<typename M>
-quetzal::brep::id_type quetzal::brep::remove_edge(M& mesh, id_type idHalfedge)
+quetzal::id_type quetzal::brep::remove_edge(M& mesh, id_type idHalfedge)
 {
     typename M::halfedge_type& halfedge = mesh.halfedge(idHalfedge);
     assert(!halfedge.deleted());
@@ -297,7 +297,6 @@ quetzal::brep::id_type quetzal::brep::remove_edge(M& mesh, id_type idHalfedge)
 
     id_type idFace = halfedge.partner().face_id();
 
-    // check these for border ...
     halfedge.next().set_prev_id(halfedge.partner().prev_id());
     halfedge.prev().set_next_id(halfedge.partner().next_id());
     halfedge.partner().next().set_prev_id(halfedge.prev_id());
@@ -385,9 +384,9 @@ void quetzal::brep::update_face(typename M::face_type& face, M& mesh, id_type id
     face.set_id(face.id() + idFaceOffset);
     face.set_halfedge_id(face.halfedge_id() + idHalfedgeOffset);
 
-    for (auto& idHalfedgeHole : face.hole_ids()) // OK for vector, won't work for set ...
+    for (auto& hole : face.holes())
     {
-        idHalfedgeHole += idHalfedgeOffset;
+        hole.set_halfedge_id(hole.halfedge_id() + idHalfedgeOffset);
     }
 
     face.set_surface_id(idSurface);
@@ -1021,7 +1020,7 @@ quetzal::id_type quetzal::brep::create_border_with_holes_face(M& mesh, id_type i
     for (id_type idHole : idHalfedgeHoles)
     {
         id_type idHalfedgeHole = create_border_hole(mesh, idHole, normal, idFace);
-        face.hole_ids().push_back(idHalfedgeHole);
+        face.create_hole(idHalfedgeHole);
     }
 
     return idFace;

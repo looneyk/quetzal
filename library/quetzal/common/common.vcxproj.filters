@@ -131,5 +131,14 @@
     <ClInclude Include="ElementsIterator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ElementsDirect.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementsDirectConstIterator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementsDirectIterator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

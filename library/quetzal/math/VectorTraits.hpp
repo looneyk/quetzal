@@ -7,13 +7,11 @@
 
 #include "floating_point.hpp"
 #include <array>
+#include <concepts>
 #include <iomanip>
 #include <iostream>
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
     //--------------------------------------------------------------------------
@@ -29,7 +27,7 @@ namespace math
 
         using reduced_traits = VectorTraits<value_type, dimension - 1>;
 
-        template<typename U, typename = std::enable_if_t<(std::is_convertible_v<U, value_type>)>>
+        template<typename U> requires (std::convertible_to<U, value_type>)
         static value_type val(const U& u)
         {
             return static_cast<value_type>(u);
@@ -49,90 +47,84 @@ namespace math
             return rep[i];
         }
                 
-        template<size_t I>
+        template<size_t I> requires (I < N)
         static T& get(rep_type& rep) noexcept
         {
-            static_assert(I < N);
             return rep[I];
         }
 
-        template<size_t I>
+        template<size_t I> requires (I < N)
         static T&& get(rep_type&& rep) noexcept
         {
-            static_assert(I < N);
             return rep[I];
         }
 
-        template<size_t I>
+        template<size_t I> requires (I < N)
         static const T& get(const rep_type& rep) noexcept
         {
-            static_assert(I < N);
             return rep[I];
         }
 
-        template<size_t I>
+        template<size_t I> requires (I < N)
         static const T&& get(const rep_type&& rep) noexcept
         {
-            static_assert(I < N);
             return rep[I];
         }
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static void clear(rep_type& rep);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static rep_type& assign(rep_type& lhs, const T(&rhs)[N]);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static rep_type unary_minus(rep_type rep);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static rep_type& assign_add(rep_type& lhs, const rep_type& rhs);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static rep_type& assign_subtract(rep_type& lhs, const rep_type& rhs);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static rep_type& assign_multiply(rep_type& lhs, const T& rhs);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static rep_type& assign_divide(rep_type& lhs, const T& rhs);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static T dot_product(const rep_type& lhs, const rep_type& rhs);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static bool zero(const rep_type& rep);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static bool equals(const rep_type& lhs, const rep_type& rhs);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static bool less(const rep_type& lhs, const rep_type& rhs);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static bool float_zero(const rep_type& rep, int ulp);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static bool float_equals(const rep_type& lhs, const rep_type& rhs, int ulp);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static rep_type round_zero(rep_type rep, int ulp);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static std::istream& extract(std::istream& is, rep_type& rhs);
 
-        template<size_t I = N - 1>
+        template<size_t I = N - 1> requires (I < N)
         static std::ostream& insert(std::ostream& os, const rep_type& rhs);
     };
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 void quetzal::math::VectorTraits<T, N>::clear(rep_type& rep)
 {
     if constexpr (I == 0)
@@ -150,7 +142,7 @@ void quetzal::math::VectorTraits<T, N>::clear(rep_type& rep)
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTraits<T, N>::assign(rep_type& lhs, const T(&rhs)[N])
 {
     if constexpr (I == 0)
@@ -167,7 +159,7 @@ typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTrait
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 typename quetzal::math::VectorTraits<T, N>::rep_type quetzal::math::VectorTraits<T, N>::unary_minus(rep_type rep)
 {
     if constexpr (I == 0)
@@ -184,7 +176,7 @@ typename quetzal::math::VectorTraits<T, N>::rep_type quetzal::math::VectorTraits
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTraits<T, N>::assign_add(rep_type& lhs, const rep_type& rhs)
 {
     if constexpr (I == 0)
@@ -201,7 +193,7 @@ typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTrait
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTraits<T, N>::assign_subtract(rep_type& lhs, const rep_type& rhs)
 {
     if constexpr (I == 0)
@@ -218,7 +210,7 @@ typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTrait
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTraits<T, N>::assign_multiply(rep_type& lhs, const T& rhs)
 {
     if constexpr (I == 0)
@@ -235,7 +227,7 @@ typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTrait
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTraits<T, N>::assign_divide(rep_type& lhs, const T& rhs)
 {
     if constexpr (I == 0)
@@ -252,7 +244,7 @@ typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTrait
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 T quetzal::math::VectorTraits<T, N>::dot_product(const rep_type& lhs, const rep_type& rhs)
 {
     if constexpr (I == 0)
@@ -267,7 +259,7 @@ T quetzal::math::VectorTraits<T, N>::dot_product(const rep_type& lhs, const rep_
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 bool quetzal::math::VectorTraits<T, N>::zero(const rep_type& rep)
 {
     if constexpr (I == 0)
@@ -282,7 +274,7 @@ bool quetzal::math::VectorTraits<T, N>::zero(const rep_type& rep)
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 bool quetzal::math::VectorTraits<T, N>::equals(const rep_type& lhs, const rep_type& rhs)
 {
     if constexpr (I == 0)
@@ -297,7 +289,7 @@ bool quetzal::math::VectorTraits<T, N>::equals(const rep_type& lhs, const rep_ty
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 bool quetzal::math::VectorTraits<T, N>::less(const rep_type& lhs, const rep_type& rhs)
 {
     if constexpr (I == 0)
@@ -316,7 +308,7 @@ bool quetzal::math::VectorTraits<T, N>::less(const rep_type& lhs, const rep_type
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 bool quetzal::math::VectorTraits<T, N>::float_zero(const rep_type& rep, int ulp)
 {
     if constexpr (I == 0)
@@ -331,7 +323,7 @@ bool quetzal::math::VectorTraits<T, N>::float_zero(const rep_type& rep, int ulp)
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 bool quetzal::math::VectorTraits<T, N>::float_equals(const rep_type& lhs, const rep_type& rhs, int ulp)
 {
     if constexpr (I == 0)
@@ -346,7 +338,7 @@ bool quetzal::math::VectorTraits<T, N>::float_equals(const rep_type& lhs, const 
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 typename quetzal::math::VectorTraits<T, N>::rep_type quetzal::math::VectorTraits<T, N>::round_zero(rep_type rep, int ulp)
 {
     if constexpr (I == 0)
@@ -363,7 +355,7 @@ typename quetzal::math::VectorTraits<T, N>::rep_type quetzal::math::VectorTraits
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 std::istream& quetzal::math::VectorTraits<T, N>::extract(std::istream& is, rep_type& rhs)
 {
     if constexpr (I == 0)
@@ -381,7 +373,7 @@ std::istream& quetzal::math::VectorTraits<T, N>::extract(std::istream& is, rep_t
 
 //------------------------------------------------------------------------------
 template<typename T, size_t N>
-template<size_t I>
+template<size_t I> requires (I < N)
 std::ostream& quetzal::math::VectorTraits<T, N>::insert(std::ostream& os, const rep_type& rhs)
 {
     if constexpr (I == 0)
