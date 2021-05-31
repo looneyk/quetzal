@@ -176,6 +176,7 @@
     <ClInclude Include="mesh_inversion.hpp" />
     <ClInclude Include="mesh_util.hpp" />
     <ClInclude Include="mesh_util_x.hpp" />
+    <ClInclude Include="Perimeter.hpp" />
     <ClInclude Include="Seam.hpp" />
     <ClInclude Include="Submesh.hpp" />
     <ClInclude Include="Surface.hpp" />

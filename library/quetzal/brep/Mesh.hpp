@@ -8,7 +8,6 @@
 #include "Face.hpp"
 #include "Flags.hpp"
 #include "Halfedge.hpp"
-#include "Seam.hpp"
 #include "Submesh.hpp"
 #include "Surface.hpp"
 #include "Vertex.hpp"
@@ -66,9 +65,6 @@ namespace quetzal::brep
         using submesh_type = Submesh<traits_type>;
         using submesh_store_type = std::vector<submesh_type>;
         using submeshes_type = Elements<Mesh<traits_type>, submesh_type, id_type>;
-        using seam_type = Seam<traits_type>;
-        using seam_store_type = std::vector<seam_type>;
-        using seams_type = Elements<Mesh<traits_type>, seam_type, id_type>;
         using index_type = std::map<std::string, id_type>;
         using size_type = typename traits_type::size_type;
 
@@ -217,22 +213,6 @@ namespace quetzal::brep
         void add_submesh_surface(const std::string& name, id_type idSurface); // Creates a new submesh if it doesn't already exist
         void rename_submesh_surfaces(id_type idSubmesh, std::function<std::string(const std::string&)> renamer);
 
-        const seam_type& seam(id_type id) const;
-        seam_type& seam(id_type id);
-
-        size_type seam_count() const;
-        const seams_type& seams() const;
-        seams_type& seams();
-
-        size_type seam_store_count() const;
-        const seam_store_type& seam_store() const;
-        seam_store_type& seam_store();
-
-        id_type create_seam(id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge);
-
-        void clear_seams(id_type idSurface);
-        void generate_seams();
-
         const Properties& properties() const;
         Properties& properties();
 
@@ -298,9 +278,6 @@ namespace quetzal::brep
         submeshes_type m_submeshes;
         index_type m_submesh_index;
 
-        seam_store_type m_seam_store;
-        seams_type m_seams;
-
         Properties m_properties;
 
         static typename halfedges_type::size_function_type m_halfedges_size;
@@ -347,15 +324,6 @@ namespace quetzal::brep
         static typename submeshes_type::iterate_function_type m_submeshes_reverse;
         static typename submeshes_type::element_function_type m_submeshes_element;
         static typename submeshes_type::const_element_function_type m_submeshes_const_element;
-
-        static typename seams_type::size_function_type m_seams_size;
-        static typename seams_type::terminal_function_type m_seams_first;
-        static typename seams_type::terminal_function_type m_seams_last;
-        static typename seams_type::terminal_function_type m_seams_end;
-        static typename seams_type::iterate_function_type m_seams_forward;
-        static typename seams_type::iterate_function_type m_seams_reverse;
-        static typename seams_type::element_function_type m_seams_element;
-        static typename seams_type::const_element_function_type m_seams_const_element;
     };
 
     //--------------------------------------------------------------------------
@@ -405,8 +373,6 @@ quetzal::brep::Mesh<Traits>::Mesh(const std::string& name) :
     m_submesh_store(),
     m_submeshes(*this, nullid, m_submeshes_size, m_submeshes_first, m_submeshes_last, m_submeshes_end, m_submeshes_forward, m_submeshes_reverse, m_submeshes_element, m_submeshes_const_element),
     m_submesh_index(),
-    m_seam_store(),
-    m_seams(*this, nullid, m_seams_size, m_seams_first, m_seams_last, m_seams_end, m_seams_forward, m_seams_reverse, m_seams_element, m_seams_const_element),
     m_properties()
 {
 }
@@ -429,8 +395,6 @@ quetzal::brep::Mesh<Traits>::Mesh(const Mesh& other) :
     m_submesh_store(other.m_submesh_store),
     m_submeshes(other.m_submeshes),
     m_submesh_index(other.m_submesh_index),
-    m_seam_store(other.m_seam_store),
-    m_seams(other.m_seams),
     m_properties()
 {
     reassign_mesh();
@@ -454,8 +418,6 @@ quetzal::brep::Mesh<Traits>::Mesh(Mesh&& other) :
     m_submesh_store(std::move(other.m_submesh_store)),
     m_submeshes(other.m_submeshes),
     m_submesh_index(std::move(other.m_submesh_index)),
-    m_seam_store(std::move(other.m_seam_store)),
-    m_seams(other.m_seams),
     m_properties()
 {
     reassign_mesh();
@@ -486,8 +448,6 @@ quetzal::brep::Mesh<Traits>& quetzal::brep::Mesh<Traits>::operator=(Mesh&& other
     m_submesh_store = std::move(other.m_submesh_store);
     m_submeshes = std::move(other.m_submeshes);
     m_submesh_index = std::move(other.m_submesh_index);
-    m_seam_store = std::move(other.m_seam_store);
-    m_seams = std::move(other.m_seams);
     m_properties = std::move(other.m_properties);
 
     reassign_mesh();
@@ -1633,77 +1593,7 @@ void quetzal::brep::Mesh<Traits>::rename_submesh_surfaces(id_type idSubmesh, std
 
     return;
 }
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-const typename quetzal::brep::Mesh<Traits>::seam_type& quetzal::brep::Mesh<Traits>::seam(id_type id) const
-{
-    assert(id != nullid);
-    assert(id < m_seam_store.size());
-    return m_seam_store[id];
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seam_type& quetzal::brep::Mesh<Traits>::seam(id_type id)
-{
-    assert(id != nullid);
-    assert(id < m_seam_store.size());
-    return m_seam_store[id];
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::size_type quetzal::brep::Mesh<Traits>::seam_count() const
-{
-    size_type n = 0;
-
-    for (const seam_type& seam : m_seam_store)
-    {
-        if (!seam.deleted())
-        {
-            ++n;
-        }
-    }
-
-    return n;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-const typename quetzal::brep::Mesh<Traits>::seams_type& quetzal::brep::Mesh<Traits>::seams() const
-{
-    return m_seams;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type& quetzal::brep::Mesh<Traits>::seams()
-{
-    return m_seams;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::size_type quetzal::brep::Mesh<Traits>::seam_store_count() const
-{
-    return m_seam_store.size();
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-const typename quetzal::brep::Mesh<Traits>::seam_store_type& quetzal::brep::Mesh<Traits>::seam_store() const
-{
-    return m_seam_store;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seam_store_type& quetzal::brep::Mesh<Traits>::seam_store()
-{
-    return m_seam_store;
-}
-
+/*
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::id_type quetzal::brep::Mesh<Traits>::create_seam(id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge)
@@ -1741,7 +1631,7 @@ void quetzal::brep::Mesh<Traits>::generate_seams()
 
     return;
 }
-
+*/
 //------------------------------------------------------------------------------
 template<typename Traits>
 typename const quetzal::Properties& quetzal::brep::Mesh<Traits>::properties() const
@@ -1977,7 +1867,6 @@ void quetzal::brep::Mesh<Traits>::append(const Mesh& mesh)
     size_type ns = surface_store_count();
 //    no? ...
 //    ne? ...
-// consider what to do about seam here ...
 
     // Add the new geometry (include deleted elements except for surfaces and submeshes ...)
     m_halfedge_store.insert(m_halfedge_store.end(), mesh.halfedge_store().begin(), mesh.halfedge_store().end());
@@ -2136,17 +2025,6 @@ void quetzal::brep::Mesh<Traits>::pack()
     }
     m_submesh_store.resize(n);
 
-    // Pack seams and store new positions
-    std::unordered_map<id_type, id_type> seam_mapping;
-    n = 0;
-    for (seam_type& seam : m_seams)
-    {
-        seam_mapping[seam.id()] = n;
-        m_seam_store[n] = seam;
-        ++n;
-    }
-    m_seam_store.resize(n);
-
     // Adjust id's to reflect their new positions
 
     for (halfedge_type& halfedge : m_halfedge_store)
@@ -2232,27 +2110,6 @@ void quetzal::brep::Mesh<Traits>::pack()
         }
     }
 
-    for (seam_type& seam : m_seam_store)
-    {
-        assert(seam_mapping.contains(seam.id()));
-        seam.set_id(seam_mapping[seam.id()]);
-
-        if (!seam.border())
-        {
-            assert(seam_mapping.contains(seam.partner_id()));
-            seam.set_partner_id(seam_mapping[seam.partner_id()]);
-        }
-
-        assert(seam_mapping.contains(seam.next_id()));
-        seam.set_next_id(seam_mapping[seam.next_id()]);
-
-        assert(seam_mapping.contains(seam.prev_id()));
-        seam.set_prev_id(seam_mapping[seam.prev_id()]);
-
-        assert(halfedge_mapping.contains(seam.halfedge_id()));
-        seam.set_halfedge_id(halfedge_mapping[seam.halfedge_id()]);
-    }
-
     for (submesh_type& submesh : m_submesh_store)
     {
         assert(submesh_mapping.contains(submesh.id()));
@@ -2302,7 +2159,6 @@ void quetzal::brep::Mesh<Traits>::clear()
     m_surface_index.clear();
     m_submesh_store.clear();
     m_submesh_index.clear();
-    m_seam_store.clear();
     return;
 }
 
@@ -2355,14 +2211,6 @@ bool quetzal::brep::Mesh<Traits>::unmarked() const
         }
     }
 
-    for (seam_type& seam : m_seams)
-    {
-        if (seam.marked())
-        {
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -2393,11 +2241,6 @@ void quetzal::brep::Mesh<Traits>::reset() const
     for (const submesh_type& submesh : m_submeshes)
     {
         submesh.Flags::reset();
-    }
-
-    for (const seam_type& seam : m_seam_store)
-    {
-        seam.Flags::reset();
     }
 
     Flags::reset();
@@ -2438,11 +2281,6 @@ void quetzal::brep::Mesh<Traits>::reassign_mesh()
     }
     m_submeshes.set_source(*this);
 
-    for (seam_type& seam : m_seam_store)
-    {
-        seam.set_mesh(*this);
-    }
-    m_seams.set_source(*this);
     return;
 }
 
@@ -2540,11 +2378,6 @@ void quetzal::brep::Mesh<Traits>::check_mesh() const
     }
     m_submeshes.check_source(this);
 
-    for (const seam_type& seam : m_seam_store)
-    {
-        seam.check_mesh(this);
-    }
-    m_seams.check_source(this);
     return;
 }
 
@@ -2563,7 +2396,6 @@ void quetzal::brep::swap(Mesh<Traits>& lhs, Mesh<Traits>& rhs)
     swap(lhs.m_surface_index, rhs.m_surface_index);
     swap(lhs.m_submesh_store, rhs.m_submesh_store);
     swap(lhs.m_submesh_index, rhs.m_submesh_index);
-    swap(lhs.m_seam_store, rhs.m_seam_store);
     swap(lhs.properties(), rhs.properties());
 
     lhs.reassign_mesh();
@@ -3094,107 +2926,6 @@ typename quetzal::brep::Mesh<Traits>::submeshes_type::const_element_function_typ
     const auto& submesh = mesh.submesh(i);
     assert(!submesh.deleted());
     return submesh;
-};
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type::size_function_type quetzal::brep::Mesh<Traits>::m_seams_size = [](const Mesh<Traits>& mesh, id_type id) -> size_t
-{
-    id;
-    return mesh.seam_count();
-};
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type::terminal_function_type quetzal::brep::Mesh<Traits>::m_seams_first = [](const Mesh<Traits>& mesh, id_type id) -> id_type
-{
-    for (const auto& seam : mesh.seam_store())
-    {
-        if (!seam.deleted())
-        {
-            return seam.id();
-        }
-    }
-
-    return m_seams_end(mesh, id);
-};
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type::terminal_function_type quetzal::brep::Mesh<Traits>::m_seams_last = [](const Mesh<Traits>& mesh, id_type id) -> id_type
-{
-    for (auto i = mesh.seam_store().crbegin(); i != mesh.seam_store().crend(); ++i)
-    {
-        if (!i->deleted())
-        {
-            return i->id();
-        }
-    }
-
-    return m_seams_end(mesh, id);
-};
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type::terminal_function_type quetzal::brep::Mesh<Traits>::m_seams_end = [](const Mesh<Traits>& mesh, id_type id) -> id_type
-{
-    mesh;
-    id;
-    return nullid;
-};
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type::iterate_function_type quetzal::brep::Mesh<Traits>::m_seams_forward = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> id_type
-{
-    assert(i != m_seams_end(mesh, id));
-    assert(i < mesh.seam_store_count());
-    for (++i; i < mesh.seam_store_count(); ++i)
-    {
-        if (!mesh.seam(i).deleted())
-        {
-            return i;
-        }
-    }
-
-    return m_seams_end(mesh, id);
-};
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type::iterate_function_type quetzal::brep::Mesh<Traits>::m_seams_reverse = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> id_type
-{
-    assert(i != m_seams_end(mesh, id));
-    assert(i < mesh.seam_store_count());
-    while (i > 0)
-    {
-        if (!mesh.seam(--i).deleted())
-        {
-            return i;
-        }
-    }
-
-    return m_seams_end(mesh, id);
-};
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type::element_function_type quetzal::brep::Mesh<Traits>::m_seams_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> typename quetzal::brep::Mesh<Traits>::seam_type&
-{
-    id;
-    auto& seam = mesh.seam(i);
-    assert(!seam.deleted());
-    return seam;
-};
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::seams_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_seams_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const typename quetzal::brep::Mesh<Traits>::seam_type&
-{
-    id;
-    const auto& seam = mesh.seam(i);
-    assert(!seam.deleted());
-    return seam;
 };
 
 #endif // QUETZAL_BREP_MESH_HPP

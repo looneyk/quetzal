@@ -350,7 +350,7 @@ void quetzal::brep::triangulate_central_vertex(M& mesh, bool bSurfacesDistinct)
     id_type nFacesOrig = mesh.face_store_count();
     for (id_type id = 0; id < nFacesOrig; ++id)
     {
-        if (!mesh.face(id).deleted() && mesh.face(id).vertex_count() >= nEdgesMin)
+        if (!mesh.face(id).deleted() && mesh.face(id).halfedge_count() >= nEdgesMin)
         {
             triangulate_face_central_vertex(mesh, id, bSurfacesDistinct);
         }

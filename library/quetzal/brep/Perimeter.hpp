@@ -30,7 +30,7 @@ namespace quetzal::brep
         using surface_type = typename mesh_type::surface_type;
         using halfedge_type = typename mesh_type::halfedge_type;
         using halfedges_type = Elements<mesh_type, halfedge_type, id_type>;
-        using seam_type = Seam<Traits>;
+        using seam_type = Seam<Traits, M>;
         using seams_type = std::vector<seam_type>;
         using size_type = typename mesh_type::size_type;
 
@@ -210,21 +210,23 @@ typename quetzal::brep::Perimeter<Traits, M>::halfedge_type& quetzal::brep::Peri
 template<typename Traits, typename M>
 typename quetzal::brep::Perimeter<Traits, M>::size_type quetzal::brep::Perimeter<Traits, M>::seam_count() const
 {
-//    check_regenerate_seams(); // or if perimeter is being used, it must already have been seamed? ...
+    surface().check_regenerate_seams();
     return m_seams.size();
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename const quetzal::Seam<Traits>& quetzal::brep::Perimeter<Traits, M>::seams() const
+typename const quetzal::brep::Perimeter<Traits, M>::seams_type& quetzal::brep::Perimeter<Traits, M>::seams() const
 {
+    surface().check_regenerate_seams();
     return m_seams;
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename quetzal::Seam<Traits>& quetzal::brep::Perimeter<Traits, M>::seams()
+typename quetzal::brep::Perimeter<Traits, M>::seams_type& quetzal::brep::Perimeter<Traits, M>::seams()
 {
+    surface().check_regenerate_seams();
     return m_seams;
 }
 

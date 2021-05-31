@@ -17,6 +17,11 @@ _ surface series separator (items in a series, body_0, bSurfacesDistinct)
 should this surface name construction/scheme be centralized? where?
 
 
+get rid of non-const seams/perimeters accessors?
+
+to set seam partners, need to cache new seams and try to match when a new one is created, then link and remove
+
+
 No, holes are not faces. They have nothing (attributes, links, ...) aside from their position in the face.
 Use Hole class, don't repurpose face.
 holes can be thought of as face subtraction

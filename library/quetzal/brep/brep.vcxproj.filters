@@ -75,6 +75,9 @@
     <ClInclude Include="Hole.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Perimeter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Flags.cpp">
