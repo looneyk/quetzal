@@ -9,10 +9,7 @@
 #include <string>
 #include <cstdint>
 
-namespace quetzal
-{
-
-namespace brep
+namespace quetzal::brep
 {
 
     template<typename T>
@@ -21,9 +18,7 @@ namespace brep
     template<typename T>
     std::string print(id_type id, const T& container);
 
-} // namespace brep
-
-} // namespace quetzal
+} // namespace quetzal::brep
 
 //------------------------------------------------------------------------------
 template<typename T>

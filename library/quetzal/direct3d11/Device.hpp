@@ -9,10 +9,7 @@
 #include "Window.hpp"
 #include "quetzal/com_ptr.hpp"
 
-namespace quetzal
-{
-
-namespace direct3d11
+namespace quetzal::direct3d11
 {
 
     //--------------------------------------------------------------------------
@@ -67,8 +64,6 @@ namespace direct3d11
         UINT m_quality4xmsaa;
     };
 
-} // namespace direct3d11
-
-} // namespace quetzal
+} // namespace quetzal::direct3d11
 
 #endif // QUETZAL_DIRECT3D11_DEVICE_HPP

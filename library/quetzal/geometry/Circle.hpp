@@ -8,10 +8,7 @@
 #include "Point.hpp"
 #include <iostream>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     //--------------------------------------------------------------------------
@@ -20,7 +17,7 @@ namespace geometry
     {
     public:
 
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using point_type = Point<Traits>;
 
         Circle() = default;
@@ -50,9 +47,7 @@ namespace geometry
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, const Circle<Traits>& circle);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

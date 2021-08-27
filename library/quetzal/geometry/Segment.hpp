@@ -23,11 +23,11 @@ namespace quetzal::geometry
     public:
 
         using traits_type = Traits;
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
         using points_type = std::array<point_type, 2>;
-        using size_type = typename Traits::size_type;
+        using size_type = Traits::size_type;
 
         Segment() = default;
         Segment(const points_type& points);
@@ -51,6 +51,9 @@ namespace quetzal::geometry
         point_type point(value_type t) const;
 
         bool contains(const point_type& point) const;
+
+        Point<Traits> projection(const Point<Traits>& point) const;
+        value_type projection_parameter(const Point<Traits>& point) const;
 
     private:
 
@@ -161,6 +164,20 @@ bool quetzal::geometry::Segment<Traits>::contains(const point_type& point) const
 {
     value_type t = dot(point - m_endpoints[0], vector()) / vector().norm_squared();
     return math::float_clamped01(t) && vector_eq(point, this->point(t));
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+typename quetzal::geometry::Segment<Traits>::point_type quetzal::geometry::Segment<Traits>::projection(const Point<Traits>& point) const
+{
+    return this->point(projection_parameter(point));
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+typename quetzal::geometry::Segment<Traits>::value_type quetzal::geometry::Segment<Traits>::projection_parameter(const Point<Traits>& point) const
+{
+    return math::dot(point - m_endpoints[0], vector()) / vector().norm_squared();
 }
 
 //------------------------------------------------------------------------------

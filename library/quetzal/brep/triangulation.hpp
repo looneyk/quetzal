@@ -110,8 +110,8 @@ void quetzal::brep::triangulate_face_quad(M& mesh, id_type idFace)
     }
 	assert(i == 4);
 
-    typename M::value_type d02 = norm_squared(positions[0] - positions[2]);
-    typename M::value_type d13 = norm_squared(positions[1] - positions[3]);
+    typename M::value_type d02 = (positions[0] - positions[2]).norm_squared();
+    typename M::value_type d13 = (positions[1] - positions[3]).norm_squared();
 
 	// allow for choice, delaunay-like by default ...
     if (d02 < d13)
@@ -141,7 +141,7 @@ void quetzal::brep::triangulate_face_ear(M& mesh, id_type idFace)
     size_t n = 0; // Counts number of failed attempts to find ear vertex
 
     id_type idHalfedge = face.halfedge_id();
-    while (mesh.halfedge(idHalfedge).face().vertex_count() > 3)
+    while (mesh.halfedge(idHalfedge).face().halfedge_count() > 3)
     {
         id_type idHalfedgeNext = mesh.halfedge(idHalfedge).next_id();
         // a bit better by advancing to next vertex; this should be done away with and instead use better triangulation algorithm ...
@@ -307,7 +307,7 @@ void quetzal::brep::triangulate_convex(M& mesh)
     size_t nFacesOrig = mesh.face_store_count();
     for (size_t i = 0; i < nFacesOrig; ++i)
     {
-        if (mesh.face(i).deleted() || mesh.face(i).vertex_count() == 3)
+        if (mesh.face(i).deleted() || mesh.face(i).halfedge_count() == 3)
         {
             continue;
         }
@@ -328,7 +328,7 @@ void quetzal::brep::triangulate_face_convex(M& mesh, id_type idFace)
     assert(face.hole_count() == 0);
 
     id_type idHalfedge = face.halfedge_id();
-    while (mesh.halfedge(idHalfedge).face().vertex_count() > 3)
+    while (mesh.halfedge(idHalfedge).face().halfedge_count() > 3)
     {
 //        id_type idHalfedgeNext = mesh.halfedge(idHalfedge).next_id();
         // Advancing twice prevents cases where all triangulated faces share the same vertex
@@ -380,23 +380,33 @@ void quetzal::brep::triangulate_face_central_vertex(M& mesh, id_type idFace, con
     id_type n = face.halfedge_count();
     bool bPlanar = face_contains(face, position);
 
+    typename M::vertex_attributes_type av;
+    av.set_position(position);
+
     typename M::vector_type normal = face.attributes().normal();
-    typename M::texcoord_type texcoord({M::val(0.5), M::val(0.0)});
+    av.set_normal(normal);
 
-    if (!bSurfacesDistinct)
+    if constexpr (M::vertex_attributes_type::contains(geometry::AttributesFlags::Texcoord0))
     {
-        // calculate proportional to position relative to face center (this assumes that position is centroid) ...
-        texcoord.clear();
+        using texcoord_type = M::vertex_attributes_type::texcoord_type;
+        texcoord_type texcoord({M::val(0.5), M::val(0.0)});
 
-        for (const auto& halfedge : face.halfedges())
+        if (!bSurfacesDistinct)
         {
-            texcoord += halfedge.attributes().texcoord();
+            // calculate proportional to position relative to face center (this assumes that position is centroid) ...
+            texcoord.clear();
+
+            for (const auto& halfedge : face.halfedges())
+            {
+                texcoord += halfedge.attributes().texcoord();
+            }
+
+            texcoord /= M::val(n);
         }
 
-        texcoord /= M::val(n);
+        av.set_texcoord(texcoord);
     }
 
-    typename M::vertex_attributes_type av(position, normal, texcoord);
     typename M::face_attributes_type af(normal);
     id_type idSurface = face.surface_id();
 
@@ -425,11 +435,14 @@ void quetzal::brep::triangulate_face_central_vertex(M& mesh, id_type idFace, con
         mesh.halfedge(idHalfedge).set_prev_id(idHalfedge0);
         mesh.halfedge(idHalfedge).set_face_id(idFace_);
 
-        if (bSurfacesDistinct)
+        if constexpr (M::vertex_attributes_type::contains(geometry::AttributesFlags::Texcoord0))
         {
-            mesh.halfedge(idHalfedge0).attributes().set_texcoord({0.5f, 0.0f});
-            mesh.halfedge(idHalfedge1).attributes().set_texcoord({1.0, 1.0});
-            mesh.halfedge(idHalfedge).attributes().set_texcoord({0.0, 1.0});
+            if (bSurfacesDistinct)
+            {
+                mesh.halfedge(idHalfedge0).attributes().set_texcoord({0.5f, 0.0f});
+                mesh.halfedge(idHalfedge1).attributes().set_texcoord({1.0, 1.0});
+                mesh.halfedge(idHalfedge).attributes().set_texcoord({0.0, 1.0});
+            }
         }
 
         idHalfedge = idHalfedgeNext;

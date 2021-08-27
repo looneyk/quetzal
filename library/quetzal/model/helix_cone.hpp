@@ -11,10 +11,7 @@
 #include "quetzal/math/math_util.hpp"
 #include <cassert>
 
-namespace quetzal
-{
-
-namespace model
+namespace quetzal::model
 {
 
     // nAzimuth is number of sides
@@ -22,7 +19,7 @@ namespace model
     void create_helix_cone(M& mesh, const std::string& name, size_type nAzimuth, size_type nz, value_type<M> rBase, value_type<M> dz, value_type<M> revs, bool bSurfacesDistinct = true);
 
     template<typename M>
-    void create_helix_cone(M& mesh, const std::string& name, size_type nz, value_type<M> dz, const geometry::Polygon<typename M::vector_traits>& polygon, value_type<M> revs, bool bSurfacesDistinct = true);
+    void create_helix_cone(M& mesh, const std::string& name, const geometry::Polygon<typename M::vector_traits>& polygon, size_type nz, value_type<M> dz, value_type<M> revs, bool bSurfacesDistinct = true);
 
 namespace helix_cone_internal
 {
@@ -30,7 +27,7 @@ namespace helix_cone_internal
     template<typename V>
     V prototype_face_normal(size_type nAzimuth, size_type nz, typename V::value_type dr, typename V::value_type dz, typename V::value_type revs, size_type i)
     {
-        using T = typename V::value_type;
+        using T = V::value_type;
 
         T t = T(2 * i + 1) / T(2 * nz); 
         T t1 = T(1) - t;
@@ -47,24 +44,21 @@ namespace helix_cone_internal
 
 } // helix_cone_internal
 
-} // namespace model
-
-} // namespace quetzal
+} // namespace quetzal::model
 
 //--------------------------------------------------------------------------
 template<typename M>
-void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_type nAzimuth, size_type nz, value_type<M> rBase, value_type<M> dz, value_type<M> revs, bool bSurfacesDistinct)
+void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_type nAzimuth, size_type nz, value_type<M> r0, value_type<M> dz, value_type<M> revs, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(nz > 0);
-    assert(rBase > 0);
+    assert(r0 > 0);
 
     T t = T(1) / T(nz);
 
-    T dr = -rBase;
-    T r0 = rBase;
+    T dr = -r0;
     T r1 = math::lerp(r0, T(0), t);
 
     T z0 = T(0);
@@ -99,10 +93,10 @@ void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_ty
     }
     else
     {
-//std::cout << "create_helix_cone" << nAzimuth<< "\t" << nz<< "\t" << rBase<< "\t" << dz<< "\t" << revs << std::endl;
+//std::cout << "create_helix_cone" << nAzimuth<< "\t" << nz<< "\t" << r0<< "\t" << dz<< "\t" << revs << std::endl;
 //auto nn = math::normalize(normalProto);
 //std::cout << "\t" << nn << std::endl;
-//auto fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, 0);
+//auto fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, r0, dz, revs, 0);
     	create_band(m, nAzimuth, r0, r1, z0, z1, azimuth0, azimuth1, normalProto, normalProto, tsProto0, tsProto1, idSurface0, bSurfacesDistinct);
 
         for (size_type i = 2; i < nz; ++i)
@@ -114,17 +108,17 @@ void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_ty
             rev1 = math::lerp(rev0, revs, t);
     	    azimuth1 = shift(azimuth, rev1);
 
-//fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, i - 1);
+//fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, r0, dz, revs, i - 1);
     	    connect_band(m, nAzimuth, r1, z1, azimuth1, normalProto, tsProto1, idSurface0, bSurfacesDistinct, bLinear);
         }
 
-//fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, rBase, dz, revs, nz - 1);
+//fn = helix_cone_internal::prototype_face_normal<typename M::vector_type>(nAzimuth, nz, r0, dz, revs, nz - 1);
         connect_apex_cusp(m, nAzimuth, dz, azimuth1, normalProto, idSurface0, bSurfacesDistinct, bLinear);
     }
 
     triangulate(m); // Needs to be done here for better (?) surface normal calculation
 
-    seal_cylinder(m, nAzimuth, nz, false, true, false, Extent<T>(), ExtentEndsFlat<T>(), idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, true, false, {}, ExtentEndsFlat<T>(), idSubmesh);
 
     // This has to be done after sealing bottom so that vertex halfedge iterators will work, fix that ...
     for (auto& surface : m.submesh(idSubmesh).surfaces())
@@ -139,9 +133,9 @@ void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_ty
 
 //--------------------------------------------------------------------------
 template<typename M>
-void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_type nz, value_type<M> dz, const geometry::Polygon<typename M::vector_traits>& polygon, value_type<M> revs, bool bSurfacesDistinct)
+void quetzal::model::create_helix_cone(M& mesh, const std::string& name, const geometry::Polygon<typename M::vector_traits>& polygon, size_type nz, value_type<M> dz, value_type<M> revs, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     size_type nAzimuth = polygon.edge_count();
     assert(nAzimuth > 2);
@@ -188,7 +182,7 @@ void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_ty
 
     if (nz == 1)
     {
-        std::vector<typename M::vertex_attributes_type> avs1 = apex_vertices_attributes<M>(polygon, dz, revs, dz);
+        std::vector<typename M::vertex_attributes_type> avs1 = apex_vertices_attributes<M>(polygon, revs, dz, dz);
         create_apex_cusp(m, avs0, avs1, true, idSurface0, bSurfacesDistinct);
     }
     else
@@ -208,11 +202,11 @@ void quetzal::model::create_helix_cone(M& mesh, const std::string& name, size_ty
     	    connect_band(m, avs1, tsProto1, true, idSurface0, bSurfacesDistinct, bLinear);
         }
 
-        avs1 = apex_vertices_attributes<M>(polygon, dz, revs, dz);
+        avs1 = apex_vertices_attributes<M>(polygon, revs, dz, dz);
         connect_apex_cusp(m, avs1, true, idSurface0, bSurfacesDistinct, bLinear);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, true, false, Extent<T>(), ExtentEndsFlat<T>(), idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, true, false, {}, ExtentEndsFlat<T>(), idSubmesh);
 
     // This has to be done after sealing bottom so that vertex halfedge iterators will work, fix that ...
     // face normals should be calculated above and applied to vertices here ...

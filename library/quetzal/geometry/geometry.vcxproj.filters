@@ -90,6 +90,12 @@
     <ClInclude Include="relationships.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BoundingVolume.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AxisAlignedBoundingBox.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Locus.cpp">

@@ -54,8 +54,8 @@ namespace quetzal::math
         Matrix& operator/=(value_type f);
         value_type operator()(size_t m, size_t n) const;
         value_type& operator()(size_t m, size_t n);
-
-        Matrix& operator*=(const Matrix& other); // square only ...
+        const row_type& operator[](size_t m) const;
+        row_type& operator[](size_t m);
 
         const row_type& row(size_t m) const;
         row_type& row(size_t m);
@@ -63,17 +63,20 @@ namespace quetzal::math
         Matrix<T, M - 1, N - 1> submatrix(size_t m, size_t n) const;
         void clear();
 
-        // the following are only valid for square matrices, consider removal ...
-        value_type determinant() const;
-        value_type trace() const;
+        // Operations on square matrices
 
-        Matrix& transpose();
-        Matrix& inverse();
+        Matrix& operator*=(const Matrix& other) requires (M == N);
 
-        value_type minor(size_t m, size_t n) const;
-        value_type cofactor(size_t m, size_t n) const;
+        value_type determinant() const requires (M == N);
+        value_type trace() const requires (M == N);
 
-        static Matrix<T, M, N> identity(); // square only ...
+        Matrix& transpose() requires (M == N);
+        Matrix& inverse() requires (M == N);
+
+        value_type minor(size_t m, size_t n) const requires (M == N);
+        value_type cofactor(size_t m, size_t n) const requires (M == N);
+
+        static Matrix<T, M, N> identity() requires (M == N);
 
     private:
 
@@ -266,12 +269,16 @@ typename quetzal::math::Matrix<T, M, N>::value_type& quetzal::math::Matrix<T, M,
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-quetzal::math::Matrix<T, M, N>& quetzal::math::Matrix<T, M, N>::operator*=(const Matrix<T, M, N>& other)
+const typename quetzal::math::Matrix<T, M, N>::row_type& quetzal::math::Matrix<T, M, N>::operator[](size_t m) const
 {
-    static_assert(M == N);
+    return m_rows[m];
+}
 
-    *this = *this * other;
-    return *this;
+//------------------------------------------------------------------------------
+template<typename T, size_t M, size_t N>
+typename quetzal::math::Matrix<T, M, N>::row_type& quetzal::math::Matrix<T, M, N>::operator[](size_t m)
+{
+    return m_rows[m];
 }
 
 //------------------------------------------------------------------------------
@@ -327,11 +334,16 @@ void quetzal::math::Matrix<T, M, N>::clear()
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, N>::determinant() const
+quetzal::math::Matrix<T, M, N>& quetzal::math::Matrix<T, M, N>::operator*=(const Matrix<T, M, N>& other) requires (M == N)
 {
-    static_assert(M == N);
-    static_assert(M > 0);
+    *this = *this * other;
+    return *this;
+}
 
+//------------------------------------------------------------------------------
+template<typename T, size_t M, size_t N>
+typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, N>::determinant() const requires (M == N)
+{
     if constexpr (M == 1)
     {
         return m_rows[0][0];
@@ -357,10 +369,8 @@ typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, 
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, N>::trace() const
+typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, N>::trace() const requires (M == N)
 {
-    static_assert(M == N);
-
     value_type t = 0;
 
     for (size_t i = 0; i < M; ++i)
@@ -373,28 +383,24 @@ typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, 
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-quetzal::math::Matrix<T, M, N>& quetzal::math::Matrix<T, M, N>::transpose()
+quetzal::math::Matrix<T, M, N>& quetzal::math::Matrix<T, M, N>::transpose() requires (M == N)
 {
-    static_assert(M == N);
-
     *this = transpose(*this);
     return *this;
 }
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-quetzal::math::Matrix<T, M, N>& quetzal::math::Matrix<T, M, N>::inverse()
+quetzal::math::Matrix<T, M, N>& quetzal::math::Matrix<T, M, N>::inverse() requires (M == N)
 {
-    static_assert(M == N);
     *this = inverse(*this);
     return *this;
 }
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, N>::minor(size_t m, size_t n) const
+typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, N>::minor(size_t m, size_t n) const requires (M == N)
 {
-    static_assert(M == N);
     assert(m < M);
     assert(n < N);
 
@@ -410,19 +416,15 @@ typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, 
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, N>::cofactor(size_t m, size_t n) const
+typename quetzal::math::Matrix<T, M, N>::value_type quetzal::math::Matrix<T, M, N>::cofactor(size_t m, size_t n) const requires (M == N)
 {
-    static_assert(M == N);
-
     return (((m + n) & 0x01) == 0 ? 1 : -1) * minor(m, n);
 }
 
 //------------------------------------------------------------------------------
 template<typename T, size_t M, size_t N>
-quetzal::math::Matrix<T, M, N> quetzal::math::Matrix<T, M, N>::identity()
+quetzal::math::Matrix<T, M, N> quetzal::math::Matrix<T, M, N>::identity() requires (M == N)
 {
-    static_assert(M == N);
-
     Matrix<T, M> matrix;
     for (size_t i = 0; i < M; ++i)
     {

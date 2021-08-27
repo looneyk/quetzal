@@ -8,10 +8,7 @@
 #include <string>
 #include <iosfwd>
 
-namespace quetzal
-{
-
-namespace xml
+namespace quetzal::xml
 {
 
     //--------------------------------------------------------------------------
@@ -40,8 +37,6 @@ namespace xml
 
     std::ostream& operator<<(std::ostream& os, const Attribute& attribute);
 
-} // namespace xml
-
-} // namespace quetzal
+} // namespace quetzal::xml
 
 #endif // QUETZAL_XML_ATTRIBUTE_HPP

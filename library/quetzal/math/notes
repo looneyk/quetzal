@@ -19,7 +19,7 @@ is matrix_alignment2 really less accurate?
 
 make sure all matrix pre-multiplication
 
-normalize won't work for homogeneous vectors
+normalize won't work for homogeneous vectors, they should not be normalized anyway
 
 
 http://www.cplusplus.com/reference/cmath/fpclassify/
@@ -32,6 +32,10 @@ https://en.wikipedia.org/wiki/Machine_epsilon
 
 float_eq0 is fine
 *float_eq needs scaling, revisit algorithm and pages above
+
+
+vector_eq0 -> float_eq0 norm_squared
+validation precision test
 
 
 instead of using xm, use sse

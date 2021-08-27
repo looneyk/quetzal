@@ -173,10 +173,10 @@ quetzal::direct3d11::EffectNormalMap::Impl::Impl(Renderer& renderer) :
     biasedVertexNormals(false)
 {
 // shader manager arrays are sized with traits anyway ...
-//    static_assert( _countof(EffectCommon<EffectNormalMapTraits>::VertexShaderIndices) == EffectNormalMapTraits::ShaderPermutationCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectNormalMapTraits>::VertexShaderBytecode) == EffectNormalMapTraits::VertexShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectNormalMapTraits>::PixelShaderBytecode) == EffectNormalMapTraits::PixelShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectNormalMapTraits>::PixelShaderIndices) == EffectNormalMapTraits::ShaderPermutationCount, "array/max mismatch" );
+//    static_assert(std::size(EffectCommon<EffectNormalMapTraits>::VertexShaderIndices) == EffectNormalMapTraits::ShaderPermutationCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectNormalMapTraits>::VertexShaderBytecode) == EffectNormalMapTraits::VertexShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectNormalMapTraits>::PixelShaderBytecode) == EffectNormalMapTraits::PixelShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectNormalMapTraits>::PixelShaderIndices) == EffectNormalMapTraits::ShaderPermutationCount, "array/max mismatch");
 
     lights.InitializeConstants(constants.specularColorAndPower, constants.lightDirection, constants.lightDiffuseColor, constants.lightSpecularColor);
 }
@@ -224,7 +224,7 @@ void quetzal::direct3d11::EffectNormalMap::Impl::apply(ID3D11DeviceContext* pDev
 
     // Set the textures
     ID3D11ShaderResourceView* textures[] = { m_pTexture, specularTexture, normalTexture};
-    pDeviceContext->PSSetShaderResources(0, _countof(textures), textures);
+    pDeviceContext->PSSetShaderResources(0, std::size(textures), textures);
 
     // Set shaders and constant buffers.
     apply_shaders(pDeviceContext, shader_permutation());

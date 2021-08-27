@@ -10,10 +10,7 @@
 #include "quetzal/math/transformation_matrix.hpp"
 #include <functional>
 
-namespace quetzal
-{
-
-namespace model
+namespace quetzal::model
 {
 
     template<typename M>
@@ -34,9 +31,7 @@ namespace model
     template<typename M>
     void swirler(M& mesh, typename M::value_type angle_z, typename M::value_type angle_r, typename M::value_type r_max);
 
-} // namespace model
-
-} // namespace quetzal
+} // namespace quetzal::model
 
 //------------------------------------------------------------------------------
 template<typename M>
@@ -99,7 +94,7 @@ void quetzal::model::undulate(M& mesh, typename M::value_type amplitude, typenam
 {
     period;
 
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     T dz = z1 - z0;
 
@@ -142,7 +137,7 @@ void quetzal::model::undulate(M& mesh, typename M::value_type amplitude, typenam
 template<typename M>
 void quetzal::model::swirl(M& mesh, typename M::value_type angle, typename M::value_type z0, typename M::value_type z1)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     T dz = z1 - z0;
     typename M::vector_type axis = {T(0), T(0), T(1)};
@@ -161,7 +156,7 @@ void quetzal::model::swirl(M& mesh, typename M::value_type angle, typename M::va
 template<typename M>
 void quetzal::model::swirl(M& mesh, typename M::value_type angle)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     // Find lowest and highest points in mesh
     T z0 = mesh.vertex(0).attributes().position().z();
@@ -189,7 +184,7 @@ void quetzal::model::swirl(M& mesh, typename M::value_type angle)
 template<typename M>
 void quetzal::model::swirler(M& mesh, typename M::value_type angle_z, typename M::value_type angle_r, typename M::value_type r_max)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     // Find lowest and highest points in mesh
     T z0 = mesh.vertex(0).attributes().position().z();

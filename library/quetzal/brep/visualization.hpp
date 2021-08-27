@@ -163,8 +163,8 @@ double fold_factor(const typename M::halfedge_type& halfedge, double fMin, doubl
 template<typename M>
 void quetzal::brep::draw_halfedge(svg::Document& document, const typename M::halfedge_type& halfedge, const math::Matrix<typename M::value_type>& matrix)
 {
-    using point_type = typename svg::Document::point_type;
-    using vector_type = typename svg::Document::vector_type;
+    using point_type = svg::Document::point_type;
+    using vector_type = svg::Document::vector_type;
 
     typename M::point_type position0 = halfedge.attributes().position();
     typename M::point_type position1 = halfedge.next().attributes().position();
@@ -208,9 +208,9 @@ void quetzal::brep::draw_halfedge(svg::Document& document, const typename M::hal
 template<typename M>
 void quetzal::brep::draw_missing_halfedge(svg::Document& document, const typename M::halfedge_type& halfedge, const math::Matrix<typename M::value_type>& matrix)
 {
-    using value_type = typename svg::Document::value_type;
-    using point_type = typename svg::Document::point_type;
-    using vector_type = typename svg::Document::vector_type;
+    using value_type = svg::Document::value_type;
+    using point_type = svg::Document::point_type;
+    using vector_type = svg::Document::vector_type;
 
     typename M::point_type position0 = halfedge.attributes().position() * matrix;
     typename M::point_type position1 = halfedge.next().attributes().position() * matrix;
@@ -232,8 +232,8 @@ void quetzal::brep::draw_missing_halfedge(svg::Document& document, const typenam
 template<typename M>
 void quetzal::brep::draw_edge(svg::Document& document, const typename M::halfedge_type& halfedge, const math::Matrix<typename M::value_type>& matrix)
 {
-    using value_type = typename svg::Document::value_type;
-    using point_type = typename svg::Document::point_type;
+    using value_type = svg::Document::value_type;
+    using point_type = svg::Document::point_type;
 
     typename M::point_type position0 = halfedge.attributes().position() * matrix;
     typename M::point_type position1 = halfedge.next().attributes().position() * matrix;

@@ -8,10 +8,7 @@
 //#include "Node.hpp"
 #include <string>
 
-namespace quetzal
-{
-
-namespace xml
+namespace quetzal::xml
 {
 
     //--------------------------------------------------------------------------
@@ -49,8 +46,6 @@ namespace xml
     std::istream& operator>>(std::istream& is, Declaration& declaration); // Node ...
     std::ostream& operator<<(std::ostream& os, const Declaration& declaration); // Node ...
 
-} // namespace xml
-
-} // namespace quetzal
+} // namespace quetzal::xml
 
 #endif // QUETZAL_XML_DECLARATION_HPP

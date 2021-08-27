@@ -7,10 +7,7 @@
 
 #include <iosfwd>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     //--------------------------------------------------------------------------
@@ -32,8 +29,6 @@ namespace geometry
 
     std::ostream& operator<<(std::ostream& os, const Locus& locus);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 #endif // QUETZAL_GEOMETRY_LOCUS_HPP

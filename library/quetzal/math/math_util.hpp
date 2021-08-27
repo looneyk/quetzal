@@ -3,6 +3,8 @@
 //------------------------------------------------------------------------------
 // math
 // math_util.hpp
+//
+// Angles in radians
 //------------------------------------------------------------------------------
 
 #include "floating_point.hpp"
@@ -27,6 +29,9 @@ namespace quetzal::math
 
     template<typename T>
     constexpr T PiFourth = T(0.78539816339744830961566084581988);
+
+    template<typename T>
+    constexpr T PiFifth = T(0.6283185307179586476925286766559);
 
     template<typename T>
     constexpr T PiTwoThird = T(2.0943951023931954923084289221863);
@@ -88,16 +93,16 @@ namespace quetzal::math
     template<typename V>
     typename V::value_type elevation_angle(const V& v);
 
-    template<typename V>
+    template<typename V> requires (V::dimension == 3)
     V cartesian_to_spherical(const V& v);
 
-    template<typename V>
+    template<typename V> requires (V::dimension == 3)
     V cartesian_to_cylindrical(const V& v);
 
-    template<typename V>
+    template<typename V> requires (V::dimension == 3)
     V spherical_to_cartesian(const V& v);
 
-    template<typename V>
+    template<typename V> requires (V::dimension == 3)
     V cylindrical_to_cartesian(const V& v);
 
 } // namespace quetzal::math
@@ -106,7 +111,6 @@ namespace quetzal::math
 template<typename T> requires std::integral<T>
 bool quetzal::math::even(T t)
 {
-	static_assert(std::is_integral_v<T>);
 	return (t & 1) == 0;
 }
 
@@ -114,7 +118,6 @@ bool quetzal::math::even(T t)
 template<typename T> requires std::integral<T>
 bool quetzal::math::odd(T t)
 {
-	static_assert(std::is_integral_v<T>);
 	return (t & 1) == 1;
 }
 
@@ -233,38 +236,30 @@ typename V::value_type quetzal::math::elevation_angle(const V& v)
 }
 
 //------------------------------------------------------------------------------
-template<typename V>
+template<typename V> requires (V::dimension == 3)
 V quetzal::math::cartesian_to_spherical(const V& v)
 {
-    static_assert(V::dimension == 3);
-
     return {norm(v), azimuth_angle(v), elevation_angle(v)};
 }
 
 //------------------------------------------------------------------------------
-template<typename V>
+template<typename V> requires (V::dimension == 3)
 V quetzal::math::cartesian_to_cylindrical(const V& v)
 {
-    static_assert(V::dimension == 3);
-
     return {norm({v.x(), v.y(), 0}), azimuth_angle(v), v.z()};
 }
 
 //------------------------------------------------------------------------------
-template<typename V>
+template<typename V> requires (V::dimension == 3)
 V quetzal::math::spherical_to_cartesian(const V& v)
 {
-    static_assert(V::dimension == 3);
-
     return {v[0] * sin(v[2]) * cos(v[1]), v[0] * sin(v[2]) * sin(v[1]), v[0] * cos(v[2])};
 }
 
 //------------------------------------------------------------------------------
-template<typename V>
+template<typename V> requires (V::dimension == 3)
 V quetzal::math::cylindrical_to_cartesian(const V& v)
 {
-    static_assert(V::dimension == 3);
-
     return {v[0] * cos(v[1]), v[0] * sin(v[1]), v[2]};
 }
 

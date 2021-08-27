@@ -18,10 +18,7 @@
 //#include "Polyhedron.hpp"
 #include <iostream>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     //--------------------------------------------------------------------------
@@ -75,9 +72,7 @@ namespace geometry
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, const Intersection<Traits>& intersection);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

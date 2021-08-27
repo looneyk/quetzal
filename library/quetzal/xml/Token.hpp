@@ -8,10 +8,7 @@
 #include <string>
 #include <iosfwd>
 
-namespace quetzal
-{
-
-namespace xml
+namespace quetzal::xml
 {
 
     //--------------------------------------------------------------------------
@@ -51,8 +48,6 @@ namespace xml
 
     Token get_token(std::istream& is);
 
-} // namespace xml
-
-} // namespace quetzal
+} // namespace quetzal::xml
 
 #endif // QUETZAL_XML_TOKEN_HPP

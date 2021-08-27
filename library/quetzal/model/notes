@@ -15,10 +15,21 @@ r1 = 1.1 is probably as far as I'd want to go due to spike height
 **calculations for 3D printed models should use double
 
 
+change body_0 to body0? 
+(using body as a surface name is a bit weird)
+look at current usage and naming convention and standardize
+
+
+more Extent auxiliary classes for closed/banded?
+
+
 icosahedron vertices should match dodecahedron normals
 
 
-trinket_box is a perfect application for boolean difference, but not ready yet
+spikosahedron but with arbitrary polyhedron
+
+
+trinket_box is a perfect application for boolean difference
 
 
 hexagonal chess pieces, Staunton, Weil, ...
@@ -41,22 +52,13 @@ helix_cone -> helix_pyramid
 consider making all free functions static members of class<M> so that value_type<M> can be done away with?
 
 
+ModelFactory, ModelManager
+encapsulate obj/stl/... type model reading
+
+
+create and seal functionality should work relative to the end of the stores to allow for submesh creation in main mesh
+
 *when calculating textures, not just dimension reduction, but align one edge with x-axis (see pdf)
-
-
-make sure that all surfaces are assigned normals
-no, not all surfaces have a meaningful normal
-but an orientation like submesh might be useful
-no, they would inherit orientation from their submesh
-
-
-faces/surfaces can have Orientation instead of Normal
-Orientation should have alternative function to up: normal to be consistent
-and in this case front is probably more useful than right
-front, or Orientation in general, is useful for grain direction in stained glass
-on the other hand, front and right could be determined from texture coordinates (-y and x respectively)
-or vice versa
-can't necessarily count on consistent texture coordinates though
 
 
 star6 has texcoord differences
@@ -65,6 +67,9 @@ star6 has texcoord differences
 change oriented polygon to just a polygon and a normal?
 
 polygon_normal function analogous to face_normal
+
+
+*add nDivisions (nz) parameter to create_extrusion
 
 should extrusion be single surface or per side?
 bSurfacesDistinct flag?
@@ -282,6 +287,11 @@ add exception handling to model mains
 
 Models
 
+spikodesic
+more nSubdivisions
+spike envelope spherical, ovoid, teardrop
+
+
 lamp test
 with reversed dx/direction, polygon is now wound in reverse
 to create glass plans
@@ -295,6 +305,17 @@ look at how a lower and upper third would overlap
 
 
 menger sponge, mosely snowflake
+all contiguous coplanar faces should form a single surface
+each disconnected coplanar surface should be distinct
+all texcoords apply to smallest (next smallest?) cube faces to keep scale looking consistent
+0..1, 0..1 or 0..1, 1..2?
+with the former, should be no change to any texcoords during construction, just during clip
+*decide on how texcoords should be applied and fix, seems to be a mess now
+    figure out what that last block of vt's is, where that is getting calculated
+
+at each level
+prepend cell name to surface name
+
 general algorithm given procedure/layout to position next level cells
 allow for different cell sizes too (not just 3)
 

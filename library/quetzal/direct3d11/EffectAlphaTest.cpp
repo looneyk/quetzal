@@ -137,10 +137,10 @@ quetzal::direct3d11::EffectAlphaTest::Impl::Impl(Renderer& renderer) :
     vertexColorEnabled(false)
 {
 // shader manager arrays are sized with traits anyway ...
-//    static_assert( _countof(EffectCommon<EffectAlphaTestTraits>::VertexShaderIndices) == EffectAlphaTestTraits::ShaderPermutationCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectAlphaTestTraits>::VertexShaderBytecode) == EffectAlphaTestTraits::VertexShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectAlphaTestTraits>::PixelShaderBytecode) == EffectAlphaTestTraits::PixelShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectAlphaTestTraits>::PixelShaderIndices) == EffectAlphaTestTraits::ShaderPermutationCount, "array/max mismatch" );
+//    static_assert(std::size(EffectCommon<EffectAlphaTestTraits>::VertexShaderIndices) == EffectAlphaTestTraits::ShaderPermutationCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectAlphaTestTraits>::VertexShaderBytecode) == EffectAlphaTestTraits::VertexShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectAlphaTestTraits>::PixelShaderBytecode) == EffectAlphaTestTraits::PixelShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectAlphaTestTraits>::PixelShaderIndices) == EffectAlphaTestTraits::ShaderPermutationCount, "array/max mismatch");
 }
 
 int quetzal::direct3d11::EffectAlphaTest::Impl::shader_permutation() const noexcept

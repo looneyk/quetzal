@@ -51,8 +51,11 @@ namespace
             // normal here, or calculate_surface_normals below ...
         }
 
-        // Bottom face
-        create_border_face(m, 0, {0.0f, 0.0f, -1.0f}, m.create_surface(m.submesh_id(name), "bottom"));
+        // Bottom
+        typename M::vector_type normal = {0.0f, 0.0f, -1.0f};
+        id_type idSurface = m.create_surface(m.submesh_id(name), "bottom", {normal});
+        create_border_face(m, 0, normal, idSurface);
+        calculate_surface_texcoords(m, idSurface);
 
         mesh.append(m);
         mesh.check();
@@ -71,6 +74,7 @@ int main(int argc, char* argv)
 
     string name;
     mesh_type mesh;
+    id_type idSurface = nullid;
 
     name = "disk_cone";
     cout << name << endl;
@@ -153,7 +157,9 @@ int main(int argc, char* argv)
     cout << name << endl;
     mesh.clear();
     model::create_cylinder(mesh, name, 9, 10, 5.0f, 5.0f, -10.0f, 10.0f, model::Extent<value_type>(0.125f, 0.875f));
-    create_border_face(mesh, 3 * 9, {1.0f, 0.0f, 0.0f}, mesh.create_surface(mesh.submesh_id(name), "side"));
+    idSurface = mesh.create_surface(mesh.submesh_id(name), "side", {{1.0f, 0.0f, 0.0f}});
+    create_border_face(mesh, 3 * 9, {1.0f, 0.0f, 0.0f}, idSurface);
+    calculate_surface_texcoords(mesh, idSurface);
     triangulate(mesh);
     model::write_obj(mesh, to_filename(name));
 
@@ -574,7 +580,9 @@ int main(int argc, char* argv)
     cout << name << endl;
     mesh.clear();
     model::create_sphere(mesh, name, 18, 6, 10.0f, model::Extent<value_type>(0.125f, 0.875f), model::ExtentEndsFlat<value_type>(0.25f, 0.75f));
-    create_border_face(mesh, 3 * 18, {1.0f, 0.0f, 0.0f}, mesh.create_surface(mesh.submesh_id(name), "side"));
+    idSurface = mesh.create_surface(mesh.submesh_id(name), "side", {{1.0f, 0.0f, 0.0f}});
+    create_border_face(mesh, 3 * 18, {1.0f, 0.0f, 0.0f}, idSurface);
+    calculate_surface_texcoords(mesh, idSurface);
     triangulate(mesh);
     model::write_obj(mesh, to_filename(name));
 

@@ -26,11 +26,11 @@ namespace quetzal::brep
     public:
 
         using mesh_type = M;
-        using halfedge_type = typename mesh_type::halfedge_type;
+        using halfedge_type = mesh_type::halfedge_type;
         using halfedge_ids_type = std::set<id_type>;
         using halfedges_type = Elements<mesh_type, halfedge_type, id_type>;
-        using attributes_type = typename mesh_type::vertex_attributes_type;
-        using size_type = typename mesh_type::size_type;
+        using attributes_type = mesh_type::vertex_attributes_type;
+        using size_type = mesh_type::size_type;
 
         Vertex();
         Vertex(mesh_type& mesh, id_type id, id_type idHalfedge, const attributes_type& attributes);
@@ -70,7 +70,6 @@ namespace quetzal::brep
         // Internal use, only by Mesh
         void set_mesh(mesh_type& mesh);
         void set_id(id_type id);
-        const mesh_type* mesh() const;
         void check_mesh(const mesh_type* const pmesh) const;
 
     private:
@@ -84,14 +83,14 @@ namespace quetzal::brep
 
         halfedges_type m_halfedges;
 
-        static typename halfedges_type::size_function_type m_halfedges_size;
-        static typename halfedges_type::terminal_function_type m_halfedges_first;
-        static typename halfedges_type::terminal_function_type m_halfedges_last;
-        static typename halfedges_type::terminal_function_type m_halfedges_end;
-        static typename halfedges_type::iterate_function_type m_halfedges_forward;
-        static typename halfedges_type::iterate_function_type m_halfedges_reverse;
-        static typename halfedges_type::element_function_type m_halfedges_element;
-        static typename halfedges_type::const_element_function_type m_halfedges_const_element;
+        static halfedges_type::size_function_type m_halfedges_size;
+        static halfedges_type::terminal_function_type m_halfedges_first;
+        static halfedges_type::terminal_function_type m_halfedges_last;
+        static halfedges_type::terminal_function_type m_halfedges_end;
+        static halfedges_type::iterate_function_type m_halfedges_forward;
+        static halfedges_type::iterate_function_type m_halfedges_reverse;
+        static halfedges_type::element_function_type m_halfedges_element;
+        static halfedges_type::const_element_function_type m_halfedges_const_element;
     };
 
     template<typename Traits, typename M>
@@ -286,17 +285,10 @@ void quetzal::brep::Vertex<Traits, M>::set_id(id_type id)
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const typename quetzal::brep::Vertex<Traits, M>::mesh_type* quetzal::brep::Vertex<Traits, M>::mesh() const
-{
-    return m_pmesh;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
 void quetzal::brep::Vertex<Traits, M>::check_mesh(const mesh_type* const pmesh) const
 {
     assert(m_pmesh == pmesh);
-    assert(m_halfedges.source() == pmesh);
+    assert(m_halfedges.check_source(pmesh));
     return;
 }
 
@@ -366,7 +358,7 @@ typename quetzal::brep::Vertex<Traits, M>::halfedges_type::iterate_function_type
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename quetzal::brep::Vertex<Traits, M>::halfedges_type::element_function_type quetzal::brep::Vertex<Traits, M>::m_halfedges_element = [](mesh_type& mesh, id_type id, id_type i) -> typename quetzal::brep::Vertex<Traits, M>::halfedge_type&
+typename quetzal::brep::Vertex<Traits, M>::halfedges_type::element_function_type quetzal::brep::Vertex<Traits, M>::m_halfedges_element = [](mesh_type& mesh, id_type id, id_type i) -> quetzal::brep::Vertex<Traits, M>::halfedge_type&
 {
     id;
     auto& halfedge = mesh.halfedge(i);
@@ -376,7 +368,7 @@ typename quetzal::brep::Vertex<Traits, M>::halfedges_type::element_function_type
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename quetzal::brep::Vertex<Traits, M>::halfedges_type::const_element_function_type quetzal::brep::Vertex<Traits, M>::m_halfedges_const_element = [](const mesh_type& mesh, id_type id, id_type i) -> const typename quetzal::brep::Vertex<Traits, M>::halfedge_type&
+typename quetzal::brep::Vertex<Traits, M>::halfedges_type::const_element_function_type quetzal::brep::Vertex<Traits, M>::m_halfedges_const_element = [](const mesh_type& mesh, id_type id, id_type i) -> const quetzal::brep::Vertex<Traits, M>::halfedge_type&
 {
     id;
     const auto& halfedge = mesh.halfedge(i);

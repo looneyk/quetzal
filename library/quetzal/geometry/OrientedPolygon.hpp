@@ -9,10 +9,7 @@
 #include "Polygon.hpp"
 #include <filesystem>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     // OrientedPolygon is a Polygon with added Orientation
@@ -27,7 +24,7 @@ namespace geometry
     {
     public:
 
-        using size_type = typename Traits::size_type;
+        using size_type = Traits::size_type;
 
         OrientedPolygon() = default;
         explicit OrientedPolygon(const Polygon<Traits>& polygon, Orientation<Traits> orientation = Orientation<Traits>());
@@ -50,9 +47,7 @@ namespace geometry
         Orientation<Traits> m_orientation;
     };
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

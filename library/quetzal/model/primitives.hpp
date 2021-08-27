@@ -248,7 +248,7 @@ namespace quetzal::model
 template<typename M>
 void quetzal::model::create_grid(M& mesh, const std::string& name, size_type nx, size_type ny, value_type<M> dx, value_type<M> dy, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     T x0 = T(-0.5) * dx;
     T x1 = T(0.5) * dx;
@@ -322,7 +322,7 @@ void quetzal::model::create_grid(M& mesh, const std::string& name, size_type nx,
 template<typename M>
 void quetzal::model::create_hexagonal_grid(M& mesh, const std::string& name, size_type nRadial, value_type<M> rHexagon)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     typename M::vector_type normal = {T(0), T(0), T(1)};
     typename M::face_attributes_type af = {normal};
@@ -364,7 +364,7 @@ void quetzal::model::create_hexagonal_grid(M& mesh, const std::string& name, siz
 template<typename M>
 void quetzal::model::create_disk(M& mesh, const std::string& name, size_type nAzimuth, size_type nRadial, value_type<M> radius, const azimuth_interval_type<M>& intervalAzimuth)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nRadial > 0);
     assert(nAzimuth > 2);
@@ -393,7 +393,7 @@ void quetzal::model::create_disk(M& mesh, const std::string& name, size_type nAz
 template<typename M>
 void quetzal::model::create_box(M& mesh, const std::string& name, value_type<M> dx, value_type<M> dy, value_type<M> dz)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     M m;
     id_type idSubmesh = m.create_submesh(name);
@@ -508,7 +508,7 @@ void quetzal::model::create_prism(M& mesh, const std::string& name, size_type nA
 template<typename M>
 void quetzal::model::create_antiprism(M& mesh, const std::string& name, size_type nAzimuth, value_type<M> rLower, value_type<M> rUpper, value_type<M> zLower, value_type<M> zUpper, const Extent<value_type<M>>& extentZ)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(rLower > T(0));
@@ -585,7 +585,7 @@ void quetzal::model::create_antiprism(M& mesh, const std::string& name, size_typ
         ++nh;
     }
 
-    seal_cylinder(m, nAzimuth, 1, false, false, false, Extent<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, 1, false, false, false, {}, extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -596,7 +596,7 @@ void quetzal::model::create_antiprism(M& mesh, const std::string& name, size_typ
 template<typename M>
 void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nAzimuth, size_type nz, value_type<M> rLower, value_type<M> rUpper, value_type<M> zLower, value_type<M> zUpper, const Extent<value_type<M>>& extentAzimuth, const Extent<value_type<M>>& extentZ, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     create_cylinder(mesh, name, nAzimuth, nz, rLower, rUpper, zLower, zUpper, T(0), T(0), extentAzimuth, extentZ, bSurfacesDistinct);
     return;
@@ -606,7 +606,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 template<typename M>
 void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nAzimuth, size_type nz, value_type<M> rLower, value_type<M> rUpper, value_type<M> zLower, value_type<M> zUpper, value_type<M> azimuthLower, value_type<M> azimuthUpper, const Extent<value_type<M>>& extentAzimuth, const Extent<value_type<M>>& extentZ, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(nz > 0);
@@ -697,7 +697,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 template<typename M>
 void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nAzimuth, const geometry::Polyline<typename M::vector_reduced_traits>& contour, const Extent<value_type<M>>& extentAzimuth, const Extent<value_type<M>>& extentZ)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(contour.edge_count() > 0);
@@ -778,7 +778,7 @@ calculate_axial_vertex_normals(m, nAzimuth);
 template<typename M>
 void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nz, value_type<M> zLower, value_type<M> zUpper, const geometry::Polygon<typename M::vector_traits>& polygon, const Extent<value_type<M>>& extentZ, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     size_type nAzimuth = polygon.edge_count();
     assert(nAzimuth > 2);
@@ -844,7 +844,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 template<typename M>
 void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nz, value_type<M> zLower, value_type<M> zUpper, value_type<M> revsLower, value_type<M> revsUpper, const geometry::Polygon<typename M::vector_traits>& polygon, const Extent<value_type<M>>& extentZ, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     size_type nAzimuth = polygon.edge_count();
     assert(nAzimuth > 2);
@@ -908,7 +908,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 	    connect_band(m, avs1, tsProto1, true, idSurface0, bSurfacesDistinct, bLinear);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, false, false, Extent<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -919,7 +919,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 template<typename M>
 void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nz, float zLower, float zUpper, const geometry::Polygon<typename M::vector_traits>& polygon, std::function<float(float)> fr, std::function<float(float)> fa, const Extent<float>& extentZ, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     size_type nAzimuth = polygon.edge_count();
     assert(nAzimuth > 2);
@@ -977,7 +977,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
     else if (nz == 1 && bCuspUpper)
     {
         avs0 = vertices_attributes<M>(polygon * matrix0, z0, ty0);
-        avs1 = apex_vertices_attributes<M>(polygon, z1, 0.0f, z1); // revs ...
+        avs1 = apex_vertices_attributes<M>(polygon, 0.0f, z1, z1); // revs ...
         create_apex_cusp(m, avs0, avs1, true, idSurface0, bSurfacesDistinct);
     }
     else
@@ -1001,7 +1001,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 
         if (i == nz && bCuspUpper)
         {
-            avs1 = apex_vertices_attributes<M>(polygon, z1, 0.0f, z1); // revs ...
+            avs1 = apex_vertices_attributes<M>(polygon, 0.0f, z1, z1); // revs ...
             connect_apex_cusp(m, avs1, true, idSurface0, bSurfacesDistinct, false);
         }
         else
@@ -1025,7 +1025,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 {
     assert(polygonLower.vertex_count() == polygonUpper.vertex_count());
 
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     size_type nAzimuth = polygonLower.edge_count();
     assert(nAzimuth > 2);
@@ -1066,7 +1066,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
         connect_band(m, avs1, true, idSurface0, bSurfacesDistinct, true);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, false, false, Extent<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -1077,7 +1077,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 template<typename M>
 void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nz, value_type<M> zLower, value_type<M> zUpper, const geometry::PolygonWithHoles<typename M::vector_traits>& polygons, const Extent<value_type<M>>& extentZ)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nz > 0);
     assert(extentZ.proper());
@@ -1115,6 +1115,9 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 
     // make sure that the orientation of holes is correct due the the reversed winding order ...
 
+// seal_cylinder here needs to use create_border_with_holes_face ...
+//    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh, -normal, normal);
+
     if (extentZ.lower_termination().type == Termination::Type::Flat)
     {
         typename M::vector_type normal = {T(0), T(0), T(-1)};
@@ -1142,7 +1145,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 template<typename M>
 void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type nAzimuth, size_type nz, std::function<value_type<M>(value_type<M>)> fr, std::function<value_type<M>(value_type<M>)> fz, std::function<value_type<M>(value_type<M>)> fa, const Extent<value_type<M>>& extentAzimuth, const Extent<value_type<M>>& extentZ)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(nz > 0);
@@ -1234,7 +1237,7 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 template<typename M>
 void quetzal::model::create_anticylinder(M& mesh, const std::string& name, size_type nAzimuth, size_type nz, value_type<M> rLower, value_type<M> rUpper, value_type<M> zLower, value_type<M> zUpper, const Extent<value_type<M>>& extentZ, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(nz > 0);
@@ -1298,7 +1301,7 @@ void quetzal::model::create_anticylinder(M& mesh, const std::string& name, size_
         connect_antiband(m, nAzimuth, r1, z1, ty1, idSurface0, bSurfacesDistinct);
     }
 
-    seal_cylinder(m, nAzimuth, nz, false, false, false, Extent<T>(), extentZ, idSubmesh);
+    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh);
 
     m.check();
     mesh.append(m);
@@ -1309,7 +1312,7 @@ void quetzal::model::create_anticylinder(M& mesh, const std::string& name, size_
 template<typename M>
 void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type nAzimuth, size_type nElevation, value_type<M> radius, const Extent<value_type<M>>& extentAzimuth, const Extent<value_type<M>>& extentElevation)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(nElevation > 1);
@@ -1387,7 +1390,7 @@ void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type n
 template<typename M>
 void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type nAzimuth, const geometry::Polyline<typename M::vector_reduced_traits>& contour, const Extent<value_type<M>>& extentAzimuth, const Extent<value_type<M>>& extentElevation)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(contour.edge_count() > 0);
@@ -1485,7 +1488,7 @@ assert(float_eq0(radius0)); // ...
 template<typename M>
 void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type nAzimuth, size_type nElevation, std::function<value_type<M>(value_type<M>)> fr, const Extent<value_type<M>>& extentAzimuth, const Extent<value_type<M>>& extentElevation)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nAzimuth > 2);
     assert(nElevation > 1);
@@ -1580,7 +1583,7 @@ void quetzal::model::create_sphere(M& mesh, const std::string& name, size_type n
 template<typename M>
 void quetzal::model::create_torus(M& mesh, const std::string& name, size_type nMajor, size_type nMinor, value_type<M> rMajor, value_type<M> rMinor, const Extent<value_type<M>>& extentMajor, const Extent<value_type<M>>& extentMinor)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nMajor > 2);
     assert(nMinor > 2);
@@ -1673,7 +1676,7 @@ void quetzal::model::create_torus(M& mesh, const std::string& name, size_type nM
 template<typename M>
 void quetzal::model::create_torus(M& mesh, const std::string& name, size_type nMajor, size_type nMinor, value_type<M> rMajorLower, value_type<M> rMajorUpper, value_type<M> rMinorLower, value_type<M> rMinorUpper, value_type<M> zLower, value_type<M> zUpper, const Extent<value_type<M>>& extentMajor, const Extent<value_type<M>>& extentMinor)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nMajor > 2);
     assert(nMinor > 2);
@@ -1775,7 +1778,7 @@ void quetzal::model::create_torus(M& mesh, const std::string& name, size_type nM
 template<typename M>
 void quetzal::model::create_torus(M& mesh, const std::string& name, size_type nMajor, size_type nMinor, std::function<value_type<M>(value_type<M>, value_type<M>)> frMajor, std::function<value_type<M>(value_type<M>, value_type<M>)> frMinor, std::function<value_type<M>(value_type<M>, value_type<M>)> fz, const Extent<value_type<M>>& extentMajor, const Extent<value_type<M>>& extentMinor)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(nMajor > 2);
     assert(nMinor > 2);
@@ -1875,7 +1878,7 @@ void quetzal::model::create_torus(M& mesh, const std::string& name, size_type nM
 template<typename M>
 void quetzal::model::create_tetrahedron(M& mesh, const std::string& name, value_type<M> radius)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(radius > T(0));
 
@@ -1955,7 +1958,7 @@ void quetzal::model::create_tetrahedron(M& mesh, const std::string& name, value_
 template<typename M>
 void quetzal::model::create_octahedron(M& mesh, const std::string& name, value_type<M> radius, bool bVertex)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(radius > T(0));
 
@@ -2107,7 +2110,8 @@ void quetzal::model::create_octahedron(M& mesh, const std::string& name, value_t
 template<typename M>
 void quetzal::model::create_dodecahedron(M& mesh, const std::string& name, value_type<M> radius)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
+    using texcoord_type = M::vertex_attributes_type::texcoord_type;
 
     assert(radius > T(0));
 
@@ -2176,7 +2180,7 @@ void quetzal::model::create_dodecahedron(M& mesh, const std::string& name, value
     T ah = a * sqrt(T(4) - gr * gr) / (T(2) * d);
     T yt2 = yt1 + ah;
 
-    const std::vector<typename M::texcoord_type> texcoords =
+    const std::vector<texcoord_type> texcoords =
     {
         {T(0.5), yt1},
         {T(0), yt2},
@@ -2290,7 +2294,8 @@ void quetzal::model::create_dodecahedron(M& mesh, const std::string& name, value
 template<typename M>
 void quetzal::model::create_icosahedron(M& mesh, const std::string& name, value_type<M> radius, bool bVertex, bool bSmooth)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
+    using texcoord_type = M::vertex_attributes_type::texcoord_type;
 
     assert(radius > T(0));
 
@@ -2437,7 +2442,7 @@ void quetzal::model::create_icosahedron(M& mesh, const std::string& name, value_
         11, 10, 6
     };
 
-    const std::vector<typename M::texcoord_type> texcoords =
+    const std::vector<texcoord_type> texcoords =
     {
         {T(0.5), T(1) - sqrt(T(3)) / T(2)},
         {T(0), T(1)},
@@ -2578,7 +2583,7 @@ void quetzal::model::create_icosahedron(M& mesh, const std::string& name, value_
 template<typename M>
 void quetzal::model::create_geodesic_sphere(M& mesh, const std::string& name, value_type<M> radius, size_type nSubdivisions, bool bVertex, bool bSmooth)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     assert(radius > T(0));
     assert(nSubdivisions > 0);
@@ -2624,6 +2629,7 @@ void quetzal::model::create_geodesic_sphere(M& mesh, const std::string& name, va
     }
 
     project_vertices(m.vertices().begin(), m.vertices().end(), radius);
+
     if (bSmooth)
     {
         calculate_spherical_normals(m);
@@ -2636,7 +2642,7 @@ void quetzal::model::create_geodesic_sphere(M& mesh, const std::string& name, va
     }
     else
     {
-        calculate_spherical_face_normals(m);
+        calculate_face_normals(m);
         apply_triangular_face_texcoords(m);
         add_face_surfaces(m, SurfaceName::BodySection + "_");
 
@@ -2656,12 +2662,11 @@ void quetzal::model::create_geodesic_sphere(M& mesh, const std::string& name, va
 template<typename M>
 void quetzal::model::create_extrusion(M& mesh, const std::string& name, const geometry::Polygon<typename M::vector_traits>& polygon, const typename M::vector_type& normal, const typename M::vector_type& displacement, const Extent<value_type<M>>& extentZ)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
+    using point_type = geometry::Polygon<M::vector_traits>::point_type;
 
     size_type nAzimuth = polygon.edge_count();
     assert(nAzimuth > 2);
-
-    using point_type = typename geometry::Polygon<M::vector_traits>::point_type;
 
     std::vector<typename M::vertex_attributes_type> avs0 = vertices_attributes<M>(polygon, T(1));
 
@@ -2708,6 +2713,8 @@ assert(texcoord.y() == T(0) || texcoord.y() == T(1));
         m.surface(i).attributes().set_normal(m.face(i).attributes().normal());
     }
 
+    seal_cylinder(m, nAzimuth, 1, false, false, false, {}, extentZ, idSubmesh, -normal, normal);
+/*
     id_type idLowerFirst = 0;
     id_type idUpperFirst = m.halfedge_store_count() - 2 * nAzimuth;
 
@@ -2733,7 +2740,7 @@ assert(texcoord.y() == T(0) || texcoord.y() == T(1));
         id_type idSurface = m.create_surface(idSubmesh, extentZ.upper_name(), {normal});
         create_border_face(m, idUpperFirst, normal, idSurface);
     }
-
+*/
     m.check();
     mesh.append(m);
     return;
@@ -2743,11 +2750,14 @@ assert(texcoord.y() == T(0) || texcoord.y() == T(1));
 template<typename M>
 void quetzal::model::create_extrusion(M& mesh, const std::string& name, const geometry::PolygonWithHoles<typename M::vector_traits>& polygons, const typename M::vector_type& normal, const typename M::vector_type& displacement, const Extent<value_type<M>>& extentZ)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
+    using point_type = geometry::Polygon<typename M::vector_traits>::point_type;
 
     assert(extentZ.proper());
 
-    using point_type = typename geometry::Polygon<typename M::vector_traits>::point_type;
+    size_type nAzimuth = polygons.polygon().edge_count();
+    assert(nAzimuth > 2);
+    size_type nz = 1;
 
     std::vector<typename M::vertex_attributes_type> avs0 = vertices_attributes<M>(polygons.polygon(), T(1));
 
@@ -2767,7 +2777,7 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
 
     id_type idHalfedgeLower = 0;
     assert(m.halfedge(idHalfedgeLower).border());
-    id_type idHalfedgeUpper = m.halfedge_store_count() - 2 * polygons.polygon().edge_count();
+    id_type idHalfedgeUpper = m.halfedge_store_count() - 2 * nAzimuth;
     assert(m.halfedge(idHalfedgeUpper).border());
 
     std::vector<id_type> idHalfedgeHolesLower(polygons.hole_count());
@@ -2799,6 +2809,9 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
 
     // make sure that the orientation of holes is correct due to the reversed winding order ...
 
+// seal_cylinder here needs to use create_border_with_holes_face ...
+//    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh, -normal, normal);
+
     if (extentZ.lower_termination().type == Termination::Type::Flat)
     {
         id_type idSurfaceLower = m.create_surface(idSubmesh, extentZ.lower_name(), {-normal});
@@ -2824,7 +2837,7 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
 template<typename M>
 void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const geometry::OrientedPolygon<typename M::vector_traits>& polygon, const geometry::Path<typename M::vector_traits>& path, const Extent<typename M::value_type>& extentZ, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     size_type nAzimuth = polygon.edge_count();
     size_type nz = path.size() - 1;
@@ -2862,6 +2875,10 @@ void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const
         connect_band(m, avs1, tsProto1, true, idSurface0, bSurfacesDistinct, false);
     }
 
+    typename M::vector_type normalLower = math::normalize(-path.front().orientation().up());
+    typename M::vector_type normalUpper = math::normalize(path.back().orientation().up());
+    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh, normalLower, normalUpper);
+/*
     size_type nh = m.halfedge_store_count();
 
     if (extentZ.lower_termination().type == Termination::Type::Flat)
@@ -2877,7 +2894,7 @@ void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const
         id_type idSurfaceUpper = m.create_surface(idSubmesh, extentZ.upper_name(), {normal});
         create_border_face(m, nh - 2 * nAzimuth, normal, idSurfaceUpper);
     }
-
+*/
     m.check();
     mesh.append(m);
     return;
@@ -2887,7 +2904,7 @@ void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const
 template<typename M>
 void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const geometry::OrientedPolygon<typename M::vector_traits>& polygon, const geometry::Path<typename M::vector_traits>& path, std::function<geometry::OrientedPolygon<typename M::vector_traits>(const geometry::OrientedPolygon<typename M::vector_traits>& polygon, value_type<M>)> f, const Extent<value_type<M>>& extentZ, bool bSurfacesDistinct)
 {
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     size_type nAzimuth = polygon.edge_count();
     size_type nz = path.size() - 1;
@@ -2929,6 +2946,10 @@ void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const
         connect_band(m, avs1, tsProto1, true, idSurface0, bSurfacesDistinct);
     }
 
+    typename M::vector_type normalLower = math::normalize(-path.front().orientation().up());
+    typename M::vector_type normalUpper = math::normalize(path.back().orientation().up());
+    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh, normalLower, normalUpper);
+/*
     size_type nh = m.halfedge_store_count();
 
     if (extentZ.lower_termination().type == Termination::Type::Flat)
@@ -2944,7 +2965,7 @@ void quetzal::model::create_swept_volume(M& mesh, const std::string& name, const
         id_type idSurfaceUpper = m.create_surface(idSubmesh, extentZ.upper_name(), {normal});
         create_border_face(m, nh - 2 * nAzimuth, normal, idSurfaceUpper);
     }
-
+*/
     m.check();
     mesh.append(m);
     return;

@@ -12,13 +12,16 @@ http://mathforum.org/library/drmath/view/62814.html
 https://www.mathworks.com/matlabcentral/answers/365911-finding-the-point-of-intersection-of-two-lines-in-3d-space
 http://paulbourke.net/geometry/pointlineplane/
 
+https://www.math24.net/derivatives-polar-functions
+https://www.emathhelp.net/calculators/algebra-2/parabola-calculator/
+
 //    typename Traits::vector_type v = cross(lineA.direction(), lineB.direction());
 //    return abs(dot(lineB.point() - lineA.point(), v) / v.norm());
 
 
 open line segment
 half-open line segment
-half line, does not include origin
+half line, does not include origin point
 half plane, does not include edge line
 region, polygon (simple closed curve) and its interior
 
@@ -31,6 +34,47 @@ value_type val()
 reduced_traits
 
 
+geometric relationships
+parallel, perpendicular, intersection, tangent
+
+static bool parametric_domain_includes(T t);
+can be used to generalize linear intersects as long as the point selection process can be resolved
+
+get rid of intersects_coplanar, or at least reduce it to a 2D reducer to polygon contains/compare
+consider the compare_internal
+compare is a 3-way comparison
+contains is point in the region defined by the polygon, edge inclusion is undefined
+
+point in poly
+http://geomalgorithms.com/a03-_inclusion.html
+
+
+polygon has a list of vertices that define its edges
+a polygon is then made up of a series of connected sections
+bSurfacesDistinct can then be applied to these sections
+Switch to Polygon with section support if the need arises
+
+polygon
+polygon with holes
+polygon with sections
+polygon with holes and sections
+
+
+use views for segments of a polygon?
+still doesn't help with circularity
+
+
+Polygon has operators for matrix multiplication
+would simply transform member functions be cleaner? (is multiplication going too far applying it this way?)
+wait for application, semantics of transformation of linear objects is a bit sketchy
+
+
+a polygon is a closed curve ...
+
+
+aabb extent is not defined well, used differently from direct3d11, and not consistent with other usages
+
+
 normals in attributes should use rotational lerp
 
 
@@ -38,7 +82,7 @@ intersection/contains failing
 required very high ulp
 work on accuracy
 
-point < = > polygon: interior, border, exterior, but only makes sense for planar
+point <=> polygon: interior, border, exterior, but only makes sense for planar
 
 
 closest_point_parameters

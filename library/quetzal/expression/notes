@@ -1,0 +1,39 @@
+
+Expression
+    T evaluate<T>
+will boost::any make this work? what is the overhead?
+
+operator/function
+    syntax (infix, function)
+    symbol
+    n params
+    (param data types)
+    return type
+    evaluator
+
+string
+    +
+integer
+    +-*/ min max abs mod
+float
+    sin cos ...
+
+Expression<T> parse<T>? no
+not necesarily, internally may include other types (conversions, ?:, ...)
+type needs to be known by parser to restrict/warn about inappropriate operators, functions for data types
+
+ability to register new functions
+need evaluator or similar first
+
+allow for both numeric and string functions
+
+see about type erasure in expression
+more likely visitor pattern
+
+
+print () only if bParenthesized?
+merge token type, precedence, ...; only applies to operators though
+    token
+    arity
+    precedence
+    associativity

@@ -26,7 +26,7 @@ namespace quetzal::geometry
     template<typename Traits>
     typename Traits::value_type distance(const Line<Traits>& line, const Point<Traits>& point);
 
-    template<typename Traits>
+    template<typename Traits> requires (Traits::dimension <= 3)
     typename Traits::value_type distance(const Line<Traits>& lineA, const Line<Traits>& lineB);
 
     template<typename Traits>
@@ -72,7 +72,7 @@ typename Traits::value_type quetzal::geometry::distance(const Line<Traits>& line
 }
 
 //------------------------------------------------------------------------------
-template<typename Traits>
+template<typename Traits> requires (Traits::dimension <= 3)
 typename Traits::value_type quetzal::geometry::distance(const Line<Traits>& lineA, const Line<Traits>& lineB)
 {
     if (parallel(lineA, lineB))
@@ -92,14 +92,8 @@ std::cout << "worked" << std::endl;
 */
         return abs(dot(lineB.point() - lineA.point(), normalize(cross(lineA.direction(), lineB.direction()))));
     }
-    else if constexpr (Traits::dimension == 2)
-    {
-        return Traits::val(0);
-    }
-    else
-    {
-        static_assert(false, "Dimension out of range.");
-    }
+
+    return Traits::val(0);
 }
 
 //------------------------------------------------------------------------------

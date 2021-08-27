@@ -386,10 +386,10 @@ quetzal::direct3d11::EffectBasic::Impl::Impl(Renderer& renderer) :
     lights()
 {
 // expose shader manager counts (since there's no other reasonable option), or just rely on changing types above ...
-//    static_assert(_countof(VertexShaderManager<EffectBasicTraits>::m_bytecode) == EffectBasicTraits::VertexShaderCount, "array/max mismatch");
-//    static_assert(_countof(VertexShaderManager<EffectBasicTraits>::m_nShader) == EffectBasicTraits::ShaderPermutationCount, "array/max mismatch");
-//    static_assert(_countof(PixelShaderManager<EffectBasicTraits>::m_bytecode) == EffectBasicTraits::PixelShaderCount, "array/max mismatch");
-//    static_assert(_countof(PixelShaderManager<EffectBasicTraits>::m_nShader) == EffectBasicTraits::ShaderPermutationCount, "array/max mismatch");
+//    static_assert(std::size(VertexShaderManager<EffectBasicTraits>::m_bytecode) == EffectBasicTraits::VertexShaderCount, "array/max mismatch");
+//    static_assert(std::size(VertexShaderManager<EffectBasicTraits>::m_nShader) == EffectBasicTraits::ShaderPermutationCount, "array/max mismatch");
+//    static_assert(std::size(PixelShaderManager<EffectBasicTraits>::m_bytecode) == EffectBasicTraits::PixelShaderCount, "array/max mismatch");
+//    static_assert(std::size(PixelShaderManager<EffectBasicTraits>::m_nShader) == EffectBasicTraits::ShaderPermutationCount, "array/max mismatch");
 
     lights.InitializeConstants(constants.specularColorAndPower, constants.lightDirection, constants.lightDiffuseColor, constants.lightSpecularColor);
 }

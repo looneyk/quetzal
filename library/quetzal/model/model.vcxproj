@@ -169,7 +169,6 @@
     <ClInclude Include="geometry.hpp" />
     <ClInclude Include="helix_cone.hpp" />
     <ClInclude Include="mesh_attributes.hpp" />
-    <ClInclude Include="mesh_extraction.hpp" />
     <ClInclude Include="obj_io.hpp" />
     <ClInclude Include="primitives.hpp" />
     <ClInclude Include="primitives_util.hpp" />

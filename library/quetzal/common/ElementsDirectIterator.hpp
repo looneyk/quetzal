@@ -28,8 +28,8 @@ namespace quetzal
         using iterator_category = std::forward_iterator_tag;
         using value_type = element_type;
         using difference_type = ptrdiff_t;
-        using pointer = value_type*;
-        using reference = value_type&;
+        using pointer_type = value_type*;
+        using reference_type = value_type&;
         using iterate_function_type = std::function<i_type(source_type&, i_type)>; // returns the next i given the current i
         using element_function_type = std::function<element_type&(source_type&, i_type)>; // returns a reference to the element at i
 
@@ -40,14 +40,14 @@ namespace quetzal
 
         ElementsDirectIterator& operator=(const ElementsDirectIterator&) = default;
 
-        bool operator==(const ElementsDirectIterator& other);
-        bool operator!=(const ElementsDirectIterator& other);
+        bool operator==(const ElementsDirectIterator& other) const;
+        bool operator!=(const ElementsDirectIterator& other) const;
 
         ElementsDirectIterator& operator++();
         ElementsDirectIterator operator++(int);
 
-        reference operator*();
-        pointer operator->();
+        reference_type operator*();
+        pointer_type operator->();
 
     private:
 
@@ -90,14 +90,14 @@ quetzal::ElementsDirectIterator<S, E, I>::ElementsDirectIterator(source_type& so
 
 //------------------------------------------------------------------------------
 template<typename S, typename E, typename I>
-bool quetzal::ElementsDirectIterator<S, E, I>::operator==(const ElementsDirectIterator& other)
+bool quetzal::ElementsDirectIterator<S, E, I>::operator==(const ElementsDirectIterator& other) const
 {
     return m_i == other.m_i;
 }
 
 //------------------------------------------------------------------------------
 template<typename S, typename E, typename I>
-bool quetzal::ElementsDirectIterator<S, E, I>::operator!=(const ElementsDirectIterator& other)
+bool quetzal::ElementsDirectIterator<S, E, I>::operator!=(const ElementsDirectIterator& other) const
 {
     return !(*this == other);
 }
@@ -122,7 +122,7 @@ quetzal::ElementsDirectIterator<S, E, I> quetzal::ElementsDirectIterator<S, E, I
 
 //------------------------------------------------------------------------------
 template<typename S, typename E, typename I>
-typename quetzal::ElementsDirectIterator<S, E, I>::reference quetzal::ElementsDirectIterator<S, E, I>::operator*()
+typename quetzal::ElementsDirectIterator<S, E, I>::reference_type quetzal::ElementsDirectIterator<S, E, I>::operator*()
 {
     assert(m_psource != nullptr);
     return m_element(*m_psource, m_i);
@@ -130,7 +130,7 @@ typename quetzal::ElementsDirectIterator<S, E, I>::reference quetzal::ElementsDi
 
 //------------------------------------------------------------------------------
 template<typename S, typename E, typename I>
-typename quetzal::ElementsDirectIterator<S, E, I>::pointer quetzal::ElementsDirectIterator<S, E, I>::operator->()
+typename quetzal::ElementsDirectIterator<S, E, I>::pointer_type quetzal::ElementsDirectIterator<S, E, I>::operator->()
 {
     assert(m_psource != nullptr);
     return &m_element(*m_psource, m_i);

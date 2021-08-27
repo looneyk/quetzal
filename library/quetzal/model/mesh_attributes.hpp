@@ -18,10 +18,7 @@
 #include <vector>
 #include <type_traits>
 
-namespace quetzal
-{
-
-namespace model
+namespace quetzal::model
 {
 
     // Returns first valid vertex normal
@@ -79,17 +76,6 @@ namespace model
     template<typename Traits>
     void calculate_surface_normals(brep::Surface<Traits>& surface);
 
-    // Calculate a common normal for the surface, each face, and each vertex in the surface
-    template<typename Traits>
-    void calculate_planar_surface_normals(brep::Surface<Traits>& surface);
-
-    // There must be no shared vertices
-    template<typename M>
-    void calculate_spherical_face_normals(M& mesh);
-
-    template<typename M>
-    void calculate_spherical_face_normal(M& mesh, id_type idFace);
-
     template<typename M>
     void calculate_spherical_normals(M& mesh);
 
@@ -98,11 +84,11 @@ namespace model
     template<typename M>
     void calculate_axial_vertex_normals(M& mesh, size_t nAzimuth);
 
-    // Set normals for all vertices in a planar surface to the normal of the first face in the surface
-    // additions: average face normal, calculate surface normal, set face normals to common value too, ...
-    template<typename M>
-    void set_planar_surface_vertex_normals(M& mesh, id_type idSurface);
+    // Apply a common normal for the surface, each face, and each vertex in the surface
+    template<typename S>
+    void set_surface_normals(S& surface, const typename S::vector_type& normal);
 
+    // this does arbitrary orientation, take an up vector to align textures? then fit triangles to unit square? ...
     template<typename M>
     void apply_triangular_face_texcoords(M& mesh);
 
@@ -121,9 +107,7 @@ namespace model
     template<typename M>
     id_type adjust_matching_face(M& mesh, id_type idFaceA, id_type idFaceB);
 
-} // namespace model
-
-} // namespace quetzal
+} // namespace quetzal::model
 
 //------------------------------------------------------------------------------
 template<typename Traits>
@@ -481,57 +465,6 @@ void quetzal::model::calculate_surface_normals(brep::Surface<Traits>& surface)
 }
 
 //------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::model::calculate_planar_surface_normals(brep::Surface<Traits>& surface)
-{
-    assert(!surface.empty());
-
-    typename Traits::vector_type normal = face_normal(surface.faces().front());
-    surface.attributes().set_normal(normal);
-
-    for (auto& face : surface.faces())
-    {
-        face.attributes().set_normal(normal);
-
-        for (auto& halfedge : face.halfedges())
-        {
-            halfedge.vertex().attributes().set_normal(normal);
-        }
-    }
-
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename M>
-void quetzal::model::calculate_spherical_face_normals(M& mesh)
-{
-    for (auto& face : mesh.faces())
-    {
-        calculate_spherical_face_normal(mesh, face.id());
-    }
-
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename M>
-void quetzal::model::calculate_spherical_face_normal(M& mesh, id_type idFace)
-{
-    auto& face = mesh.face(idFace);
-    auto normal = normalize(centroid(face));
-    face.attributes().set_normal(normal);
-
-    // Set all vertex normals to the face normal
-    for (auto& halfedge : face.halfedges())
-    {
-        halfedge.vertex().attributes().set_normal(normal);
-    }
-
-    return;
-}
-
-//------------------------------------------------------------------------------
 template<typename M>
 void quetzal::model::calculate_spherical_normals(M& mesh)
 {
@@ -552,9 +485,9 @@ void quetzal::model::calculate_spherical_normals(M& mesh)
 template<typename M>
 void quetzal::model::calculate_axial_vertex_normals(M& mesh, size_t nAzimuth)
 {
-    using value_type = typename M::value_type;
-    using point_type = typename M::point_type;
-    using vector_type = typename M::vector_type;
+    using value_type = M::value_type;
+    using point_type = M::point_type;
+    using vector_type = M::vector_type;
 
     size_t nVertices = mesh.vertex_store_count();
 
@@ -672,16 +605,17 @@ void quetzal::model::calculate_axial_vertex_normals(M& mesh, size_t nAzimuth)
 }
 
 //------------------------------------------------------------------------------
-template<typename M>
-void quetzal::model::set_planar_surface_vertex_normals(M& mesh, id_type idSurface)
+template<typename S>
+void quetzal::model::set_surface_normals(S& surface, const typename S::vector_type& normal)
 {
-    typename M::surface_type& surface = mesh.surface(idSurface);
     assert(!surface.empty());
 
-    typename M::vector_type normal = surface.faces().front().attributes().normal();
+    surface.attributes().set_normal(normal);
 
-    for (auto& face : surface.face())
+    for (auto& face : surface.faces())
     {
+        face.attributes().set_normal(normal);
+
         for (auto& halfedge : face.halfedges())
         {
             halfedge.vertex().attributes().set_normal(normal);

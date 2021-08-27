@@ -1,0 +1,4 @@
+
+deal with fonts properly
+
+use line advance for text instead of absolute positioning all the time

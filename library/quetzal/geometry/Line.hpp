@@ -24,7 +24,7 @@ namespace quetzal::geometry
     public:
 
         using traits_type = Traits;
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
 
@@ -142,7 +142,7 @@ typename quetzal::geometry::Line<Traits>::value_type quetzal::geometry::Line<Tra
 template<typename Traits>
 std::array<typename Traits::value_type, 2> quetzal::geometry::closest_point_parameters(const Line<Traits>& lineA, const Line<Traits>& lineB)
 {
-    using T = typename Traits::value_type;
+    using T = Traits::value_type;
     using V = math::Vector<Traits>;
 
     V u = lineA.direction();
@@ -182,7 +182,7 @@ std::array<typename Traits::value_type, 2> quetzal::geometry::closest_point_para
 template<typename Traits>
 std::array<typename Traits::value_type, 2> quetzal::geometry::closest_point_parameters(const Point<Traits>& pointA, const math::Vector<Traits>& vectorA, const Point<Traits>& pointB, const math::Vector<Traits>& vectorB)
 {
-    using T = typename Traits::value_type;
+    using T = Traits::value_type;
     using V = math::Vector<Traits>;
 
     V u = vectorA;

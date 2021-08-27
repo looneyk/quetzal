@@ -14,10 +14,7 @@
 #include <iostream>
 #include <vector>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     // Polyline is an ordered set of points
@@ -30,17 +27,17 @@ namespace geometry
     {
     public:
 
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
         using vertex_type = Point<Traits>;
         using vertices_type = Points<Traits>;
-        using size_type = typename Traits::size_type;
+        using size_type = Traits::size_type;
 
-        using reference = typename vertices_type::reference;
-        using const_reference = typename vertices_type::const_reference;
-        using iterator = typename vertices_type::iterator;
-        using const_iterator = typename vertices_type::const_iterator;
+        using reference = vertices_type::reference;
+        using const_reference = vertices_type::const_reference;
+        using iterator = vertices_type::iterator;
+        using const_iterator = vertices_type::const_iterator;
 
         Polyline() = default;
         explicit Polyline(size_type n);
@@ -84,9 +81,7 @@ namespace geometry
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, const Polyline<Traits>& polyline);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

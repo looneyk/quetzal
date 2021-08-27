@@ -269,10 +269,10 @@ quetzal::direct3d11::EffectSkinned::Impl::Impl(Renderer& renderer) :
     weightsPerVertex(4)
 {
 // shader manager arrays are sized with traits anyway ...
-//    static_assert( _countof(EffectCommon<EffectSkinnedTraits>::VertexShaderIndices) == EffectSkinnedTraits::ShaderPermutationCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectSkinnedTraits>::VertexShaderBytecode) == EffectSkinnedTraits::VertexShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectSkinnedTraits>::PixelShaderBytecode) == EffectSkinnedTraits::PixelShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectSkinnedTraits>::PixelShaderIndices) == EffectSkinnedTraits::ShaderPermutationCount, "array/max mismatch" );
+//    static_assert(std::size(EffectCommon<EffectSkinnedTraits>::VertexShaderIndices) == EffectSkinnedTraits::ShaderPermutationCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectSkinnedTraits>::VertexShaderBytecode) == EffectSkinnedTraits::VertexShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectSkinnedTraits>::PixelShaderBytecode) == EffectSkinnedTraits::PixelShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectSkinnedTraits>::PixelShaderIndices) == EffectSkinnedTraits::ShaderPermutationCount, "array/max mismatch");
 
     lights.InitializeConstants(constants.specularColorAndPower, constants.lightDirection, constants.lightDiffuseColor, constants.lightSpecularColor);
 

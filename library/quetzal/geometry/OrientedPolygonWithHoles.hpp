@@ -9,10 +9,7 @@
 #include "PolygonWithHoles.hpp"
 #include <filesystem>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     // OrientedPolygonWithHoles is a PolygonWithHoles with added Orientation
@@ -24,7 +21,7 @@ namespace geometry
     {
     public:
 
-        using size_type = typename Traits::size_type;
+//        using size_type = Traits::size_type;
 
         OrientedPolygonWithHoles() = default;
         explicit OrientedPolygonWithHoles(const PolygonWithHoles<Traits>& polygon, Orientation<Traits> orientation = Orientation<Traits>());
@@ -48,9 +45,7 @@ namespace geometry
         Orientation<Traits> m_orientation;
     };
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

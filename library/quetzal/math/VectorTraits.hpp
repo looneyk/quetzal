@@ -10,6 +10,8 @@
 #include <concepts>
 #include <iomanip>
 #include <iostream>
+#include <limits>
+#include <span>
 
 namespace quetzal::math
 {
@@ -75,6 +77,9 @@ namespace quetzal::math
         static void clear(rep_type& rep);
 
         template<size_t I = N - 1> requires (I < N)
+        static rep_type& assign(rep_type& lhs, std::span<T> rhs);
+
+        template<size_t I = N - 1> requires (I < N)
         static rep_type& assign(rep_type& lhs, const T(&rhs)[N]);
 
         template<size_t I = N - 1> requires (I < N)
@@ -113,6 +118,20 @@ namespace quetzal::math
         template<size_t I = N - 1> requires (I < N)
         static rep_type round_zero(rep_type rep, int ulp);
 
+        // min and max are component-wise
+
+        template<size_t I = N - 1> requires (I < N)
+        static void set_min(rep_type& rep);
+
+        template<size_t I = N - 1> requires (I < N)
+        static void set_max(rep_type& rep);
+
+        template<size_t I = N - 1> requires (I < N)
+        static rep_type min(rep_type lhs, const rep_type& rhs);
+
+        template<size_t I = N - 1> requires (I < N)
+        static rep_type max(rep_type lhs, const rep_type& rhs);
+
         template<size_t I = N - 1> requires (I < N)
         static std::istream& extract(std::istream& is, rep_type& rhs);
 
@@ -137,6 +156,23 @@ void quetzal::math::VectorTraits<T, N>::clear(rep_type& rep)
         clear<I - 1>(rep);
         get<I>(rep) = T(0);
         return;
+    }
+}
+
+//------------------------------------------------------------------------------
+template<typename T, size_t N>
+template<size_t I> requires (I < N)
+typename quetzal::math::VectorTraits<T, N>::rep_type& quetzal::math::VectorTraits<T, N>::assign(rep_type& lhs, std::span<T> rhs)
+{
+    if constexpr (I == 0)
+    {
+        get<0>(lhs) = rhs[0];
+        return lhs;
+    }
+    else
+    {
+        get<I>(lhs) = rhs[I];
+        return assign<I - 1>(lhs, rhs);
     }
 }
 
@@ -350,6 +386,76 @@ typename quetzal::math::VectorTraits<T, N>::rep_type quetzal::math::VectorTraits
     {
         get<I>(rep) = math::round_zero(get<I>(rep), ulp);
         return round_zero<I - 1>(rep, ulp);
+    }
+}
+
+//------------------------------------------------------------------------------
+template<typename T, size_t N>
+template<size_t I> requires (I < N)
+void quetzal::math::VectorTraits<T, N>::set_min(rep_type& rep)
+{
+    if constexpr (I == 0)
+    {
+        get<0>(rep) = numeric_limits<T>::lowest();
+        return;
+    }
+    else
+    {
+        set_min<I - 1>(rep);
+        get<I>(rep) = numeric_limits<T>::lowest();
+        return;
+    }
+}
+
+//------------------------------------------------------------------------------
+template<typename T, size_t N>
+template<size_t I> requires (I < N)
+void quetzal::math::VectorTraits<T, N>::set_max(rep_type& rep)
+{
+    if constexpr (I == 0)
+    {
+        get<0>(rep) = numeric_limits<T>::max();
+        return;
+    }
+    else
+    {
+        set_max<I - 1>(rep);
+        get<I>(rep) = numeric_limits<T>::max();
+        return;
+    }
+}
+
+//------------------------------------------------------------------------------
+template<typename T, size_t N>
+template<size_t I> requires (I < N)
+typename quetzal::math::VectorTraits<T, N>::rep_type typename quetzal::math::VectorTraits<T, N>::min(rep_type lhs, const rep_type& rhs)
+{
+    if constexpr (I == 0)
+    {
+        get<0>(lhs) = std::min(get<0>(lhs), get<0>(rhs));
+        return lhs;
+    }
+    else
+    {
+        get<I>(lhs) = std::min(get<I>(lhs), get<I>(rhs));
+        return min<I - 1>(lhs, rhs);
+    }
+}
+
+//------------------------------------------------------------------------------
+template<typename T, size_t N>
+template<size_t I> requires (I < N)
+typename quetzal::math::VectorTraits<T, N>::rep_type typename quetzal::math::VectorTraits<T, N>::max(rep_type lhs, const rep_type& rhs)
+{
+    if constexpr (I == 0)
+    {
+        get<0>(lhs) = std::max(get<0>(lhs), get<0>(rhs));
+        return lhs;
+    }
+    else
+    {
+        get<I>(lhs) = std::max(get<I>(lhs), get<I>(rhs));
+        return max<I - 1>(lhs, rhs);
     }
 }
 

@@ -6,49 +6,48 @@
 //------------------------------------------------------------------------------
 
 #include "id.hpp"
+#include "quetzal/geometry/Attributes.hpp"
 #include <functional>
 
-namespace quetzal
+namespace quetzal::brep
 {
 
-namespace brep
-{
-
-    // transform_texcoord_type ...
-    // null/identity_transform_texcoord ...
-
-    // Reverses orientation of each face using invert function of attribute type
     template<typename M>
-    void invert(M& mesh, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord = [](const typename M::texcoord_type& texcoord) -> typename M::texcoord_type {return {M::val(1) - texcoord.x(), texcoord.y()};});
+    using transform_texcoord_type = geometry::Attributes<typename M::vector_traits>::transform_texcoord_type;
 
-    // Reverses orientation of each face using invert function of attribute type
+    template<typename M>
+    transform_texcoord_type<M> transform_texcoord_reflect_u = geometry::Attributes<typename M::vector_traits>::transform_texcoord_reflect_u;
+
+    // Reverses orientation of each face using invert function of attributes type
+    template<typename M>
+    void invert(M& mesh, transform_texcoord_type<M> transform_texcoord = transform_texcoord_reflect_u<M>);
+
+    // Reverses orientation of each face using invert function of attributes type
     // Reassigns vertices leaving partners unchanged
     // bReset parameter is used to trigger reset on first, non-recursive call; not a user parameter
     template<typename M>
-    void invert_border_section(M& mesh, id_type idHalfedge, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord = [](const typename M::texcoord_type& texcoord) -> typename M::texcoord_type {return {M::val(1) - texcoord.x(), texcoord.y()};}, bool bReset = true);
+    void invert_border_section(M& mesh, id_type idHalfedge, transform_texcoord_type<M> transform_texcoord = transform_texcoord_reflect_u<M>, bool bReset = true);
 
-    // Reverses orientation of each face using invert function of attribute type
+    // Reverses orientation of each face using invert function of attributes type
     template<typename M>
-    void invert_submesh(M& mesh, id_type idSubmesh, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord = [](const typename M::texcoord_type& texcoord) -> typename M::texcoord_type {return {M::val(1) - texcoord.x(), texcoord.y()};});
+    void invert_submesh(M& mesh, id_type idSubmesh, transform_texcoord_type<M> transform_texcoord = transform_texcoord_reflect_u<M>);
 
-    // Reverses orientation of each face using invert function of attribute type
+    // Reverses orientation of each face using invert function of attributes type
     template<typename M>
-    void invert_surface(M& mesh, id_type idSurface, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord = [](const typename M::texcoord_type& texcoord) -> typename M::texcoord_type {return {M::val(1) - texcoord.x(), texcoord.y()};});
+    void invert_surface(M& mesh, id_type idSurface, transform_texcoord_type<M> transform_texcoord = transform_texcoord_reflect_u<M>);
 
-    // Reverses orientation using invert function of attribute type
+    // Reverses orientation using invert function of attributes type
     template<typename M>
-    void invert_face(M& mesh, id_type idFace, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord = [](const typename M::texcoord_type& texcoord) -> typename M::texcoord_type {return {M::val(1) - texcoord.x(), texcoord.y()};});
+    void invert_face(M& mesh, id_type idFace, transform_texcoord_type<M> transform_texcoord = transform_texcoord_reflect_u<M>);
 
     template<typename M>
     void reverse_winding_order(M& mesh, id_type idFace);
 
-} // namespace brep
-
-} // namespace quetzal
+} // namespace quetzal::brep
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::invert(M& mesh, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord)
+void quetzal::brep::invert(M& mesh, transform_texcoord_type<M> transform_texcoord)
 {
     for (auto& surface : mesh.surfaces())
     {
@@ -60,7 +59,7 @@ void quetzal::brep::invert(M& mesh, std::function<typename M::texcoord_type(cons
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::invert_border_section(M& mesh, id_type idHalfedge, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord, bool bReset)
+void quetzal::brep::invert_border_section(M& mesh, id_type idHalfedge, transform_texcoord_type<M> transform_texcoord, bool bReset)
 {
     if (bReset)
     {
@@ -87,7 +86,7 @@ void quetzal::brep::invert_border_section(M& mesh, id_type idHalfedge, std::func
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::invert_submesh(M& mesh, id_type idSubmesh, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord)
+void quetzal::brep::invert_submesh(M& mesh, id_type idSubmesh, transform_texcoord_type<M> transform_texcoord)
 {
     auto& submesh = mesh.submesh(idSubmesh);
 
@@ -101,7 +100,7 @@ void quetzal::brep::invert_submesh(M& mesh, id_type idSubmesh, std::function<typ
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::invert_surface(M& mesh, id_type idSurface, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord)
+void quetzal::brep::invert_surface(M& mesh, id_type idSurface, transform_texcoord_type<M> transform_texcoord)
 {
     auto& surface = mesh.surface(idSurface);
 
@@ -116,7 +115,7 @@ void quetzal::brep::invert_surface(M& mesh, id_type idSurface, std::function<typ
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::invert_face(M& mesh, id_type idFace, std::function<typename M::texcoord_type(const typename M::texcoord_type&)> transform_texcoord)
+void quetzal::brep::invert_face(M& mesh, id_type idFace, transform_texcoord_type<M> transform_texcoord)
 {
     auto& face = mesh.face(idFace);
     assert(!face.deleted());

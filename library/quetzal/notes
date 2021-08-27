@@ -1,0 +1,19 @@
+
+quetzal_20190602    model reference
+
+
+check boost mpl
+
+Just implement your image loader in terms of std::istream, and then use different streambufs for your different sources. 
+
+
+Color does too much with hsl and yuv
+separate classes for component and packed?
+gui::Color is good
+
+
+Should Serial be in io or device? (or just separate?)
+device wrapped by IO?
+device used as template parameter? analogously filesystem and memory devices ... (device manager)
+IO might mean just character stream devices
+Input<device>, Output<device>?

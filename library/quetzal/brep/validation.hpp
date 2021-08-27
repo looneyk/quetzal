@@ -461,29 +461,32 @@ bool quetzal::brep::check_face(const M& mesh, const typename M::face_type& face)
             bOK = false;
         }
 
-        typename M::vector_type texcoord = {halfedge.attributes().texcoord().x(), M::val(1) - halfedge.attributes().texcoord().y(), M::val(0)};
-        typename M::vector_type texcoordNext = {halfedge.next().attributes().texcoord().x(), M::val(1) - halfedge.next().attributes().texcoord().y(), M::val(0)};
-        typename M::vector_type texcoordPrev = {halfedge.prev().attributes().texcoord().x(), M::val(1) - halfedge.prev().attributes().texcoord().y(), M::val(0)};
-        auto texture_direction = cross(texcoordNext - texcoord, texcoordPrev - texcoord);
-        typename M::value_type projection = dot(texture_direction, {M::val(0), M::val(0), M::val(1)});
+        if constexpr (M::vertex_attributes_type::contains(geometry::AttributesFlags::Texcoord0))
+        {
+            typename M::vector_type texcoord = {halfedge.attributes().texcoord().x(), M::val(1) - halfedge.attributes().texcoord().y(), M::val(0)};
+            typename M::vector_type texcoordNext = {halfedge.next().attributes().texcoord().x(), M::val(1) - halfedge.next().attributes().texcoord().y(), M::val(0)};
+            typename M::vector_type texcoordPrev = {halfedge.prev().attributes().texcoord().x(), M::val(1) - halfedge.prev().attributes().texcoord().y(), M::val(0)};
+            typename M::vector_type texture_direction = cross(texcoordNext - texcoord, texcoordPrev - texcoord);
+            typename M::value_type projection = dot(texture_direction, {M::val(0), M::val(0), M::val(1)});
 
-        if (convex(halfedge))
-        {
-            if (math::float_le0(projection))
+            if (convex(halfedge))
             {
-                std::cout << "Bad: convex dot(texture_direction, {0, 0, 1}) <= 0" << " f " << halfedge.face_id() << " h " << halfedge.id() << " [" << texture_direction << "]: [" << halfedge.attributes().position() << "] [" << halfedge.attributes().texcoord() << "]" << std::endl;
-                bOK = false;
+                if (math::float_le0(projection))
+                {
+                    std::cout << "Bad: convex dot(texture_direction, {0, 0, 1}) <= 0" << " f " << halfedge.face_id() << " h " << halfedge.id() << " [" << texture_direction << "]: [" << halfedge.attributes().position() << "] [" << halfedge.attributes().texcoord() << "]" << std::endl;
+                    std::cout << "[" << texcoord << "] [" << texcoordNext << "] [" << texcoordPrev << "] " << std::endl;
+                    bOK = false;
+                }
+            }
+            else if (reflex(halfedge))
+            {
+                if (math::float_ge0(projection))
+                {
+                    std::cout << "Bad: reflex dot(texture_direction, {0, 0, 1}) >= 0" << " f " << halfedge.face_id() << " h " << halfedge.id() << " [" << texture_direction << "]: [" << halfedge.attributes().position() << "] [" << halfedge.attributes().texcoord() << "]" << std::endl;
+                    bOK = false;
+                }
             }
         }
-        else if (reflex(halfedge))
-        {
-            if (math::float_ge0(projection))
-            {
-                std::cout << "Bad: reflex dot(texture_direction, {0, 0, 1}) >= 0" << " f " << halfedge.face_id() << " h " << halfedge.id() << " [" << texture_direction << "]: [" << halfedge.attributes().position() << "] [" << halfedge.attributes().texcoord() << "]" << std::endl;
-                bOK = false;
-            }
-        }
-        //else 
 
         typename M::point_type position = halfedge.attributes().position();
         if (vector_eq(position, positionPrev))
@@ -1948,7 +1951,7 @@ bool quetzal::brep::check_face_angles(const M& mesh, const typename M::face_type
         return bOK;
     }
 
-    using T = typename M::value_type;
+    using T = M::value_type;
 
     size_t n = face.halfedge_count();
     T sum = 0;
@@ -2085,8 +2088,8 @@ bool quetzal::brep::check_spherical(const M& mesh, typename M::value_type radius
 template<typename M>
 std::map<typename M::value_type, size_t> quetzal::brep::count_edge_lengths(const M& mesh)
 {
-    using value_type = typename M::value_type;
-    using point_type = typename M::point_type;
+    using value_type = M::value_type;
+    using point_type = M::point_type;
 
     std::map<value_type, size_t> m;
 

@@ -40,16 +40,15 @@ namespace quetzal::brep
     public:
 
         using traits_type = Traits;
-        using vector_traits = typename traits_type::vector_traits;
+        using vector_traits = traits_type::vector_traits;
 
-        using vertex_attributes_type = typename traits_type::vertex_attributes_type;
-        using face_attributes_type = typename traits_type::face_attributes_type;
-        using surface_attributes_type = typename traits_type::surface_attributes_type;
-        using submesh_attributes_type = typename traits_type::submesh_attributes_type;
-        using value_type = typename traits_type::value_type;
-        using point_type = typename traits_type::point_type;
-        using vector_type = typename traits_type::vector_type;
-        using texcoord_type = typename traits_type::texcoord_type;
+        using vertex_attributes_type = traits_type::vertex_attributes_type;
+        using face_attributes_type = traits_type::face_attributes_type;
+        using surface_attributes_type = traits_type::surface_attributes_type;
+        using submesh_attributes_type = traits_type::submesh_attributes_type;
+        using value_type = traits_type::value_type;
+        using point_type = traits_type::point_type;
+        using vector_type = traits_type::vector_type;
         using halfedge_type = Halfedge<traits_type>;
         using halfedge_store_type = std::vector<halfedge_type>;
         using halfedges_type = Elements<Mesh<traits_type>, halfedge_type, id_type>;
@@ -66,11 +65,11 @@ namespace quetzal::brep
         using submesh_store_type = std::vector<submesh_type>;
         using submeshes_type = Elements<Mesh<traits_type>, submesh_type, id_type>;
         using index_type = std::map<std::string, id_type>;
-        using size_type = typename traits_type::size_type;
+        using size_type = traits_type::size_type;
 
         // Use from Traits only? ...
         template<typename U>
-        static value_type val(const U& u)
+        static constexpr value_type val(const U& u)
         {
             return traits_type::val(u);
         }
@@ -280,55 +279,55 @@ namespace quetzal::brep
 
         Properties m_properties;
 
-        static typename halfedges_type::size_function_type m_halfedges_size;
-        static typename halfedges_type::terminal_function_type m_halfedges_first;
-        static typename halfedges_type::terminal_function_type m_halfedges_last;
-        static typename halfedges_type::terminal_function_type m_halfedges_end;
-        static typename halfedges_type::iterate_function_type m_halfedges_forward;
-        static typename halfedges_type::iterate_function_type m_halfedges_reverse;
-        static typename halfedges_type::element_function_type m_halfedges_element;
-        static typename halfedges_type::const_element_function_type m_halfedges_const_element;
+        static halfedges_type::size_function_type m_halfedges_size;
+        static halfedges_type::terminal_function_type m_halfedges_first;
+        static halfedges_type::terminal_function_type m_halfedges_last;
+        static halfedges_type::terminal_function_type m_halfedges_end;
+        static halfedges_type::iterate_function_type m_halfedges_forward;
+        static halfedges_type::iterate_function_type m_halfedges_reverse;
+        static halfedges_type::element_function_type m_halfedges_element;
+        static halfedges_type::const_element_function_type m_halfedges_const_element;
 
-        static typename vertices_type::size_function_type m_vertices_size;
-        static typename vertices_type::terminal_function_type m_vertices_first;
-        static typename vertices_type::terminal_function_type m_vertices_last;
-        static typename vertices_type::terminal_function_type m_vertices_end;
-        static typename vertices_type::iterate_function_type m_vertices_forward;
-        static typename vertices_type::iterate_function_type m_vertices_reverse;
-        static typename vertices_type::element_function_type m_vertices_element;
-        static typename vertices_type::const_element_function_type m_vertices_const_element;
+        static vertices_type::size_function_type m_vertices_size;
+        static vertices_type::terminal_function_type m_vertices_first;
+        static vertices_type::terminal_function_type m_vertices_last;
+        static vertices_type::terminal_function_type m_vertices_end;
+        static vertices_type::iterate_function_type m_vertices_forward;
+        static vertices_type::iterate_function_type m_vertices_reverse;
+        static vertices_type::element_function_type m_vertices_element;
+        static vertices_type::const_element_function_type m_vertices_const_element;
 
-        static typename faces_type::size_function_type m_faces_size;
-        static typename faces_type::terminal_function_type m_faces_first;
-        static typename faces_type::terminal_function_type m_faces_last;
-        static typename faces_type::terminal_function_type m_faces_end;
-        static typename faces_type::iterate_function_type m_faces_forward;
-        static typename faces_type::iterate_function_type m_faces_reverse;
-        static typename faces_type::element_function_type m_faces_element;
-        static typename faces_type::const_element_function_type m_faces_const_element;
+        static faces_type::size_function_type m_faces_size;
+        static faces_type::terminal_function_type m_faces_first;
+        static faces_type::terminal_function_type m_faces_last;
+        static faces_type::terminal_function_type m_faces_end;
+        static faces_type::iterate_function_type m_faces_forward;
+        static faces_type::iterate_function_type m_faces_reverse;
+        static faces_type::element_function_type m_faces_element;
+        static faces_type::const_element_function_type m_faces_const_element;
 
-        static typename surfaces_type::size_function_type m_surfaces_size;
-        static typename surfaces_type::terminal_function_type m_surfaces_first;
-        static typename surfaces_type::terminal_function_type m_surfaces_last;
-        static typename surfaces_type::terminal_function_type m_surfaces_end;
-        static typename surfaces_type::iterate_function_type m_surfaces_forward;
-        static typename surfaces_type::iterate_function_type m_surfaces_reverse;
-        static typename surfaces_type::element_function_type m_surfaces_element;
-        static typename surfaces_type::const_element_function_type m_surfaces_const_element;
+        static surfaces_type::size_function_type m_surfaces_size;
+        static surfaces_type::terminal_function_type m_surfaces_first;
+        static surfaces_type::terminal_function_type m_surfaces_last;
+        static surfaces_type::terminal_function_type m_surfaces_end;
+        static surfaces_type::iterate_function_type m_surfaces_forward;
+        static surfaces_type::iterate_function_type m_surfaces_reverse;
+        static surfaces_type::element_function_type m_surfaces_element;
+        static surfaces_type::const_element_function_type m_surfaces_const_element;
 
-        static typename submeshes_type::size_function_type m_submeshes_size;
-        static typename submeshes_type::terminal_function_type m_submeshes_first;
-        static typename submeshes_type::terminal_function_type m_submeshes_last;
-        static typename submeshes_type::terminal_function_type m_submeshes_end;
-        static typename submeshes_type::iterate_function_type m_submeshes_forward;
-        static typename submeshes_type::iterate_function_type m_submeshes_reverse;
-        static typename submeshes_type::element_function_type m_submeshes_element;
-        static typename submeshes_type::const_element_function_type m_submeshes_const_element;
+        static submeshes_type::size_function_type m_submeshes_size;
+        static submeshes_type::terminal_function_type m_submeshes_first;
+        static submeshes_type::terminal_function_type m_submeshes_last;
+        static submeshes_type::terminal_function_type m_submeshes_end;
+        static submeshes_type::iterate_function_type m_submeshes_forward;
+        static submeshes_type::iterate_function_type m_submeshes_reverse;
+        static submeshes_type::element_function_type m_submeshes_element;
+        static submeshes_type::const_element_function_type m_submeshes_const_element;
     };
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    typename Mesh<Traits>::face_deleter_type face_deleter_basic = [](Face& face) -> void
+    Mesh<Traits>::face_deleter_type face_deleter_basic = [](Face& face) -> void
     {
         face.set_deleted();
         return;
@@ -336,7 +335,7 @@ namespace quetzal::brep
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    typename Mesh<Traits>::face_deleter_type face_deleter_full = [](Face& face) -> void
+    Mesh<Traits>::face_deleter_type face_deleter_full = [](Face& face) -> void
     {
         for (auto& halfedge : face.halfedges())
         {
@@ -1561,7 +1560,7 @@ void quetzal::brep::Mesh<Traits>::add_submesh_surface(const std::string& name, i
     if (surface(idSurface).submesh_id() != nullid)
     {
         submesh_type& o = surface(idSurface).submesh();
-        o.remove_face(idSurface);
+        o.remove_surface(idSurface);
         if (o.empty())
         {
             remove_submesh(o.name());
@@ -1593,45 +1592,7 @@ void quetzal::brep::Mesh<Traits>::rename_submesh_surfaces(id_type idSubmesh, std
 
     return;
 }
-/*
-//------------------------------------------------------------------------------
-template<typename Traits>
-quetzal::id_type quetzal::brep::Mesh<Traits>::create_seam(id_type idPartner, id_type idNext, id_type idPrev, id_type idHalfedge)
-{
-    id_type idSeam = m_seam_store.size();
-    m_seam_store.emplace_back(*this, idSeam, idPartner, idNext, idPrev, idHalfedge);
-    return idSeam;
-}
 
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::clear_seams(id_type idSurface)
-{
-    for (auto& seam : m_seams)
-    {
-        if (seam.surface_id() == idSurface)
-        {
-            seam.set_deleted();
-        }
-    }
-
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::generate_seams()
-{
-    m_seam_store.clear();
-
-    for (auto& surface : m_surfaces)
-    {
-        surface.generate_seams();
-    }
-
-    return;
-}
-*/
 //------------------------------------------------------------------------------
 template<typename Traits>
 typename const quetzal::Properties& quetzal::brep::Mesh<Traits>::properties() const
@@ -1895,6 +1856,10 @@ void quetzal::brep::Mesh<Traits>::append(const Mesh& mesh)
         {
             create_surface(idSubmesh, name, surfaceOrig.attributes(), surfaceOrig.properties());
         }
+        else
+        {
+            surface(idSubmesh, name).set_regenerate_perimeters();
+        }
     }
 
     // Adjust id's to reflect their new positions
@@ -2070,6 +2035,8 @@ void quetzal::brep::Mesh<Traits>::pack()
 
         for (auto& hole : face.holes())
         {
+            hole.set_face_id(face.id());
+
             assert(halfedge_mapping.contains(hole.halfedge_id()));
             hole.set_halfedge_id(halfedge_mapping[hole.halfedge_id()]);
         }
@@ -2101,13 +2068,13 @@ void quetzal::brep::Mesh<Traits>::pack()
             surface.face_ids().insert(face_mapping[idFace]);
         }
 
-        surface.set_regenerate_seams();
-
         if (surface.submesh_id() != nullid)
         {
             assert(submesh_mapping.contains(surface.submesh_id()));
             surface.set_submesh_id(submesh_mapping[surface.submesh_id()]);
         }
+
+        surface.set_regenerate_perimeters();
     }
 
     for (submesh_type& submesh : m_submesh_store)
@@ -2506,7 +2473,7 @@ typename quetzal::brep::Mesh<Traits>::halfedges_type::iterate_function_type quet
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::halfedges_type::element_function_type quetzal::brep::Mesh<Traits>::m_halfedges_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> typename quetzal::brep::Mesh<Traits>::halfedge_type&
+typename quetzal::brep::Mesh<Traits>::halfedges_type::element_function_type quetzal::brep::Mesh<Traits>::m_halfedges_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> quetzal::brep::Mesh<Traits>::halfedge_type&
 {
     id;
     auto& halfedge = mesh.halfedge(i);
@@ -2516,7 +2483,7 @@ typename quetzal::brep::Mesh<Traits>::halfedges_type::element_function_type quet
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::halfedges_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_halfedges_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const typename quetzal::brep::Mesh<Traits>::halfedge_type&
+typename quetzal::brep::Mesh<Traits>::halfedges_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_halfedges_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const quetzal::brep::Mesh<Traits>::halfedge_type&
 {
     id;
     const auto& halfedge = mesh.halfedge(i);
@@ -2607,7 +2574,7 @@ typename quetzal::brep::Mesh<Traits>::vertices_type::iterate_function_type quetz
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::vertices_type::element_function_type quetzal::brep::Mesh<Traits>::m_vertices_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> typename quetzal::brep::Mesh<Traits>::vertex_type&
+typename quetzal::brep::Mesh<Traits>::vertices_type::element_function_type quetzal::brep::Mesh<Traits>::m_vertices_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> quetzal::brep::Mesh<Traits>::vertex_type&
 {
     id;
     auto& vertex = mesh.vertex(i);
@@ -2617,7 +2584,7 @@ typename quetzal::brep::Mesh<Traits>::vertices_type::element_function_type quetz
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::vertices_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_vertices_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const typename quetzal::brep::Mesh<Traits>::vertex_type&
+typename quetzal::brep::Mesh<Traits>::vertices_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_vertices_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const quetzal::brep::Mesh<Traits>::vertex_type&
 {
     id;
     const auto& vertex = mesh.vertex(i);
@@ -2708,7 +2675,7 @@ typename quetzal::brep::Mesh<Traits>::faces_type::iterate_function_type quetzal:
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::faces_type::element_function_type quetzal::brep::Mesh<Traits>::m_faces_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> typename quetzal::brep::Mesh<Traits>::face_type&
+typename quetzal::brep::Mesh<Traits>::faces_type::element_function_type quetzal::brep::Mesh<Traits>::m_faces_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> quetzal::brep::Mesh<Traits>::face_type&
 {
     id;
     auto& face = mesh.face(i);
@@ -2718,7 +2685,7 @@ typename quetzal::brep::Mesh<Traits>::faces_type::element_function_type quetzal:
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::faces_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_faces_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const typename quetzal::brep::Mesh<Traits>::face_type&
+typename quetzal::brep::Mesh<Traits>::faces_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_faces_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const quetzal::brep::Mesh<Traits>::face_type&
 {
     id;
     const auto& face = mesh.face(i);
@@ -2809,7 +2776,7 @@ typename quetzal::brep::Mesh<Traits>::surfaces_type::iterate_function_type quetz
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::surfaces_type::element_function_type quetzal::brep::Mesh<Traits>::m_surfaces_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> typename quetzal::brep::Mesh<Traits>::surface_type&
+typename quetzal::brep::Mesh<Traits>::surfaces_type::element_function_type quetzal::brep::Mesh<Traits>::m_surfaces_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> quetzal::brep::Mesh<Traits>::surface_type&
 {
     id;
     auto& surface = mesh.surface(i);
@@ -2819,7 +2786,7 @@ typename quetzal::brep::Mesh<Traits>::surfaces_type::element_function_type quetz
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::surfaces_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_surfaces_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const typename quetzal::brep::Mesh<Traits>::surface_type&
+typename quetzal::brep::Mesh<Traits>::surfaces_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_surfaces_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const quetzal::brep::Mesh<Traits>::surface_type&
 {
     id;
     const auto& surface = mesh.surface(i);
@@ -2910,7 +2877,7 @@ typename quetzal::brep::Mesh<Traits>::submeshes_type::iterate_function_type quet
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::submeshes_type::element_function_type quetzal::brep::Mesh<Traits>::m_submeshes_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> typename quetzal::brep::Mesh<Traits>::submesh_type&
+typename quetzal::brep::Mesh<Traits>::submeshes_type::element_function_type quetzal::brep::Mesh<Traits>::m_submeshes_element = [](Mesh<Traits>& mesh, id_type id, id_type i) -> quetzal::brep::Mesh<Traits>::submesh_type&
 {
     id;
     auto& submesh = mesh.submesh(i);
@@ -2920,7 +2887,7 @@ typename quetzal::brep::Mesh<Traits>::submeshes_type::element_function_type quet
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::brep::Mesh<Traits>::submeshes_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_submeshes_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const typename quetzal::brep::Mesh<Traits>::submesh_type&
+typename quetzal::brep::Mesh<Traits>::submeshes_type::const_element_function_type quetzal::brep::Mesh<Traits>::m_submeshes_const_element = [](const Mesh<Traits>& mesh, id_type id, id_type i) -> const quetzal::brep::Mesh<Traits>::submesh_type&
 {
     id;
     const auto& submesh = mesh.submesh(i);

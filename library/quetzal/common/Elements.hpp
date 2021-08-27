@@ -24,8 +24,8 @@ namespace quetzal
         using element_type = E;
         using i_type = I;
         using value_type = element_type;
-        using reference = value_type&;
-        using const_reference = const value_type&;
+        using reference_type = value_type&;
+        using const_reference_type = const value_type&;
         using iterator = ElementsIterator<source_type, element_type, i_type>;
         using const_iterator = ElementsConstIterator<source_type, element_type, i_type>;
         using reverse_iterator = ElementsIterator<source_type, element_type, i_type>;
@@ -35,7 +35,7 @@ namespace quetzal
         using terminal_function_type = std::function<i_type(const source_type&, id_type)>; // returns the i at the beginning or end of the range given a source element id
         using iterate_function_type = std::function<i_type(const source_type&, id_type, i_type)>; // returns the next i given the current i
         using element_function_type = std::function<element_type&(source_type&, id_type, i_type)>; // returns a reference to the element at i
-        using const_element_function_type = std::function<const element_type&(const source_type&, id_type, i_type)>; // returns a const_reference to the element at i
+        using const_element_function_type = std::function<const element_type&(const source_type&, id_type, i_type)>; // returns a const reference to the element at i
 
         Elements(source_type& source, id_type id, size_function_type size, terminal_function_type first, terminal_function_type last, terminal_function_type end,
                 iterate_function_type forward, iterate_function_type reverse, element_function_type element, const_element_function_type const_element);
@@ -67,14 +67,13 @@ namespace quetzal
         const_reverse_iterator crbegin() const;
         const_reverse_iterator crend() const;
 
-        reference front();
-        const_reference front() const;
+        reference_type front();
+        const_reference_type front() const;
 
-        reference back();
-        const_reference back() const;
+        reference_type back();
+        const_reference_type back() const;
 
         // Internal use
-        const source_type* source() const;
         void set_source(source_type& source);
         void set_id(id_type id);
         void check_source(const source_type* const psource) const;
@@ -223,7 +222,7 @@ typename quetzal::Elements<S, E, I>::const_reverse_iterator quetzal::Elements<S,
 
 //------------------------------------------------------------------------------
 template<typename S, typename E, typename I>
-typename quetzal::Elements<S, E, I>::reference quetzal::Elements<S, E, I>::front()
+typename quetzal::Elements<S, E, I>::reference_type quetzal::Elements<S, E, I>::front()
 {
     assert(m_psource != nullptr);
     return m_element(*m_psource, m_id, m_first(*m_psource, m_id));
@@ -231,7 +230,7 @@ typename quetzal::Elements<S, E, I>::reference quetzal::Elements<S, E, I>::front
 
 //------------------------------------------------------------------------------
 template<typename S, typename E, typename I>
-typename quetzal::Elements<S, E, I>::const_reference quetzal::Elements<S, E, I>::front() const
+typename quetzal::Elements<S, E, I>::const_reference_type quetzal::Elements<S, E, I>::front() const
 {
     assert(m_psource != nullptr);
     return m_element(*m_psource, m_id, m_first(*m_psource, m_id));
@@ -239,7 +238,7 @@ typename quetzal::Elements<S, E, I>::const_reference quetzal::Elements<S, E, I>:
 
 //------------------------------------------------------------------------------
 template<typename S, typename E, typename I>
-typename quetzal::Elements<S, E, I>::reference quetzal::Elements<S, E, I>::back()
+typename quetzal::Elements<S, E, I>::reference_type quetzal::Elements<S, E, I>::back()
 {
     assert(m_psource != nullptr);
     return m_element(*m_psource, m_id, m_last(*m_psource, m_id));
@@ -247,17 +246,10 @@ typename quetzal::Elements<S, E, I>::reference quetzal::Elements<S, E, I>::back(
 
 //------------------------------------------------------------------------------
 template<typename S, typename E, typename I>
-typename quetzal::Elements<S, E, I>::const_reference quetzal::Elements<S, E, I>::back() const
+typename quetzal::Elements<S, E, I>::const_reference_type quetzal::Elements<S, E, I>::back() const
 {
     assert(m_psource != nullptr);
     return m_element(*m_psource, m_id, m_last(*m_psource, m_id));
-}
-
-//------------------------------------------------------------------------------
-template<typename S, typename E, typename I>
-const typename quetzal::Elements<S, E, I>::source_type* quetzal::Elements<S, E, I>::source() const
-{
-    return m_psource;
 }
 
 //------------------------------------------------------------------------------

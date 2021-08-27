@@ -86,19 +86,6 @@ void quetzal::brep::Flags::set_marked(bool b) const
 }
 
 //------------------------------------------------------------------------------
-bool quetzal::brep::Flags::unset() const
-{
-    return deleted() ? true : empty();
-}
-
-//------------------------------------------------------------------------------
-void quetzal::brep::Flags::reset() const
-{
-    m_bits &= static_cast<underlying_type<Bits>::type>(Bits::Deleted);
-    return;
-}
-
-//------------------------------------------------------------------------------
 bool quetzal::brep::Flags::empty() const
 {
     return m_bits == 0;
@@ -108,6 +95,19 @@ bool quetzal::brep::Flags::empty() const
 void quetzal::brep::Flags::clear() const
 {
     m_bits = 0;
+    return;
+}
+
+//------------------------------------------------------------------------------
+bool quetzal::brep::Flags::unset() const
+{
+    return deleted() ? true : empty();
+}
+
+//------------------------------------------------------------------------------
+void quetzal::brep::Flags::reset() const
+{
+    m_bits &= static_cast<underlying_type<Bits>::type>(Bits::Deleted);
     return;
 }
 

@@ -34,6 +34,9 @@ namespace quetzal::geometry
     template<typename V>
     bool triangle_degenerate(const V& a, const V& b, const V& c);
 
+    template<typename V>
+    V triangle_centroid(const V& a, const V& b, const V& c);
+
     template<typename V> requires (V::dimension == 2)
     typename V::value_type triangle_area(const V& a, const V& b, const V& c);
 
@@ -133,10 +136,17 @@ bool quetzal::geometry::triangle_degenerate(const V& a, const V& b, const V& c)
 }
 
 //------------------------------------------------------------------------------
+template<typename V>
+V quetzal::geometry::triangle_centroid(const V& a, const V& b, const V& c)
+{
+    return (a + b + c) / V::value_type(3);
+}
+
+//------------------------------------------------------------------------------
 template<typename V> requires (V::dimension == 2)
 typename V::value_type quetzal::geometry::triangle_area(const V& a, const V& b, const V& c)
 {
-    return std::abs(triangle_area(a, b, c));
+    return std::abs(triangle_signed_area(a, b, c));
 }
 
 //------------------------------------------------------------------------------
@@ -169,7 +179,7 @@ typename V::value_type quetzal::geometry::triangle_signed_area(const V& a, const
 template<typename V> requires (V::dimension == 2)
 bool quetzal::geometry::internal::triangle_region_contains(const V& a, const V& b, const V& c, const V& point)
 {
-    using T = typename V::value_type;
+    using T = V::value_type;
 
     T signa = dot(perp(b - a), point - a);
     T signb = dot(perp(c - b), point - b);
@@ -184,7 +194,7 @@ bool quetzal::geometry::internal::triangle_region_contains(const V& a, const V& 
 template<typename V> requires (V::dimension == 2)
 bool quetzal::geometry::internal::triangle_region_contains(const V& a, const V& b, const V& c, const V& point)
 {
-    using T = typename V::value_type;
+    using T = V::value_type;
 
     V v0 = a;
     V v1 = b - a;

@@ -69,13 +69,19 @@
     <ClInclude Include="mesh_connection.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mesh_util_x.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Hole.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Perimeter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh_clip.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh_connection2.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh_texcoord.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

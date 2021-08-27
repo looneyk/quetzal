@@ -25,8 +25,8 @@ namespace quetzal::brep
     public:
 
         using mesh_type = M;
-        using face_type = typename mesh_type::face_type;
-        using halfedge_type = typename mesh_type::halfedge_type;
+        using face_type = mesh_type::face_type;
+        using halfedge_type = mesh_type::halfedge_type;
         using halfedges_type = ElementsDirect<Hole, halfedge_type, id_type>;
 
         Hole();
@@ -59,10 +59,10 @@ namespace quetzal::brep
 
         bool check() const;
 
-        // Internal use, only by Mesh
-        void set_mesh(mesh_type& mesh);
+        // Internal use
         const mesh_type& mesh() const;
         mesh_type& mesh();
+        void set_mesh(mesh_type& mesh);
         void check_mesh(const mesh_type* const pmesh) const;
 
     private:
@@ -73,14 +73,14 @@ namespace quetzal::brep
         halfedges_type m_halfedges;
         Properties m_properties;
 
-        static typename halfedges_type::size_function_type m_halfedges_size;
-        static typename halfedges_type::terminal_function_type m_halfedges_first;
-        static typename halfedges_type::terminal_function_type m_halfedges_last;
-        static typename halfedges_type::terminal_function_type m_halfedges_end;
-        static typename halfedges_type::iterate_function_type m_halfedges_forward;
-        static typename halfedges_type::iterate_function_type m_halfedges_reverse;
-        static typename halfedges_type::element_function_type m_halfedges_element;
-        static typename halfedges_type::const_element_function_type m_halfedges_const_element;
+        static halfedges_type::size_function_type m_halfedges_size;
+        static halfedges_type::terminal_function_type m_halfedges_first;
+        static halfedges_type::terminal_function_type m_halfedges_last;
+        static halfedges_type::terminal_function_type m_halfedges_end;
+        static halfedges_type::iterate_function_type m_halfedges_forward;
+        static halfedges_type::iterate_function_type m_halfedges_reverse;
+        static halfedges_type::element_function_type m_halfedges_element;
+        static halfedges_type::const_element_function_type m_halfedges_const_element;
     };
 
     template<typename Traits, typename M>
@@ -221,14 +221,6 @@ bool quetzal::brep::Hole<Traits, M>::check() const
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-void quetzal::brep::Hole<Traits, M>::set_mesh(mesh_type& mesh)
-{
-    m_pmesh = &mesh;
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
 const typename quetzal::brep::Hole<Traits, M>::mesh_type& quetzal::brep::Hole<Traits, M>::mesh() const
 {
     assert(m_pmesh != nullptr);
@@ -241,6 +233,14 @@ typename quetzal::brep::Hole<Traits, M>::mesh_type& quetzal::brep::Hole<Traits, 
 {
     assert(m_pmesh != nullptr);
     return *m_pmesh;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits, typename M>
+void quetzal::brep::Hole<Traits, M>::set_mesh(mesh_type& mesh)
+{
+    m_pmesh = &mesh;
+    return;
 }
 
 //------------------------------------------------------------------------------
@@ -290,6 +290,7 @@ typename quetzal::brep::Hole<Traits, M>::halfedges_type::terminal_function_type 
 template<typename Traits, typename M>
 typename quetzal::brep::Hole<Traits, M>::halfedges_type::iterate_function_type quetzal::brep::Hole<Traits, M>::m_halfedges_forward = [](const Hole<Traits, M>& hole, id_type i) -> id_type
 {
+    assert(i != m_halfedges_end(hole));
     i = hole.mesh().halfedge(i).next_id();
     return i != m_halfedges_first(hole) ? i : nullid;
 };
@@ -298,13 +299,14 @@ typename quetzal::brep::Hole<Traits, M>::halfedges_type::iterate_function_type q
 template<typename Traits, typename M>
 typename quetzal::brep::Hole<Traits, M>::halfedges_type::iterate_function_type quetzal::brep::Hole<Traits, M>::m_halfedges_reverse = [](const Hole<Traits, M>& hole, id_type i) -> id_type
 {
+    assert(i != m_halfedges_end(hole));
     i = hole.mesh().halfedge(i).prev_id();
     return i != m_halfedges_last(hole) ? i : nullid;
 };
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename quetzal::brep::Hole<Traits, M>::halfedges_type::element_function_type quetzal::brep::Hole<Traits, M>::m_halfedges_element = [](Hole<Traits, M>& hole, id_type i) -> typename quetzal::brep::Hole<Traits, M>::halfedge_type&
+typename quetzal::brep::Hole<Traits, M>::halfedges_type::element_function_type quetzal::brep::Hole<Traits, M>::m_halfedges_element = [](Hole<Traits, M>& hole, id_type i) -> quetzal::brep::Hole<Traits, M>::halfedge_type&
 {
     auto& halfedge = hole.mesh().halfedge(i);
     assert(!halfedge.deleted());
@@ -313,7 +315,7 @@ typename quetzal::brep::Hole<Traits, M>::halfedges_type::element_function_type q
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-typename quetzal::brep::Hole<Traits, M>::halfedges_type::const_element_function_type quetzal::brep::Hole<Traits, M>::m_halfedges_const_element = [](const Hole<Traits, M>& hole, id_type i) -> const typename quetzal::brep::Hole<Traits, M>::halfedge_type&
+typename quetzal::brep::Hole<Traits, M>::halfedges_type::const_element_function_type quetzal::brep::Hole<Traits, M>::m_halfedges_const_element = [](const Hole<Traits, M>& hole, id_type i) -> const quetzal::brep::Hole<Traits, M>::halfedge_type&
 {
     const auto& halfedge = hole.mesh().halfedge(i);
     assert(!halfedge.deleted());

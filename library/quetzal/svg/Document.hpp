@@ -15,10 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace quetzal
-{
-
-namespace svg
+namespace quetzal::svg
 {
 
     //--------------------------------------------------------------------------
@@ -121,9 +118,7 @@ namespace svg
         bool m_bFirst;
     };
 
-} // namespace svg
-
-} // namespace quetzal
+} // namespace quetzal::svg
 
 //------------------------------------------------------------------------------
 template<typename... Args>

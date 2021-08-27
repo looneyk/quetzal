@@ -9,10 +9,7 @@
 #include "Element.hpp"
 #include <iosfwd>
 
-namespace quetzal
-{
-
-namespace xml
+namespace quetzal::xml
 {
 
     //--------------------------------------------------------------------------
@@ -43,8 +40,6 @@ namespace xml
     std::ostream& operator<<(std::ostream& os, const xml::Document& document);
     std::istream& operator>>(std::istream& is, xml::Document& document);
 
-} // namespace xml
-
-} // namespace quetzal
+} // namespace quetzal::xml
 
 #endif // QUETZAL_XML_DOCUMENT_HPP

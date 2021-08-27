@@ -15,46 +15,34 @@
 #include <sstream>
 #include <string>
 
-namespace quetzal
+namespace quetzal::geometry
 {
 
-namespace geometry
-{
-
-    namespace Flags
+    //--------------------------------------------------------------------------
+    class AttributesFlags
     {
-        using type = unsigned int;
+    public:
 
-        enum : type
-        {
-            Position = 0x01,
-            Normal = 0x02,
-            Texcoord0 = 0x04,
-            Texcoord1 = 0x08,
-            Tangent = 0x10,
-            Bitangent = 0x20
-        };
+        static constexpr unsigned int Position = 0x01;
+        static constexpr unsigned int Normal = 0x02;
+        static constexpr unsigned int Texcoord0 = 0x04;
+        static constexpr unsigned int Texcoord1 = 0x08;
+        static constexpr unsigned int Tangent = 0x10;
+        static constexpr unsigned int Bitangent = 0x20;
+
+        AttributesFlags() = default;
+        constexpr AttributesFlags(unsigned int flags);
+        AttributesFlags(const AttributesFlags&) = default;
+        ~AttributesFlags() = default;
+
+        AttributesFlags& operator=(const AttributesFlags&) = default;
+
+        constexpr operator unsigned int() const;
+
+    private:
+
+        const unsigned int m_flags;
     };
-
-    namespace Attribute
-    {
-        using Types = unsigned int;
-
-        enum : Types
-        {
-            Position = 0x01,
-            Normal = 0x02,
-            Texcoord0 = 0x04,
-            Texcoord1 = 0x08,
-            Tangent = 0x10,
-            Bitangent = 0x20
-        };
-
-        // or ...
-        //    static const type Position = 0x01;
-        // in any case, not Types or Flags, but Attributes::contents or similar ...
-    };
-
 
     //--------------------------------------------------------------------------
     template<typename Traits>
@@ -63,13 +51,14 @@ namespace geometry
     public:
 
         using vector_traits = Traits;
-        using texcoord_traits = typename vector_traits::reduced_traits;
+        using texcoord_traits = vector_traits::reduced_traits;
 
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using point_type = math::Vector<vector_traits>;
         using vector_type = math::Vector<vector_traits>;
         using texcoord_type = math::Vector<texcoord_traits>;
         using matrix_type = math::Matrix<value_type>; // N ...
+        using transform_texcoord_type = std::function<texcoord_type(const texcoord_type&)>;
 
         Attributes() = default;
         Attributes(const Attributes&) = default;
@@ -79,12 +68,16 @@ namespace geometry
 
         virtual void transform(const matrix_type& matrixPosition) = 0;
         virtual void transform(const matrix_type& matrixPosition, const matrix_type& matrixNormal) = 0;
-        virtual void invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord) = 0;
+        virtual void invert(transform_texcoord_type transform_texcoord) = 0;
         virtual bool validate() const = 0;
-        virtual bool validate(std::string& error) const = 0;
+        virtual bool validate(std::string& errors) const = 0;
 
         // virtual instead of in addition?
         // free functions instead?
+
+        static texcoord_type transform_texcoord_null(const texcoord_type& texcoord);
+        static texcoord_type transform_texcoord_reflect_u(const texcoord_type& texcoord);
+        static texcoord_type transform_texcoord_reflect_v(const texcoord_type& texcoord);
 
         static bool validate_normal(const vector_type& normal);
         static bool validate_normal(const vector_type& normal, std::string& error);
@@ -108,13 +101,12 @@ namespace geometry
     {
     public:
 
-        using value_type = Attributes<Traits>::value_type;
-        using point_type = Attributes<Traits>::point_type;
-        using vector_type = Attributes<Traits>::vector_type;
-        using texcoord_type = Attributes<Traits>::texcoord_type;
-        using matrix_type = Attributes<Traits>::matrix_type;
-
-        static constexpr Flags::type flags();
+        using typename Attributes<Traits>::value_type;
+        using typename Attributes<Traits>::point_type;
+        using typename Attributes<Traits>::vector_type;
+        using typename Attributes<Traits>::texcoord_type;
+        using typename Attributes<Traits>::matrix_type;
+        using typename Attributes<Traits>::transform_texcoord_type;
 
         Position() = default;
         Position(const point_type& position);
@@ -131,13 +123,13 @@ namespace geometry
 
         virtual void transform(const matrix_type& matrixPosition) override;
         virtual void transform(const matrix_type& matrixPosition, const matrix_type& matrixNormal) override;
-        virtual void invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord = [](const texcoord_type& texcoord) -> texcoord_type {return texcoord;}) override;
+        virtual void invert(transform_texcoord_type transform_texcoord = transform_texcoord_null) override;
         virtual bool validate() const override;
-        virtual bool validate(std::string& error) const override;
+        virtual bool validate(std::string& errors) const override;
+
+        static constexpr bool contains(AttributesFlags components);
 
     private:
-
-        static constexpr Flags::type m_flags = Flags::Position;
 
         point_type m_position;
     };
@@ -154,13 +146,12 @@ namespace geometry
     {
     public:
 
-        using value_type = Attributes<Traits>::value_type;
-        using point_type = Attributes<Traits>::point_type;
-        using vector_type = Attributes<Traits>::vector_type;
-        using texcoord_type = Attributes<Traits>::texcoord_type;
-        using matrix_type = Attributes<Traits>::matrix_type;
-
-        static constexpr Flags::type flags();
+        using typename Attributes<Traits>::value_type;
+        using typename Attributes<Traits>::point_type;
+        using typename Attributes<Traits>::vector_type;
+        using typename Attributes<Traits>::texcoord_type;
+        using typename Attributes<Traits>::matrix_type;
+        using typename Attributes<Traits>::transform_texcoord_type;
 
         PositionNormal() = default;
         PositionNormal(const point_type& position, const vector_type& normal);
@@ -181,13 +172,13 @@ namespace geometry
 
         virtual void transform(const matrix_type& matrixPosition) override;
         virtual void transform(const matrix_type& matrixPosition, const matrix_type& matrixNormal) override;
-        virtual void invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord = [](const texcoord_type& texcoord) -> texcoord_type {return texcoord;}) override;
+        virtual void invert(transform_texcoord_type transform_texcoord = transform_texcoord_null) override;
         virtual bool validate() const override;
-        virtual bool validate(std::string& error) const override;
+        virtual bool validate(std::string& errors) const override;
+
+        static constexpr bool contains(AttributesFlags components);
 
     private:
-
-        static constexpr Flags::type m_flags = Flags::Position | Flags::Normal;
 
         point_type m_position;
         vector_type m_normal;
@@ -205,13 +196,12 @@ namespace geometry
     {
     public:
 
-        using value_type = Attributes<Traits>::value_type;
-        using point_type = Attributes<Traits>::point_type;
-        using vector_type = Attributes<Traits>::vector_type;
-        using texcoord_type = Attributes<Traits>::texcoord_type;
-        using matrix_type = Attributes<Traits>::matrix_type;
-
-        static constexpr Flags::type flags();
+        using typename Attributes<Traits>::value_type;
+        using typename Attributes<Traits>::point_type;
+        using typename Attributes<Traits>::vector_type;
+        using typename Attributes<Traits>::texcoord_type;
+        using typename Attributes<Traits>::matrix_type;
+        using typename Attributes<Traits>::transform_texcoord_type;
 
         PositionNormalTexture() = default;
         PositionNormalTexture(const point_type& position, const vector_type& normal, const texcoord_type& texcoord);
@@ -236,13 +226,13 @@ namespace geometry
 
         virtual void transform(const matrix_type& matrixPosition) override;
         virtual void transform(const matrix_type& matrixPosition, const matrix_type& matrixNormal) override;
-        virtual void invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord = [](const texcoord_type& texcoord) -> texcoord_type {return texcoord;}) override;
+        virtual void invert(transform_texcoord_type transform_texcoord = transform_texcoord_null) override;
         virtual bool validate() const override;
-        virtual bool validate(std::string& error) const override;
+        virtual bool validate(std::string& errors) const override;
+
+        static constexpr bool contains(AttributesFlags components);
 
     private:
-
-        static constexpr Flags::type m_flags = Flags::Position | Flags::Normal | Flags::Texcoord0;
 
         point_type m_position;
         vector_type m_normal;
@@ -261,13 +251,12 @@ namespace geometry
     {
     public:
 
-        using value_type = Attributes<Traits>::value_type;
-        using point_type = Attributes<Traits>::point_type;
-        using vector_type = Attributes<Traits>::vector_type;
-        using texcoord_type = Attributes<Traits>::texcoord_type;
-        using matrix_type = Attributes<Traits>::matrix_type;
-
-        static constexpr Flags::type flags();
+        using typename Attributes<Traits>::value_type;
+        using typename Attributes<Traits>::point_type;
+        using typename Attributes<Traits>::vector_type;
+        using typename Attributes<Traits>::texcoord_type;
+        using typename Attributes<Traits>::matrix_type;
+        using typename Attributes<Traits>::transform_texcoord_type;
 
         PositionNormalTextureTangent() = default;
         PositionNormalTextureTangent(const point_type& position, const vector_type& normal, const texcoord_type& texcoord, const vector_type& tangent);
@@ -296,13 +285,13 @@ namespace geometry
 
         virtual void transform(const matrix_type& matrixPosition) override;
         virtual void transform(const matrix_type& matrixPosition, const matrix_type& matrixNormal) override;
-        virtual void invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord = [](const texcoord_type& texcoord) -> texcoord_type {return texcoord;}) override;
+        virtual void invert(transform_texcoord_type transform_texcoord = transform_texcoord_null) override;
         virtual bool validate() const override;
-        virtual bool validate(std::string& error) const override;
+        virtual bool validate(std::string& errors) const override;
+
+        static constexpr bool contains(AttributesFlags components);
 
     private:
-
-        static constexpr Flags::type m_flags = Flags::Position | Flags::Normal | Flags::Texcoord0 | Flags::Tangent;
 
         point_type m_position;
         vector_type m_normal;
@@ -322,13 +311,12 @@ namespace geometry
     {
     public:
 
-        using value_type = Attributes<Traits>::value_type;
-        using point_type = Attributes<Traits>::point_type;
-        using vector_type = Attributes<Traits>::vector_type;
-        using texcoord_type = Attributes<Traits>::texcoord_type;
-        using matrix_type = Attributes<Traits>::matrix_type;
-
-        static constexpr Flags::type flags();
+        using typename Attributes<Traits>::value_type;
+        using typename Attributes<Traits>::point_type;
+        using typename Attributes<Traits>::vector_type;
+        using typename Attributes<Traits>::texcoord_type;
+        using typename Attributes<Traits>::matrix_type;
+        using typename Attributes<Traits>::transform_texcoord_type;
 
         Normal() = default;
         Normal(const vector_type& normal);
@@ -345,13 +333,13 @@ namespace geometry
 
         virtual void transform(const matrix_type& matrixPosition) override;
         virtual void transform(const matrix_type& matrixPosition, const matrix_type& matrixNormal) override;
-        virtual void invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord = [](const texcoord_type& texcoord) -> texcoord_type {return texcoord;}) override;
+        virtual void invert(transform_texcoord_type transform_texcoord = transform_texcoord_null) override;
         virtual bool validate() const override;
-        virtual bool validate(std::string& error) const override;
+        virtual bool validate(std::string& errors) const override;
+
+        static constexpr bool contains(AttributesFlags components);
 
     private:
-
-        static constexpr Flags::type m_flags = Flags::Normal;
 
         vector_type m_normal;
     };
@@ -368,13 +356,12 @@ namespace geometry
     {
     public:
 
-        using value_type = Attributes<Traits>::value_type;
-        using point_type = Attributes<Traits>::point_type;
-        using vector_type = Attributes<Traits>::vector_type;
-        using texcoord_type = Attributes<Traits>::texcoord_type;
-        using matrix_type = Attributes<Traits>::matrix_type;
-
-        static constexpr Flags::type flags();
+        using typename Attributes<Traits>::value_type;
+        using typename Attributes<Traits>::point_type;
+        using typename Attributes<Traits>::vector_type;
+        using typename Attributes<Traits>::texcoord_type;
+        using typename Attributes<Traits>::matrix_type;
+        using typename Attributes<Traits>::transform_texcoord_type;
 
         NormalTangent() = default;
         NormalTangent(const vector_type& normal, const vector_type& tangent);
@@ -395,13 +382,13 @@ namespace geometry
 
         virtual void transform(const matrix_type& matrixPosition) override;
         virtual void transform(const matrix_type& matrixPosition, const matrix_type& matrixNormal) override;
-        virtual void invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord = [](const texcoord_type& texcoord) -> texcoord_type {return texcoord;}) override;
+        virtual void invert(transform_texcoord_type transform_texcoord = transform_texcoord_null) override;
         virtual bool validate() const override;
-        virtual bool validate(std::string& error) const override;
+        virtual bool validate(std::string& errors) const override;
+
+        static constexpr bool contains(AttributesFlags components);
 
     private:
-
-        static constexpr Flags::type m_flags = Flags::Normal | Flags::Tangent;
 
         vector_type m_normal;
         vector_type m_tangent;
@@ -413,9 +400,40 @@ namespace geometry
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, const NormalTangent<Traits>& a);
 
-} // namespace geometry
+} // namespace quetzal::geometry
 
-} // namespace quetzal
+//------------------------------------------------------------------------------
+constexpr quetzal::geometry::AttributesFlags::AttributesFlags(unsigned int flags) :
+    m_flags(flags)
+{
+}
+
+//------------------------------------------------------------------------------
+constexpr quetzal::geometry::AttributesFlags::operator unsigned int() const
+{
+    return m_flags;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+quetzal::geometry::Attributes<Traits>::texcoord_type quetzal::geometry::Attributes<Traits>::transform_texcoord_null(const texcoord_type& texcoord)
+{
+    return texcoord;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+quetzal::geometry::Attributes<Traits>::texcoord_type quetzal::geometry::Attributes<Traits>::transform_texcoord_reflect_u(const texcoord_type& texcoord)
+{
+    return {Traits::val(1) - texcoord.x(), texcoord.y()};
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+quetzal::geometry::Attributes<Traits>::texcoord_type quetzal::geometry::Attributes<Traits>::transform_texcoord_reflect_v(const texcoord_type& texcoord)
+{
+    return {texcoord.x(), Traits::val(1) - texcoord.y()};
+}
 
 //------------------------------------------------------------------------------
 template<typename Traits>
@@ -509,17 +527,10 @@ bool quetzal::geometry::Attributes<Traits>::validate_bitangent(const vector_type
 template<typename A, typename B>
 bool quetzal::geometry::coincident(const A& a, const B& b)
 {
-    static_assert(a.flags() & Flags::Position);
-    static_assert(b.flags() & Flags::Position);
+    static_assert(A::contains(AttributesFlags::Position));
+    static_assert(B::contains(AttributesFlags::Position));
 
     return(vector_eq(a.position(), b.position()));
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-constexpr quetzal::geometry::Flags::type quetzal::geometry::Position<Traits>::flags()
-{
-    return m_flags;
 }
 
 //------------------------------------------------------------------------------
@@ -578,7 +589,7 @@ void quetzal::geometry::Position<Traits>::transform(const matrix_type& matrixPos
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::geometry::Position<Traits>::invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord)
+void quetzal::geometry::Position<Traits>::invert(transform_texcoord_type transform_texcoord)
 {
     return;
 }
@@ -592,9 +603,17 @@ bool quetzal::geometry::Position<Traits>::validate() const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Position<Traits>::validate(std::string& error) const
+bool quetzal::geometry::Position<Traits>::validate(std::string& errors) const
 {
     return true;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+constexpr bool quetzal::geometry::Position<Traits>::contains(AttributesFlags components)
+{
+    constexpr AttributesFlags contained = AttributesFlags::Position;
+    return (contained & components) == components;
 }
 
 //------------------------------------------------------------------------------
@@ -610,13 +629,6 @@ std::ostream& quetzal::geometry::operator<<(std::ostream& os, const Position<Tra
 {
     os << "[" << a.position() << "]";
     return os;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-constexpr quetzal::geometry::Flags::type quetzal::geometry::PositionNormal<Traits>::flags()
-{
-    return m_flags;
 }
 
 //------------------------------------------------------------------------------
@@ -701,7 +713,7 @@ void quetzal::geometry::PositionNormal<Traits>::transform(const matrix_type& mat
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::geometry::PositionNormal<Traits>::invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord)
+void quetzal::geometry::PositionNormal<Traits>::invert(transform_texcoord_type transform_texcoord)
 {
     m_normal = -m_normal;
     return;
@@ -716,9 +728,17 @@ bool quetzal::geometry::PositionNormal<Traits>::validate() const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::PositionNormal<Traits>::validate(std::string& error) const
+bool quetzal::geometry::PositionNormal<Traits>::validate(std::string& errors) const
 {
-    return Attributes<Traits>::validate_normal(m_normal, error);
+    return Attributes<Traits>::validate_normal(m_normal, errors);
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+constexpr bool quetzal::geometry::PositionNormal<Traits>::contains(AttributesFlags components)
+{
+    constexpr AttributesFlags contained = AttributesFlags::Position | AttributesFlags::Normal;
+    return (contained & components) == components;
 }
 
 //------------------------------------------------------------------------------
@@ -735,13 +755,6 @@ std::ostream& quetzal::geometry::operator<<(std::ostream& os, const PositionNorm
     os << "[" << a.position() << "]";
     os << " [" << a.normal() << "]";
     return os;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-constexpr quetzal::geometry::Flags::type quetzal::geometry::PositionNormalTexture<Traits>::flags()
-{
-    return m_flags;
 }
 
 //------------------------------------------------------------------------------
@@ -850,7 +863,7 @@ void quetzal::geometry::PositionNormalTexture<Traits>::transform(const matrix_ty
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::geometry::PositionNormalTexture<Traits>::invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord)
+void quetzal::geometry::PositionNormalTexture<Traits>::invert(transform_texcoord_type transform_texcoord)
 {
     m_normal = -m_normal;
     m_texcoord = transform_texcoord(m_texcoord);
@@ -866,29 +879,37 @@ bool quetzal::geometry::PositionNormalTexture<Traits>::validate() const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::PositionNormalTexture<Traits>::validate(std::string& error) const
+bool quetzal::geometry::PositionNormalTexture<Traits>::validate(std::string& errors) const
 {
-    std::string e;
+    std::string error;
     bool bOK = true;
 
-    if (!Attributes<Traits>::validate_normal(m_normal, e))
+    if (!Attributes<Traits>::validate_normal(m_normal, error))
     {
-        error = e;
+        errors = error;
         bOK = false;
     }
 
-    if (!Attributes<Traits>::validate_texcoord(m_texcoord, e))
+    if (!Attributes<Traits>::validate_texcoord(m_texcoord, error))
     {
-        if (!e.empty())
+        if (!errors.empty())
         {
-            error += "; ";
+            errors += "; ";
         }
 
-        error += e;
+        errors += error;
         bOK = false;
     }
 
     return bOK;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+constexpr bool quetzal::geometry::PositionNormalTexture<Traits>::contains(AttributesFlags components)
+{
+    constexpr AttributesFlags contained = AttributesFlags::Position | AttributesFlags::Normal | AttributesFlags::Texcoord0;
+    return (contained & components) == components;
 }
 
 //------------------------------------------------------------------------------
@@ -906,13 +927,6 @@ std::ostream& quetzal::geometry::operator<<(std::ostream& os, const PositionNorm
     os << " [" << a.normal() << "]";
     os << " [" << a.texcoord() << "]";
     return os;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-constexpr quetzal::geometry::Flags::type quetzal::geometry::PositionNormalTextureTangent<Traits>::flags()
-{
-    return m_flags;
 }
 
 //------------------------------------------------------------------------------
@@ -1045,7 +1059,7 @@ void quetzal::geometry::PositionNormalTextureTangent<Traits>::transform(const ma
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::geometry::PositionNormalTextureTangent<Traits>::invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord)
+void quetzal::geometry::PositionNormalTextureTangent<Traits>::invert(transform_texcoord_type transform_texcoord)
 {
     m_normal = -m_normal;
     m_texcoord = transform_texcoord(m_texcoord);
@@ -1062,40 +1076,48 @@ bool quetzal::geometry::PositionNormalTextureTangent<Traits>::validate() const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::PositionNormalTextureTangent<Traits>::validate(std::string& error) const
+bool quetzal::geometry::PositionNormalTextureTangent<Traits>::validate(std::string& errors) const
 {
-    std::string e;
+    std::string error;
     bool bOK = true;
 
-    if (!Attributes<Traits>::validate_normal(m_normal, e))
+    if (!Attributes<Traits>::validate_normal(m_normal, error))
     {
-        error = e;
+        errors = error;
         bOK = false;
     }
 
-    if (!Attributes<Traits>::validate_texcoord(m_texcoord, e))
+    if (!Attributes<Traits>::validate_texcoord(m_texcoord, error))
     {
-        if (!e.empty())
+        if (!errors.empty())
         {
-            error += "; ";
+            errors += "; ";
         }
 
-        error += e;
+        errors += error;
         bOK = false;
     }
 
-    if (!Attributes<Traits>::validate_tangent(m_tangent, e))
+    if (!Attributes<Traits>::validate_tangent(m_tangent, error))
     {
-        if (!e.empty())
+        if (!errors.empty())
         {
-            error += "; ";
+            errors += "; ";
         }
 
-        error += e;
+        errors += error;
         bOK = false;
     }
 
     return bOK;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+constexpr bool quetzal::geometry::PositionNormalTextureTangent<Traits>::contains(AttributesFlags components)
+{
+    constexpr AttributesFlags contained = AttributesFlags::Position | AttributesFlags::Normal | AttributesFlags::Texcoord0 | AttributesFlags::Tangent;
+    return (contained & components) == components;
 }
 
 //------------------------------------------------------------------------------
@@ -1114,13 +1136,6 @@ std::ostream& quetzal::geometry::operator<<(std::ostream& os, const PositionNorm
     os << " [" << a.texcoord() << "]";
     os << " [" << a.tangent() << "]";
     return os;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-constexpr quetzal::geometry::Flags::type quetzal::geometry::Normal<Traits>::flags()
-{
-    return m_flags;
 }
 
 //------------------------------------------------------------------------------
@@ -1181,7 +1196,7 @@ void quetzal::geometry::Normal<Traits>::transform(const matrix_type& matrixPosit
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::geometry::Normal<Traits>::invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord)
+void quetzal::geometry::Normal<Traits>::invert(transform_texcoord_type transform_texcoord)
 {
     m_normal = -m_normal;
     return;
@@ -1196,9 +1211,17 @@ bool quetzal::geometry::Normal<Traits>::validate() const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Normal<Traits>::validate(std::string& error) const
+bool quetzal::geometry::Normal<Traits>::validate(std::string& errors) const
 {
-    return Attributes<Traits>::validate_normal(m_normal, error);
+    return Attributes<Traits>::validate_normal(m_normal, errors);
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+constexpr bool quetzal::geometry::Normal<Traits>::contains(AttributesFlags components)
+{
+    constexpr AttributesFlags contained = AttributesFlags::Normal;
+    return (contained & components) == components;
 }
 
 //------------------------------------------------------------------------------
@@ -1214,13 +1237,6 @@ std::ostream& quetzal::geometry::operator<<(std::ostream& os, const Normal<Trait
 {
     os << "[" << a.normal() << "]";
     return os;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-constexpr quetzal::geometry::Flags::type quetzal::geometry::NormalTangent<Traits>::flags()
-{
-    return m_flags;
 }
 
 //------------------------------------------------------------------------------
@@ -1305,7 +1321,7 @@ void quetzal::geometry::NormalTangent<Traits>::transform(const matrix_type& matr
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::geometry::NormalTangent<Traits>::invert(std::function<texcoord_type(const texcoord_type&)> transform_texcoord)
+void quetzal::geometry::NormalTangent<Traits>::invert(transform_texcoord_type transform_texcoord)
 {
     m_normal = -m_normal;
     m_tangent = -m_tangent;
@@ -1321,29 +1337,37 @@ bool quetzal::geometry::NormalTangent<Traits>::validate() const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::NormalTangent<Traits>::validate(std::string& error) const
+bool quetzal::geometry::NormalTangent<Traits>::validate(std::string& errors) const
 {
-    std::string e;
+    std::string error;
     bool bOK = true;
 
-    if (!Attributes<Traits>::validate_normal(m_normal, e))
+    if (!Attributes<Traits>::validate_normal(m_normal, error))
     {
-        error = e;
+        errors = error;
         bOK = false;
     }
 
-    if (!Attributes<Traits>::validate_tangent(m_tangent, e))
+    if (!Attributes<Traits>::validate_tangent(m_tangent, error))
     {
-        if (!e.empty())
+        if (!errors.empty())
         {
-            error += "; ";
+            errors += "; ";
         }
 
-        error += e;
+        errors += error;
         bOK = false;
     }
 
     return bOK;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+constexpr bool quetzal::geometry::NormalTangent<Traits>::contains(AttributesFlags components)
+{
+    constexpr AttributesFlags contained = AttributesFlags::Normal | AttributesFlags::Tangent;
+    return (contained & components) == components;
 }
 
 //------------------------------------------------------------------------------

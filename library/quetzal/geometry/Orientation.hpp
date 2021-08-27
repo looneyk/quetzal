@@ -8,10 +8,7 @@
 #include "quetzal/math/Matrix.hpp"
 #include "quetzal/math/Vector.hpp"
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     //--------------------------------------------------------------------------
@@ -22,7 +19,7 @@ namespace geometry
 
 		static_assert(Traits::dimension >= 3);
 
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
 
         Orientation();
@@ -60,9 +57,7 @@ namespace geometry
     template<typename Traits>
     Orientation<typename Traits::reduced_traits>& operator*=(Orientation<typename Traits::reduced_traits>& lhs, const math::Matrix<typename Traits::value_type>& rhs);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

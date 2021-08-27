@@ -2,6 +2,11 @@
 http://paulbourke.net/
 
 
+if coordinate requires exponential notation, it's 0
+clean up coordinates when target is model, these values make no sense there
+tolerance/precision algorithm applied to coordinates?
+
+
 Handle the case where an existing group is being specified in the context of a different material
 see notes in read_obj and write_obj in model/obj_io.hpp
 

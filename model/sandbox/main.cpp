@@ -18,7 +18,7 @@
 #include <string>
 #include <cassert>
 
-#include "quetzal/brep/mesh_util_x.hpp"
+#include "quetzal/brep/mesh_connection2.hpp"
 
 using namespace std;
 using namespace quetzal;

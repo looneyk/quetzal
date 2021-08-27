@@ -10,10 +10,7 @@
 
 #include "math_util.hpp"
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
     //--------------------------------------------------------------------------
@@ -53,9 +50,7 @@ namespace math
     template<typename T>
     Interval<T> shift(const Interval<T>& interval, T t);
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename T>

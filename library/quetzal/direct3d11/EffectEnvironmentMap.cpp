@@ -345,10 +345,10 @@ quetzal::direct3d11::EffectEnvironmentMap::Impl::Impl(Renderer& renderer) :
     biasedVertexNormals(false)
 {
 // shader manager arrays are sized with traits anyway ...
-//    static_assert( _countof(EffectCommon<EffectEnvironmentMapTraits>::VertexShaderIndices) == EffectEnvironmentMapTraits::ShaderPermutationCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectEnvironmentMapTraits>::VertexShaderBytecode) == EffectEnvironmentMapTraits::VertexShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectEnvironmentMapTraits>::PixelShaderBytecode) == EffectEnvironmentMapTraits::PixelShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectEnvironmentMapTraits>::PixelShaderIndices) == EffectEnvironmentMapTraits::ShaderPermutationCount, "array/max mismatch" );
+//    static_assert(std::size(EffectCommon<EffectEnvironmentMapTraits>::VertexShaderIndices) == EffectEnvironmentMapTraits::ShaderPermutationCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectEnvironmentMapTraits>::VertexShaderBytecode) == EffectEnvironmentMapTraits::VertexShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectEnvironmentMapTraits>::PixelShaderBytecode) == EffectEnvironmentMapTraits::PixelShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectEnvironmentMapTraits>::PixelShaderIndices) == EffectEnvironmentMapTraits::ShaderPermutationCount, "array/max mismatch");
 
     constants.environmentMapAmount = 1;
     constants.fresnelFactor = 1;

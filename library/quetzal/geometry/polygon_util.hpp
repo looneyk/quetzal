@@ -14,10 +14,7 @@
 
 #include "intersect.hpp"
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     template<typename Traits>
@@ -74,9 +71,7 @@ namespace polygon_util_internal
 
 } // namespace polygon_util_internal
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

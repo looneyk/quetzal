@@ -8,10 +8,7 @@
 #include "Matrix.hpp"
 #include <DirectXMath.h>
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
     template<typename V>
@@ -33,9 +30,7 @@ namespace math_xm_internal
 
 } // namespace math_xm_internal
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename V>

@@ -11,10 +11,7 @@
 #include "quetzal/geometry/Attributes.hpp"
 #include "quetzal/math/Vector.hpp"
 
-namespace quetzal
-{
-
-namespace brep
+namespace quetzal::brep
 {
 
     //--------------------------------------------------------------------------
@@ -24,30 +21,26 @@ namespace brep
     public:
 
         using vector_traits = Traits;
-        using texcoord_traits = typename vector_traits::reduced_traits;
         
         using vertex_attributes_type = V;
         using face_attributes_type = F;
         using surface_attributes_type = S;
         using submesh_attributes_type = O;
 
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using vector_type = math::Vector<vector_traits>;
         using point_type = math::Vector<vector_traits>;
-        using texcoord_type = math::Vector<texcoord_traits>;
         using size_type = size_t;
 
         static constexpr size_t dimension = vector_traits::dimension;
 
         template<typename U>
-        static value_type val(const U& u)
+        static constexpr value_type val(const U& u)
         {
             return static_cast<value_type>(u);
         }
     };
 
-} // namespace brep
-
-} // namespace quetzal
+} // namespace quetzal::brep
 
 #endif // QUETZAL_BREP_MESHTRAITS_HPP

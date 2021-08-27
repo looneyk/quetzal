@@ -518,8 +518,8 @@ bool quetzal::geometry::intersects(const Segment<Traits>& segmentA, const Segmen
 template<typename Traits>
 bool quetzal::geometry::intersects(const Segment<Traits>& segment, const Plane<Traits>& plane)
 {
-    auto p = plane.region(segment.endpoint(0));
-    auto q = plane.region(segment.endpoint(1));
+    auto p = plane.compare(segment.endpoint(0));
+    auto q = plane.compare(segment.endpoint(1));
     return p != q || p == 0;
 }
 
@@ -1230,7 +1230,7 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Pl
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Plane<Traits>& planeA, const Plane<Traits>& planeB)
 {
-    using T = typename Traits::value_type;
+    using T = Traits::value_type;
 
     if (parallel(planeA, planeB))
     {

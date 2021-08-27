@@ -21,6 +21,14 @@ namespace quetzal::brep
     {
     public:
 
+        Flags() = default;
+        Flags(const Flags&) = default;
+        Flags(Flags&&) = default;
+        virtual ~Flags() = default;
+
+        Flags& operator=(const Flags&) = default;
+        Flags& operator=(Flags&&) = default;
+
         bool deleted() const;
         void set_deleted(bool b = true) const;
 
@@ -30,31 +38,22 @@ namespace quetzal::brep
         bool marked() const;
         void set_marked(bool b = true) const;
 
-        bool unset() const; // If deleted, remaining bits are ignored
-        virtual void reset() const; // Preserves deleted state
-
         bool empty() const;
         virtual void clear() const;
 
-    protected:
+        // These are aware of the deleted state
+        bool unset() const; // If deleted, remaining bits are ignored
+        virtual void reset() const; // Preserves deleted state
 
-        Flags() = default;
-        Flags(const Flags&) = default;
-        Flags(Flags&&) = default;
-        virtual ~Flags() = default;
+    private:
 
-        Flags& operator=(const Flags&) = default;
-        Flags& operator=(Flags&&) = default;
+        mutable uint32_t m_bits = {};
 
         friend constexpr void swap(Flags& lhs, Flags& rhs) noexcept
         {
             using std::swap;
             swap(lhs.m_bits, rhs.m_bits);
         }
-
-    private:
-
-        mutable uint32_t m_bits = {};
     };
 
     std::ostream& operator<<(std::ostream& os, const Flags& flags);

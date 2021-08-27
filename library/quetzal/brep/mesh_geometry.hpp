@@ -19,14 +19,11 @@
 #include "quetzal/geometry/triangle_util.hpp"
 #include "quetzal/math/DimensionReducer.hpp"
 
-namespace quetzal
-{
-
-namespace brep
+namespace quetzal::brep
 {
 
     // Returns -1, 0, 1: reflex, straight, convex
-    template<typename Traits>
+    template<typename Traits> requires (Traits::dimension >= 2 && Traits::dimension <= 3)
     int orientation(const Halfedge<Traits>& halfedge);
 
     template<typename Traits>
@@ -103,12 +100,10 @@ namespace brep
     template<typename Traits>
     bool solid_contains(const Mesh<Traits>& mesh, const typename Traits::point_type& point);
 
-} // namespace brep
-
-} // namespace quetzal
+} // namespace quetzal::brep
 
 //------------------------------------------------------------------------------
-template<typename Traits>
+template<typename Traits> requires (Traits::dimension >= 2 && Traits::dimension <= 3)
 int quetzal::brep::orientation(const Halfedge<Traits>& halfedge)
 {
     if (colinear(halfedge))
@@ -128,10 +123,6 @@ int quetzal::brep::orientation(const Halfedge<Traits>& halfedge)
     else if constexpr (Traits::dimension == 2)
     {
         return dot(c - b, perp(b - a)) < Traits::val(0) ? -1 : 1;
-    }
-    else
-    {
-        static_assert(false, "Dimension out of range.");
     }
 }
 

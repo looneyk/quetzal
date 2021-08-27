@@ -10,10 +10,7 @@
 
 #include <string>
 
-namespace quetzal
-{
-
-namespace model
+namespace quetzal::model
 {
 
 namespace SurfaceName
@@ -29,8 +26,6 @@ namespace SurfaceName
 
 } // namespace SurfaceName
 
-} // namespace model
-
-} // namespace quetzal
+} // namespace quetzal::model
 
 #endif // QUETZAL_MODEL_SURFACENAME_HPP

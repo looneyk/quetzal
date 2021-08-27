@@ -29,12 +29,13 @@ namespace quetzal::wavefront_obj
     {
     public:
 
-        using value_type = typename M::value_type;
-        using point_type = typename M::point_type;
-        using vector_type = typename M::vector_type;
-        using texcoord_type = typename M::texcoord_type;
+        using attributes_type = M::vertex_attributes_type;
+        using value_type = attributes_type::value_type;
+        using point_type = attributes_type::point_type;
+        using vector_type = attributes_type::vector_type;
+        using texcoord_type = attributes_type::texcoord_type;
 
-        using open_function_type = std::function<void(M&, const std::string&)>;
+        using open_function_type = std::function<void(M&, const std::filesystem::path&)>;
         using object_function_type = std::function<void(M&, const std::string&)>;
         using group_function_type = std::function<void(M&, const std::string&)>;
         using face_open_function_type = std::function<void(M&)>;
@@ -49,7 +50,7 @@ namespace quetzal::wavefront_obj
 
         Reader& operator=(const Reader&) = delete;
 
-        void read(const std::filesystem::path& pathname, M& m) const;
+        void read(M& m, const std::filesystem::path& pathname) const;
 
     private:
 
@@ -81,7 +82,7 @@ quetzal::wavefront_obj::Reader<M>::Reader(open_function_type on_open, object_fun
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::wavefront_obj::Reader<M>::read(const std::filesystem::path& pathname, M& m) const
+void quetzal::wavefront_obj::Reader<M>::read(M& m, const std::filesystem::path& pathname) const
 {
     std::ifstream is(pathname, std::ios_base::binary);
     if (!is)
@@ -91,7 +92,7 @@ void quetzal::wavefront_obj::Reader<M>::read(const std::filesystem::path& pathna
         throw Exception(oss.str(), __FILE__, __LINE__);
     }
 
-    m_on_open(m, pathname.filename().string());
+    m_on_open(m, pathname);
 
     std::vector<point_type> positions;
     std::vector<vector_type> normals;

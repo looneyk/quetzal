@@ -15,11 +15,15 @@ namespace quetzal::direct3d11
 
     // not to_xm, not to_dx, to_dv? ...
 
+    // use concepts, require dimension 2 and 3 ...
+    // require Vector<Traits>? ...
+    // take V instead of M ...
+
     template<typename M>
     quetzal::direct3d11::Vector3 to_xm(const typename M::vector_type& v);
 
     template<typename M>
-    quetzal::direct3d11::Vector2 to_xm(const typename M::texcoord_type& v);
+    quetzal::direct3d11::Vector2 to_xm(const typename M::vertex_attributes_type::texcoord_type& v);
 
     template<typename V, typename I, typename M>
     std::tuple<std::vector<V>, std::vector<I>> mesh_geometry(const M& m, std::function<V(const typename M::vertex_type::attributes_type&)> transfer_vertex);
@@ -35,7 +39,7 @@ quetzal::direct3d11::Vector3 quetzal::direct3d11::to_xm(const typename M::vector
 
 //------------------------------------------------------------------------------
 template<typename M>
-quetzal::direct3d11::Vector2 quetzal::direct3d11::to_xm(const typename M::texcoord_type& v)
+quetzal::direct3d11::Vector2 quetzal::direct3d11::to_xm(const typename M::vertex_attributes_type::texcoord_type& v)
 {
     return {v.x(), v.y()};
 }

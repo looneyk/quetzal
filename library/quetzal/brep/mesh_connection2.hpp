@@ -1,11 +1,12 @@
-#if !defined(QUETZAL_BREP_MESH_UTIL_X_HPP)
-#define QUETZAL_BREP_MESH_UTIL_X_HPP
+#if !defined(QUETZAL_BREP_MESH_CONNECTION2_HPP)
+#define QUETZAL_BREP_MESH_CONNECTION2_HPP
 //------------------------------------------------------------------------------
 // brep
 // mesh_util.hpp
 //------------------------------------------------------------------------------
 
 #include "mesh_geometry.hpp"
+#include "mesh_texcoord.hpp"
 #include "quetzal/math/math_util.hpp"
 #include "quetzal/geometry/intersect.hpp"
 #include <algorithm>
@@ -17,6 +18,7 @@
 namespace quetzal::brep
 {
 
+    // Currently only supports surfaces that consist of a single face
     template<typename M>
     void attach_x(M& mesh, const std::string& nameSurfaceA, const std::string& nameSurfaceB, bool bSurfacesDistinct = false);
 
@@ -26,7 +28,7 @@ namespace quetzal::brep
     // Implementation
 
     template<typename M>
-    std::vector<std::array<id_type, 2>> intersection_faces(M& mesh, id_type idFaceA, id_type idFaceB);
+    std::vector<std::array<id_type, 2>> create_intersection_faces(M& mesh, id_type idFaceA, id_type idFaceB);
 
     template<typename M>
     void mark_internal(const typename M::face_type& faceA, const typename M::face_type& faceB);
@@ -103,7 +105,7 @@ void quetzal::brep::attach_x(M& mesh, const std::string& nameSurfaceA, const std
     auto& surfaceA = mesh.surface(nameSurfaceA);
     auto& surfaceB = mesh.surface(nameSurfaceB);
 
-    // so far this only handles single face per surface case ...
+    // so far this only handles the single face per surface case ...
     assert(surfaceA.face_count() == surfaceB.face_count());
     assert(surfaceA.face_count() == 1);
 
@@ -115,7 +117,7 @@ void quetzal::brep::attach_x(M& mesh, const std::string& nameSurfaceA, const std
 template<typename M>
 void quetzal::brep::attach_x(M& mesh, id_type idFaceA, id_type idFaceB, bool bSurfacesDistinct)
 {
-    auto intersections = intersection_faces(mesh, idFaceA, idFaceB);
+    auto intersections = create_intersection_faces(mesh, idFaceA, idFaceB);
     for (const auto& i : intersections)
     {
         weld(mesh, i[0], i[1]);
@@ -129,7 +131,7 @@ bSurfacesDistinct;
     id_type idSubmesh = faceA.submesh_id();
     size_t i = 0;
 
-    // need to apply intersection_faces here too ...
+    // need to apply create_intersection_faces here too ...
     // but using intersection for hole face instead of removing it ...
     for (const auto& hole : faceB.holes())
     {
@@ -146,12 +148,20 @@ bSurfacesDistinct;
         {
             id_type idSurfaceHole = mesh.create_surface(idSubmesh, mesh.surface(idSurface).name() + to_string(i), mesh.surface(idSurface).attributes(), mesh.surface(idSurface).properties());
             face.set_surface_id(idSurfaceHole);
-            calculate_surface_texcoords(mesh, idSurfaceHole);
+
+            if constexpr (M::vertex_attributes_type::contains(geometry::AttributesFlags::Texcoord0))
+            {
+                calculate_surface_texcoords(mesh, idSurfaceHole);
+            }
+
             ++i;
         }
         else
         {
-            interpolate_face_texcoords(faceA, face);
+            if constexpr (M::vertex_attributes_type::contains(geometry::AttributesFlags::Texcoord0))
+            {
+                interpolate_face_texcoords(faceA, face);
+            }
         }
     }
 */
@@ -160,7 +170,7 @@ bSurfacesDistinct;
 
 //------------------------------------------------------------------------------
 template<typename M>
-std::vector<std::array<quetzal::id_type, 2>> quetzal::brep::intersection_faces(M& mesh, id_type idFaceA, id_type idFaceB)
+std::vector<std::array<quetzal::id_type, 2>> quetzal::brep::create_intersection_faces(M& mesh, id_type idFaceA, id_type idFaceB)
 {
     auto marked = [&mesh](id_type idHalfedge) -> bool { return mesh.halfedge(idHalfedge).vertex().marked(); };
     auto mark = [&](id_type idHalfedge) -> std::string { return marked(idHalfedge) ? "*" : ""; };
@@ -473,4 +483,4 @@ bool quetzal::brep::inward(const M& mesh, id_type idHalfedgeA, id_type idHalfedg
     return dot(cross(va, vb), normal) > M::val(0);
 }
 
-#endif // QUETZAL_BREP_MESH_UTIL_X_HPP
+#endif // QUETZAL_BREP_MESH_CONNECTION2_HPP

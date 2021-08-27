@@ -9,10 +9,7 @@
 #include <string>
 #include <iosfwd>
 
-namespace quetzal
-{
-
-namespace svg
+namespace quetzal::svg
 {
 
     //--------------------------------------------------------------------------
@@ -42,9 +39,7 @@ namespace svg
     template<typename T>
     std::ostream& operator<<(std::ostream& os, const Attribute<T>& attribute);    
 
-} // namespace svg
-
-} // namespace quetzal
+} // namespace quetzal::svg
 
 //------------------------------------------------------------------------------
 template<typename T>

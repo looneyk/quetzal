@@ -13,10 +13,7 @@
 #include <vector>
 #include <cassert>
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     template<typename Traits>
@@ -25,9 +22,7 @@ namespace geometry
     template<typename Traits>
     Path<Traits> load_path(const std::filesystem::path& filepath);
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>

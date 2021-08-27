@@ -5,7 +5,7 @@
 // transformation_matrix.hpp
 //
 // Transformation matrices for pre-multiplication: v' = v * M
-//
+// Angles in radians
 //------------------------------------------------------------------------------
 
 #include "Matrix.hpp"
@@ -16,10 +16,7 @@
 #include <cmath>
 #include <cassert>
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
     template<typename V>
@@ -78,6 +75,12 @@ namespace math
 //    template<typename Traits>
 //    Matrix<Traits::value_type> reflection(const geometry::Plane<Traits>& plane);
 
+    // Transformation matrix for rotating upFrom to coincide with upTo
+    // up vectors need to be unit length
+    // (internally does an axis/angle rotation) ...
+    template<typename V>
+    Matrix<typename V::value_type> alignment(const V& from, const V& to);
+
     // Transformation matrix for rotating upFrom and rightFrom to coincide with upTo and rightTo
     // up and right vectors need to be unit length
     template<typename V>
@@ -87,29 +90,24 @@ namespace math
     template<typename V>
     Matrix<typename V::value_type> alignment2(const V& upFrom, const V& rightFrom, const V& upTo, const V& rightTo);
 
+    // should be 4, 4? ...
     template<typename Traits>
-    Matrix<typename Traits::value_type, 3, 3> change_of_basis(const Vector<Traits>& a0, const Vector<Traits>& a1, const Vector<Traits>& a2, const Vector<Traits>& b0, const Vector<Traits>& b1, const Vector<Traits>& b2);
+    Matrix<typename Traits::value_type, 3, 3> linear_mapping(const Vector<Traits>& a0, const Vector<Traits>& a1, const Vector<Traits>& a2, const Vector<Traits>& b0, const Vector<Traits>& b1, const Vector<Traits>& b2);
 
+    // should be 3, 3? ...
     template<typename Traits>
-    Matrix<typename Traits::value_type, 2, 2> change_of_basis(const Vector<Traits>& a0, const Vector<Traits>& a1, const Vector<Traits>& b0, const Vector<Traits>& b1);
+    Matrix<typename Traits::value_type, 2, 2> linear_mapping(const Vector<Traits>& a0, const Vector<Traits>& a1, const Vector<Traits>& b0, const Vector<Traits>& b1);
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename V>
 quetzal::math::Matrix<typename V::value_type> quetzal::math::translation(const V& v)
 {
-    static_assert(V::dimension >= 2);
-
     Matrix<typename V::value_type> matrix = Matrix<typename V::value_type>::identity();
-    matrix(3, 0) = v[0];
-    matrix(3, 1) = v[1];
-
-    if constexpr (V::dimension >= 3)
+    for (size_t i = 0; i < V::dimension; ++i)
     {
-        matrix(3, 2) = v[2];
+        matrix(3, i) = v[i];
     }
 
     return matrix;
@@ -259,7 +257,7 @@ quetzal::math::Matrix<typename V::value_type> quetzal::math::rotation_axis_unit(
     {
         // Rotation matrix using Rodrigues' rotation formula
 
-        using T = typename V::value_type;
+        using T = V::value_type;
 
         Matrix<T> mcross = {
             {T(0), axis[2], -axis[1], T(0)},
@@ -320,6 +318,21 @@ quetzal::math::Matrix<T> quetzal::math::reflection_z()
 
 //------------------------------------------------------------------------------
 template<typename V>
+quetzal::math::Matrix<typename V::value_type> quetzal::math::alignment(const V& from, const V& to)
+{
+    assert(from.unit());
+    assert(to.unit());
+
+    if (vector_eq(from, to))
+    {
+        return Matrix<typename V::value_type>::identity();
+    }
+
+    return rotation_axis_unit(normalize(cross(from, to)), angle_unit(from, to));
+}
+
+//------------------------------------------------------------------------------
+template<typename V>
 quetzal::math::Matrix<typename V::value_type> quetzal::math::alignment(const V& upFrom, V rightFrom, const V& upTo, V rightTo)
 {
     assert(upFrom.unit());
@@ -329,7 +342,7 @@ quetzal::math::Matrix<typename V::value_type> quetzal::math::alignment(const V& 
     assert(perpendicular(upFrom, rightFrom));
     assert(perpendicular(upTo, rightTo));
 
-    using T = typename V::value_type;
+    using T = V::value_type;
 
     V axisZ = {T(0), T(0), T(1)};
 
@@ -407,7 +420,7 @@ quetzal::math::Matrix<typename V::value_type> quetzal::math::alignment2(const V&
     assert(perpendicular(upFrom, rightFrom));
     assert(perpendicular(upTo, rightTo));
 
-    using T = typename V::value_type;
+    using T = V::value_type;
 
     Matrix<T> matrix = Matrix<T>::identity();
     V rightFromAligned = rightFrom;
@@ -445,8 +458,10 @@ quetzal::math::Matrix<typename V::value_type> quetzal::math::alignment2(const V&
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::math::Matrix<typename Traits::value_type, 3, 3> quetzal::math::change_of_basis(const Vector<Traits>& a0, const Vector<Traits>& a1, const Vector<Traits>& a2, const Vector<Traits>& b0, const Vector<Traits>& b1, const Vector<Traits>& b2)
+quetzal::math::Matrix<typename Traits::value_type, 3, 3> quetzal::math::linear_mapping(const Vector<Traits>& a0, const Vector<Traits>& a1, const Vector<Traits>& a2, const Vector<Traits>& b0, const Vector<Traits>& b1, const Vector<Traits>& b2)
 {
+assert(false); // ...
+
     using matrix_type = Matrix<typename Traits::value_type, 3, 3>;
 
     matrix_type a(a0, a1, a2);
@@ -457,14 +472,31 @@ quetzal::math::Matrix<typename Traits::value_type, 3, 3> quetzal::math::change_o
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::math::Matrix<typename Traits::value_type, 2, 2> quetzal::math::change_of_basis(const Vector<Traits>& a0, const Vector<Traits>& a1, const Vector<Traits>& b0, const Vector<Traits>& b1)
+quetzal::math::Matrix<typename Traits::value_type, 2, 2> quetzal::math::linear_mapping(const Vector<Traits>& a0, const Vector<Traits>& a1, const Vector<Traits>& b0, const Vector<Traits>& b1)
 {
     using matrix2_type = Matrix<typename Traits::value_type, 2, 2>;
 
-    matrix2_type a(a0, a1);
-    matrix2_type b(b0, b1);
+//    matrix2_type a(a0, a1);
+//    matrix2_type b(b0, b1);
+//    return inverse(a) * b;
+/*
+    typename Traits::value_type d = Traits::value_type(1) / (b0.x() * b1.y() - b0.y() * b1.x());
 
-    return inverse(a) * b;
+    matrix2_type m;
+    m(0, 0) = (b0.x() * a1.y() - b1.x() * a0.y()) * d;
+    m(0, 1) = (b0.y() * a1.y() - b1.y() * a0.y()) * d;
+    m(1, 0) = (b1.x() * a0.x() - b0.x() * a1.x()) * d;
+    m(1, 1) = (b1.y() * a0.x() - b0.y() * a1.x()) * d;
+*/
+    typename Traits::value_type d = Traits::value_type(1) / (a0.y() * a1.x() - a0.x() * a1.y());
+
+    matrix2_type m;
+    m(0, 0) = (a0.y() * b1.x() - a1.y() * b0.x()) * d;
+    m(0, 1) = (a0.y() * b1.y() - a1.y() * b0.y()) * d;
+    m(1, 0) = (a1.x() * b0.x() - a0.x() * b1.x()) * d;
+    m(1, 1) = (a1.x() * b0.y() - a0.x() * b1.y()) * d;
+
+    return m;
 }
 
 #endif // QUETZAL_MATH_TRANSFORMATION_MATRIX_HPP

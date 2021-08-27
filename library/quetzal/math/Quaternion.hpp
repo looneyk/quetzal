@@ -13,7 +13,7 @@
 #include <array>
 #include <cassert>
 
-namespace quetzal
+namespace quetzal::math
 {
 
     //--------------------------------------------------------------------------
@@ -51,7 +51,7 @@ namespace quetzal
         rep_type m_rep;
     };
 
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename Traits>

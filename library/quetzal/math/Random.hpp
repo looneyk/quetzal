@@ -7,10 +7,7 @@
 
 #include <random>
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
     //--------------------------------------------------------------------------
@@ -49,9 +46,7 @@ namespace math
         E m_engine;
     };
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename E>

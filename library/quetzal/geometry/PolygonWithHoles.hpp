@@ -19,11 +19,11 @@ namespace quetzal::geometry
     {
     public:
 
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using polygon_type = Polygon<Traits>;
         using hole_type = Polygon<Traits>;
         using holes_type = std::vector<hole_type>;
-        using size_type = typename Traits::size_type;
+        using size_type = Traits::size_type;
 
         PolygonWithHoles() = default;
         PolygonWithHoles(const PolygonWithHoles&) = default;

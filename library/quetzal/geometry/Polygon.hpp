@@ -5,6 +5,7 @@
 // Polygon.hpp
 //------------------------------------------------------------------------------
 
+#include "AxisAlignedBoundingBox.hpp"
 #include "Point.hpp"
 #include "Points.hpp"
 #include "Plane.hpp"
@@ -25,7 +26,7 @@ namespace quetzal::geometry
     // Polygon is an ordered set of vertices
     // Each sequential pair of vertices defines an edge, with an implied edge between the last and first vertices
     // edge count == vertex count
-    // Results of center, area, normal, and plane are undefined if the polygon is not planar or vertices are not in CCW order
+    // Results of centroid, area, normal, and plane are only meaningful if the polygon is planar and the vertices are in CCW order
 
     //--------------------------------------------------------------------------
     template<typename Traits>
@@ -34,13 +35,13 @@ namespace quetzal::geometry
     public:
 
         using traits_type = Traits;
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
         using vertex_type = Point<Traits>;
         using vertices_type = Points<Traits>;
         using edge_type = Segment<Traits>;
-        using size_type = typename Traits::size_type;
+        using size_type = Traits::size_type;
 
         // this may be enough to disable plane ...
         // but requires the ugly plane_type<> ...
@@ -73,9 +74,9 @@ namespace quetzal::geometry
 
         bool planar() const;
 
-        point_type center() const;
-        vector_type extent() const;
-        std::array<point_type, 2> bounds() const;
+        point_type centroid() const;
+        point_type vertex_mean() const; // The geometric mean of all vertices
+        AxisAlignedBoundingBox<Traits> bounds() const;
 
         value_type area() const requires (Traits::dimension == 2);
         value_type area(const vector_type& normal) const requires (Traits::dimension == 3);
@@ -244,7 +245,30 @@ bool quetzal::geometry::Polygon<Traits>::planar() const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::geometry::Polygon<Traits>::point_type quetzal::geometry::Polygon<Traits>::center() const
+typename quetzal::geometry::Polygon<Traits>::point_type quetzal::geometry::Polygon<Traits>::centroid() const
+{
+    if (m_vertices.size() == 3)
+    {
+        return vertex_mean();
+    }
+
+    typename Traits::value_type areaTotal = 0;
+    quetzal::geometry::Polygon<Traits>::point_type weightedTriangleCentroidTotal;
+
+    size_t n = m_vertices.size();
+    for (size_t i = 1; i < n - 1; ++i)
+    {
+        typename Traits::value_type area = triangle_area(m_vertices[0], m_vertices[i], m_vertices[i + 1]);
+        areaTotal += area;
+        weightedTriangleCentroidTotal += area * triangle_centroid(m_vertices[0], m_vertices[i], m_vertices[i + 1]);
+    }
+
+    return weightedTriangleCentroidTotal / areaTotal;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+typename quetzal::geometry::Polygon<Traits>::point_type quetzal::geometry::Polygon<Traits>::vertex_mean() const
 {
     point_type position;
     for (const auto& point : m_vertices)
@@ -257,30 +281,9 @@ typename quetzal::geometry::Polygon<Traits>::point_type quetzal::geometry::Polyg
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::geometry::Polygon<Traits>::vector_type quetzal::geometry::Polygon<Traits>::extent() const
+quetzal::geometry::AxisAlignedBoundingBox<Traits> quetzal::geometry::Polygon<Traits>::bounds() const
 {
-    auto [boundsMin, boundsMax] = bounds();
-    return boundsMax - boundsMin;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-std::array<typename quetzal::geometry::Polygon<Traits>::point_type, 2> quetzal::geometry::Polygon<Traits>::bounds() const
-{
-    point_type boundsMin = m_vertices[0];
-    point_type boundsMax = m_vertices[0];
-
-    for (const auto& point : m_vertices)
-    {
-        if (point.x() < boundsMin.x()) boundsMin.set_x(point.x());
-        if (point.y() < boundsMin.y()) boundsMin.set_y(point.y());
-        if (point.z() < boundsMin.z()) boundsMin.set_z(point.z());
-        if (point.x() > boundsMax.x()) boundsMax.set_x(point.x());
-        if (point.y() > boundsMax.y()) boundsMax.set_y(point.y());
-        if (point.z() > boundsMax.z()) boundsMax.set_z(point.z());
-    }
-
-    return {boundsMin, boundsMax};
+    return AxisAlignedBoundingBox(m_vertices);
 }
 
 //------------------------------------------------------------------------------
@@ -420,7 +423,7 @@ bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const
 	math::DimensionReducer<Traits> dr(normal());
 
     Polygon<typename Traits::reduced_traits> polygon;
-    std::transform(m_vertices.begin(), m_vertices.end(), std::back_inserter(polygon.vertices()), [](const math::Vector<Traits>& v) -> math::Vector<Traits> { return dr.reduce(v); });
+    std::transform(m_vertices.begin(), m_vertices.end(), std::back_inserter(polygon.vertices()), [&](const math::Vector<Traits>& v) -> math::Vector<Traits::reduced_traits> { return dr.reduce(v); });
 
     return polygon.contains(dr.reduce(point));
 }

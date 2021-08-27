@@ -1,0 +1,24 @@
+
+https://www.fabbers.com/tech/STL_Format#Sct_binary
+https://en.wikipedia.org/wiki/STL_(file_format)
+
+
+stl read
+handling of default surface name? default flag, otherwise write it out?
+maybe just use submesh name with suffix? no, I really prefer not to introduce new names
+submesh name is available in text
+binary submesh name can be given base filename
+no surface name in either
+
+
+strict text read:
+    vectors have 3 components
+    loops have 3 points
+    facets have 1 loop
+    solid and endsolid names match
+may not be line oriented, so more general token parsing/consumption is necessary
+
+reading has to be into new Submesh of Mesh
+writing, however, can apply to both Mesh and Submesh
+
+this implementation currently allows faces with more than 3 vertices, creates polygonal face instead of triangle

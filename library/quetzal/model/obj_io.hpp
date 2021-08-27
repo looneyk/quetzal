@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 
 #include "quetzal/common/id.hpp"
-#include "quetzal/math/Vector.hpp"
 #include "quetzal/wavefront_obj/Material.hpp"
 #include "quetzal/wavefront_obj/MaterialLibrary.hpp"
 #include "quetzal/wavefront_obj/Reader.hpp"
@@ -49,26 +48,30 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
     id_type idSubmesh = nullid;
     id_type idSurface = nullid;
     id_type idFace = nullid;
-    size_t nvFace = 0;
+    size_t nVertices = 0;
     std::string material;
 
-    //--------------------------------------------------------------------------
-    auto on_open = [&](M& mesh, const std::string& name) -> void
+    using segment_type = std::array<typename M::point_type, 2>;
+    std::map<segment_type, id_type> segments;
+
+    auto on_open = [&](M& mesh, const std::filesystem::path& pathname) -> void
     {
-        mesh.set_name(name);
+        pathname;
+
+        assert(idSubmesh == nullid);
+        assert(idSurface == nullid);
+        assert(idFace == nullid);
+        
         mesh.properties().set(MaterialStandardPropertyName, "wavefront_obj");
         return;
     };
 
-    //--------------------------------------------------------------------------
     auto on_object = [&](M& mesh, const std::string& name) -> void
     {
         idSubmesh = mesh.contains_submesh(name) ? mesh.submesh(name).id() : mesh.create_submesh(name);
-        idSurface = nullid;
         return;
     };
 
-    //--------------------------------------------------------------------------
     auto on_group = [&](M& mesh, const std::string& name) -> void
     {
         if (idSubmesh == nullid)
@@ -79,6 +82,10 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
         if (!mesh.contains_surface(idSubmesh, name))
         {
             idSurface = mesh.create_surface(idSubmesh, name);
+        }
+        else
+        {
+            idSurface = mesh.surface_id(idSubmesh, name);
         }
 
         if (mesh.surface(idSurface).empty() && !material.empty())
@@ -95,7 +102,6 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
         return;
     };
 
-    //--------------------------------------------------------------------------
     auto on_face_open = [&](M& mesh) -> void
     {
         if (idSurface == nullid)
@@ -113,54 +119,46 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
         }
 
         idFace = mesh.create_face(idSurface, mesh.halfedge_store_count());
-        nvFace = 0;
+        nVertices = 0;
         return;
     };
 
-    //--------------------------------------------------------------------------
-    auto on_face_vertex = [&](M& mesh, const typename M::point_type& position, const typename M::vector_type& normal, const typename M::texcoord_type& texcoord) -> void
+
+    auto on_face_vertex = [&](M& mesh, const typename M::point_type& position, const typename M::vector_type& normal, const typename M::vertex_attributes_type::texcoord_type& texcoord) -> void
     {
         id_type nh = mesh.halfedge_store_count();
         typename M::vertex_attributes_type av = {position, normal, texcoord};
-        id_type idVertex = mesh.create_vertex(nh, av);
-        mesh.create_halfedge(0, nh + 1, nh - 1, idVertex, idFace);
-        ++nvFace;
+        mesh.create_halfedge_vertex(0, nh + 1, nh - 1, idFace, av);
+        ++nVertices;
         return;
     };
 
-    //--------------------------------------------------------------------------
     auto on_face_close = [&](M& mesh) -> void
     {
-        using segment_type = std::array<typename M::point_type, 2>;
-        std::map<segment_type, id_type> segments;
-
         // Correct prev and next for first and last halfedges respectively
         id_type nh = mesh.halfedge_store_count();
-        mesh.halfedge(nh - nvFace).set_prev_id(nh - 1);
-        mesh.halfedge(nh - 1).set_next_id(nh - nvFace);
+        mesh.halfedge(nh - nVertices).set_prev_id(nh - 1);
+        mesh.halfedge(nh - 1).set_next_id(nh - nVertices);
 
         // Add partner id to each halfedge in this new face
-        id_type ih = nh - nvFace;
-        typename M::face_type& face = mesh.faces().back();
+        typename M::face_type& face = mesh.face(idFace);
         for (typename M::halfedge_type& halfedge : face.halfedges())
         {
+            id_type idHalfedge = halfedge.id();
             const typename M::point_type& position = halfedge.attributes().position();
-            const typename M::halfedge_type& heNext = halfedge.next();
-            const typename M::point_type& positionNext = heNext.attributes().position();
+            const typename M::point_type& positionNext = halfedge.next().attributes().position();
             segment_type segment = {positionNext, position};
             auto i = segments.find(segment);
             if (i == segments.end())
             {
-                segments[{position, positionNext}] = ih;
+                segments[{position, positionNext}] = idHalfedge;
             }
             else
             {
                 halfedge.set_partner_id(i->second);
-                mesh.halfedge(i->second).set_partner_id(ih);
+                mesh.halfedge(i->second).set_partner_id(idHalfedge);
                 segments.erase(i);
             }
-
-            ++ih;
         }
 
         return;
@@ -204,7 +202,7 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
     };
 
     wavefront_obj::Reader<M> reader(on_open, on_object, on_group, on_face_open, on_face_vertex, on_face_close, on_materials, on_material);
-    reader.read(pathname, mesh);
+    reader.read(mesh, pathname);
     return;
 }
 

@@ -117,10 +117,10 @@ quetzal::direct3d11::EffectDualTexture::Impl::Impl(Renderer& renderer) :
     vertexColorEnabled(false)
 {
 // shader manager arrays are sized with traits anyway ...
-//    static_assert( _countof(EffectCommon<EffectDualTextureTraits>::VertexShaderIndices) == EffectDualTextureTraits::ShaderPermutationCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectDualTextureTraits>::VertexShaderBytecode) == EffectDualTextureTraits::VertexShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectDualTextureTraits>::PixelShaderBytecode) == EffectDualTextureTraits::PixelShaderCount, "array/max mismatch" );
-//    static_assert( _countof(EffectCommon<EffectDualTextureTraits>::PixelShaderIndices) == EffectDualTextureTraits::ShaderPermutationCount, "array/max mismatch" );
+//    static_assert(std::size(EffectCommon<EffectDualTextureTraits>::VertexShaderIndices) == EffectDualTextureTraits::ShaderPermutationCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectDualTextureTraits>::VertexShaderBytecode) == EffectDualTextureTraits::VertexShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectDualTextureTraits>::PixelShaderBytecode) == EffectDualTextureTraits::PixelShaderCount, "array/max mismatch");
+//    static_assert(std::size(EffectCommon<EffectDualTextureTraits>::PixelShaderIndices) == EffectDualTextureTraits::ShaderPermutationCount, "array/max mismatch");
 }
 
 int quetzal::direct3d11::EffectDualTexture::Impl::shader_permutation() const noexcept

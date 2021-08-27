@@ -9,10 +9,7 @@
 #include <functional>
 #include <cmath>
 
-namespace quetzal
-{
-
-namespace math
+namespace quetzal::math
 {
 
 	//--------------------------------------------------------------------------
@@ -21,7 +18,7 @@ namespace math
 	{
 	public:
 
-		using value_type = typename Traits::value_type;
+		using value_type = Traits::value_type;
 		using vector_type = Vector<Traits>;
 		using vector_reduced_type = Vector<typename Traits::reduced_traits>;
 
@@ -47,9 +44,7 @@ namespace math
 		static vector_reduced_type reduce_z_yx(const vector_type& v);
 	};
 
-} // namespace math
-
-} // namespace quetzal
+} // namespace quetzal::math
 
 //------------------------------------------------------------------------------
 template<typename Traits>

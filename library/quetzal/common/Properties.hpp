@@ -18,8 +18,8 @@ namespace quetzal
     public:
 
         using values_type = std::unordered_map<std::string, std::string>;
-        using iterator = typename values_type::iterator;
-        using const_iterator = typename values_type::const_iterator;
+        using iterator = values_type::iterator;
+        using const_iterator = values_type::const_iterator;
 
         Properties() = default;
         Properties(const Properties&) = default;

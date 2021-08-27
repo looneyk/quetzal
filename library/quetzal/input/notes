@@ -1,0 +1,39 @@
+
+device types
+    key
+    pointer
+    ...
+
+device capabilities
+
+input devices
+    key(board) devices
+        one or more keys
+        may or may not have character interpretation
+    pointer devices
+        provide one or more absolute or relative positions
+        may have keys/buttons as well
+
+output devices (aside from video and audio)
+    vibration, force feedback, etc.
+
+
+Find out what devices are connected to a system and get their capabilities
+try SetupDiGetClassDevs
+    keyboard
+    mouse
+    HID
+    multimedia
+where would xbox or similar controllers fit in?
+
+
+make sure that new input device types can be registered and used dynamically (InputDevice interface)
+
+
+device sets, linked devices to allow for multiple sets of keyboard/mouse combinations for example
+a device set, not a device would have a selected widget (not necressarily true for other properties though)
+
+should mouse functionality be exposed through separate (paired?) pointer and key devices?
+
+does a distinction really need to be made between pointer and key devices?
+all devices are simply allowed to produce all types of input events

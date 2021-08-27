@@ -24,9 +24,9 @@ namespace quetzal::brep
     public:
 
         using mesh_type = M;
-        using vertex_type = typename mesh_type::vertex_type;
-        using face_type = typename mesh_type::face_type;
-        using attributes_type = typename mesh_type::vertex_attributes_type;
+        using vertex_type = mesh_type::vertex_type;
+        using face_type = mesh_type::face_type;
+        using attributes_type = mesh_type::vertex_attributes_type;
 
         Halfedge() = default;
         Halfedge(mesh_type& mesh, id_type id, id_type idPartner = nullid, id_type idNext = nullid, id_type idPrev = nullid, id_type idVertex = nullid, id_type idFace = nullid);
@@ -91,7 +91,6 @@ namespace quetzal::brep
         // Internal use, only by Mesh
         void set_mesh(mesh_type& mesh);
         void set_id(id_type id);
-        const mesh_type* mesh() const;
         void check_mesh(const mesh_type* const pmesh) const;
 
     private:
@@ -150,7 +149,7 @@ void quetzal::brep::Halfedge<Traits, M>::set_partner_id(id_type idHalfedge)
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const typename quetzal::brep::Halfedge<Traits, M>& quetzal::brep::Halfedge<Traits, M>::partner() const
+const quetzal::brep::Halfedge<Traits, M>& quetzal::brep::Halfedge<Traits, M>::partner() const
 {
     assert(m_pmesh != nullptr);
     return m_pmesh->halfedge(m_idPartner);
@@ -181,7 +180,7 @@ void quetzal::brep::Halfedge<Traits, M>::set_next_id(id_type idHalfedge)
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const typename quetzal::brep::Halfedge<Traits, M>& quetzal::brep::Halfedge<Traits, M>::next() const
+const quetzal::brep::Halfedge<Traits, M>& quetzal::brep::Halfedge<Traits, M>::next() const
 {
     assert(m_pmesh != nullptr);
     return m_pmesh->halfedge(m_idNext);
@@ -212,7 +211,7 @@ void quetzal::brep::Halfedge<Traits, M>::set_prev_id(id_type idHalfedge)
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-const typename quetzal::brep::Halfedge<Traits, M>& quetzal::brep::Halfedge<Traits, M>::prev() const
+const quetzal::brep::Halfedge<Traits, M>& quetzal::brep::Halfedge<Traits, M>::prev() const
 {
     assert(m_pmesh != nullptr);
     return m_pmesh->halfedge(m_idPrev);
@@ -421,13 +420,6 @@ void quetzal::brep::Halfedge<Traits, M>::set_id(id_type id)
 {
     m_id = id;
     return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-const typename quetzal::brep::Halfedge<Traits, M>::mesh_type* quetzal::brep::Halfedge<Traits, M>::mesh() const
-{
-    return m_pmesh;
 }
 
 //------------------------------------------------------------------------------

@@ -8,10 +8,7 @@
 #include "Orientation.hpp"
 #include "Point.hpp"
 
-namespace quetzal
-{
-
-namespace geometry
+namespace quetzal::geometry
 {
 
     //--------------------------------------------------------------------------
@@ -22,7 +19,7 @@ namespace geometry
 
 		static_assert(Traits::dimension >= 3);
 
-        using value_type = typename Traits::value_type;
+        using value_type = Traits::value_type;
         using point_type = Point<Traits>;
         using orientation_type = Orientation<Traits>;
 
@@ -45,9 +42,7 @@ namespace geometry
         orientation_type m_orientation;
     };
 
-} // namespace geometry
-
-} // namespace quetzal
+} // namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>
