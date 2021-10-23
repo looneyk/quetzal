@@ -10,45 +10,36 @@
 #include "mesh_util.hpp"
 #include "quetzal/common/string_util.hpp"
 #include "quetzal/math/DimensionReducer.hpp"
+#include "quetzal/geometry/HalfSpace.hpp"
 #include "quetzal/geometry/Line.hpp"
-#include "quetzal/geometry/Plane.hpp"
 #include "quetzal/geometry/Polygon.hpp"
 #include "quetzal/geometry/intersect.hpp"
-#include <map>
+#include <string>
+#include <queue>
+
+#include "validation.hpp"
+#include <iostream>
 
 namespace quetzal::brep
 {
 
     template<typename M>
-    void split(M& mesh, const geometry::Plane<typename M::vector_traits>& plane, const std::string& nameSubmesh0, const std::string& nameSubmesh1, const std::string& nameSurface = "split");
+    void split(M& mesh, const geometry::HalfSpace<typename M::vector_traits>& halfspace, const std::string& nameSurface = "split");
 
-    // internal
-
-    using BorderHalfedges = std::map<id_type, id_type>;
-    using BorderHalfedge = BorderHalfedges::value_type;
-
-    // In addition to creating the split face, this creates or renames the submesh
+    // Set all connected surfaces and faces to a new submesh
     template<typename M>
-    void close_split(M& mesh, BorderHalfedges borderHalfedges, const typename M::vector_type& normal, const std::string& nameSurface, const std::string& nameSubmesh);
-
-    // Set all connected surfaces and faces to the new submesh
-    // Calls set_submesh_connected_face recursively
-    template<typename F>
-    void set_submesh_connected(F& face, id_type idSubmesh);
-
-    template<typename F>
-    void set_submesh_connected_face(F& face, id_type idSubmesh);
+    void set_submesh_connected(M& mesh, id_type idFace, id_type idSubmesh);
 
 } // namespace quetzal::brep
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::split(M& mesh, const geometry::Plane<typename M::vector_traits>& plane, const std::string& nameSubmesh0, const std::string& nameSubmesh1, const std::string& nameSurface)
+void quetzal::brep::split(M& mesh, const geometry::HalfSpace<typename M::vector_traits>& halfspace, const std::string& nameSurface)
 {
     mesh.reset();
 
     // Mark exterior vertices
-    // Vertices in clip plane are considered interior
+    // Vertices in halfspace plane are considered interior
 
     for (auto& vertex : mesh.vertices())
     {
@@ -57,7 +48,7 @@ void quetzal::brep::split(M& mesh, const geometry::Plane<typename M::vector_trai
             continue;
         }
 
-        bool bExterior = plane.exterior(vertex.attributes().position());
+        bool bExterior = halfspace.exterior(vertex.attributes().position());
 
         for (auto& halfedge : vertex.halfedges())
         {
@@ -122,31 +113,31 @@ void quetzal::brep::split(M& mesh, const geometry::Plane<typename M::vector_trai
         assert(idHalfedgeTransitionOut != nullid);
         assert(idHalfedgeTransitionIn != nullid);
 
-        // Don't split if non-exterior point already intersects plane
-        if (!plane.contains(mesh.halfedge(idHalfedgeTransitionIn).next().attributes().position()))
+        // Don't split if non-exterior point already intersects halfspace plane
+        if (!halfspace.boundary(mesh.halfedge(idHalfedgeTransitionIn).next().attributes().position()))
         {
             geometry::Line<typename M::vector_traits> line = to_line(mesh.halfedge(idHalfedgeTransitionIn));
-            geometry::Intersection<typename M::vector_traits> intersection = geometry::intersection(line, plane);
+            geometry::Intersection<typename M::vector_traits> intersection = geometry::intersection(line, halfspace.plane());
             assert(intersection.locus() == geometry::Locus::Point);
             typename M::point_type position = intersection.point();
             split_edge(mesh, idHalfedgeTransitionIn, position);
         }
         else if (mesh.halfedge(idHalfedgeTransitionIn).next().id() == idHalfedgeTransitionOut)
         {
-            // The only plane intersection is this vertex, so this is actually an exterior face, mark it as such
+            // The only halfspace plane intersection is this vertex, so this is actually an exterior face, mark it as such
             mesh.halfedge(idHalfedgeTransitionOut).vertex().set_marked();
             face.set_marked();
             continue;
         }
-        else if (plane.contains(mesh.halfedge(idHalfedgeTransitionOut).attributes().position()))
+        else if (halfspace.boundary(mesh.halfedge(idHalfedgeTransitionOut).attributes().position()))
         {
-            // Both inward and outward transitioning halfedges intersect with the clip plane
-            // If all vertices between idHalfedgeTransitionIn and idHalfedgeTransitionOut are in plane or exterior, then this is an exterior face
+            // Both inward and outward transitioning halfedges intersect with the halfspace plane
+            // If all vertices between idHalfedgeTransitionIn and idHalfedgeTransitionOut are in halfspace plane or exterior, then this is an exterior face
 
             bool bExterior = true;
             for (id_type idHalfedge = mesh.halfedge(idHalfedgeTransitionIn).next().id(); idHalfedge != idHalfedgeTransitionOut; idHalfedge = mesh.halfedge(idHalfedge).next_id())
             {
-                bool bIncident = plane.contains(mesh.halfedge(idHalfedge).attributes().position());
+                bool bIncident = halfspace.boundary(mesh.halfedge(idHalfedge).attributes().position());
                 if (!mesh.halfedge(idHalfedge).marked() && !bIncident)
                 {
                     bExterior = false;
@@ -167,26 +158,26 @@ void quetzal::brep::split(M& mesh, const geometry::Plane<typename M::vector_trai
             }
         }
 
-        idHalfedgeTransitionIn = mesh.halfedge(idHalfedgeTransitionIn).next_id(); // Adjust so vertex is on clip plane
-        assert(plane.contains(mesh.halfedge(idHalfedgeTransitionIn).attributes().position()));
+        idHalfedgeTransitionIn = mesh.halfedge(idHalfedgeTransitionIn).next_id(); // Adjust so vertex is on halfspace plane
+        assert(halfspace.boundary(mesh.halfedge(idHalfedgeTransitionIn).attributes().position()));
 
         assert(!mesh.halfedge(idHalfedgeTransitionIn).vertex().marked());
         assert(!mesh.halfedge(idHalfedgeTransitionOut).vertex().marked());
 
-        if (!plane.contains(mesh.halfedge(idHalfedgeTransitionOut).attributes().position()))
+        if (!halfspace.boundary(mesh.halfedge(idHalfedgeTransitionOut).attributes().position()))
         {
             geometry::Line<typename M::vector_traits> line = to_line(mesh.halfedge(idHalfedgeTransitionOut));
-            geometry::Intersection<typename M::vector_traits> intersection = geometry::intersection(line, plane);
+            geometry::Intersection<typename M::vector_traits> intersection = geometry::intersection(line, halfspace.plane());
             assert(intersection.locus() == geometry::Locus::Point);
             typename M::point_type position = intersection.point();
             split_edge(mesh, idHalfedgeTransitionOut, position);
 
-            idHalfedgeTransitionOut = mesh.halfedge(idHalfedgeTransitionOut).next_id(); // Adjust so vertex is on clip plane
+            idHalfedgeTransitionOut = mesh.halfedge(idHalfedgeTransitionOut).next_id(); // Adjust so vertex is on halfspace plane
         }
 
         mesh.halfedge(idHalfedgeTransitionOut).vertex().set_marked();
 
-        assert(plane.contains(mesh.halfedge(idHalfedgeTransitionOut).attributes().position()));
+        assert(halfspace.boundary(mesh.halfedge(idHalfedgeTransitionOut).attributes().position()));
 
         // Split face into interior and exterior faces
         split_face(mesh, idHalfedgeTransitionIn, idHalfedgeTransitionOut);
@@ -194,7 +185,7 @@ void quetzal::brep::split(M& mesh, const geometry::Plane<typename M::vector_trai
         mesh.halfedge(idHalfedgeTransitionOut).face().set_marked();
     }
 
-    // Delete all vertices, edges, and faces that are exterior to the clipping plane, store remaining border halfedges
+    // Delete all vertices, edges, and faces that are exterior to the halfspace plane, store remaining border halfedges
 
     // borderHalfedges[idHalfedge] = idSubmesh
     BorderHalfedges borderHalfedges0;
@@ -202,258 +193,90 @@ void quetzal::brep::split(M& mesh, const geometry::Plane<typename M::vector_trai
 
     for (auto& face : mesh.faces())
     {
-        bool bExterior = face.halfedge().vertex().marked();
+        if (face.marked())
+        {
+            for (auto& halfedge : face.halfedges())
+            {
+                assert(halfedge.vertex().marked());
+            }
+
+            continue;
+        }
 
         for (auto& halfedge : face.halfedges())
         {
-            assert(bExterior && halfedge.vertex().marked() || !bExterior && !halfedge.vertex().marked());
+            assert(!halfedge.vertex().marked());
+            assert(!halfedge.border());
 
-            if (halfedge.vertex().marked())
+            if (halfedge.partner().vertex().marked())
             {
-                if (!halfedge.border() && !halfedge.partner().vertex().marked())
-                {
-                    borderHalfedges0.insert({halfedge.partner_id(), face.submesh_id()});
-                    borderHalfedges1.insert({halfedge.id(), face.submesh_id()});
-                    halfedge.partner().set_border();
-                    halfedge.set_border();
-                }
+                borderHalfedges0.insert({halfedge.id(), face.submesh_id()});
+                borderHalfedges1.insert({halfedge.partner_id(), face.submesh_id()});
+                halfedge.partner().set_border();
+                halfedge.set_border();
             }
         }
     }
 
+    assert(borderHalfedges0.size() == borderHalfedges1.size());
     if (borderHalfedges0.empty()) // No intersection
     {
         return;
     }
 
-    close_split(mesh, borderHalfedges0, plane.normal(), nameSurface, nameSubmesh0);
-    close_split(mesh, borderHalfedges1, -plane.normal(), nameSurface, nameSubmesh1);
+    // Close off borders and assign each to a new submesh
+    // This will still potentially create disconnected submeshes with one section per surface, may need better naming ...
 
-    mesh.pack();
+    auto idsSurface = close_border(mesh, borderHalfedges0, nameSurface, halfspace.plane().normal());
+    for (id_type idSurface : idsSurface)
+    {
+        id_type idSubmesh = mesh.get_submesh_id(mesh.surface(idSurface).submesh().name() + "_0");
+        set_submesh_connected(mesh, mesh.surface(idSurface).faces().front().id(), idSubmesh);
+    }
+
+    idsSurface = close_border(mesh, borderHalfedges1, nameSurface, -halfspace.plane().normal());
+    for (id_type idSurface : idsSurface)
+    {
+        id_type idSubmesh = mesh.get_submesh_id(mesh.surface(idSurface).submesh().name() + "_1");
+        set_submesh_connected(mesh, mesh.surface(idSurface).faces().front().id(), idSubmesh);
+    }
+
     return;
 }
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::close_split(M& mesh, BorderHalfedges borderHalfedges, const typename M::vector_type& normal, const std::string& nameSurface, const std::string& nameSubmesh)
+void quetzal::brep::set_submesh_connected(M& mesh, id_type idFace, id_type idSubmesh)
 {
-std::cout << "close_split\t" << borderHalfedges.size() << " borderHalfedges\t[" << normal << "]" << std::endl;
-    // For each border polygon, store the initial halfedge in the appropriate set
+    mesh.reset();
 
-    std::vector<BorderHalfedge> borderHalfedgesExternal;
-    std::vector<BorderHalfedge> borderHalfedgesInternal;
-
-    while (!borderHalfedges.empty())
+    std::queue<id_type> idsFace({idFace});
+    while (!idsFace.empty())
     {
-        BorderHalfedge borderHalfedge = *borderHalfedges.begin();
-        id_type idHalfedge = borderHalfedge.first;
-        assert(!mesh.halfedge(idHalfedge).deleted());
+        auto& f = mesh.face(idsFace.front());
+        idsFace.pop();
 
-        id_type id = idHalfedge;
-        do
+        if (f.marked())
         {
-            borderHalfedges.erase(id);
-            id = next_border_halfedge(mesh, id);
-        } while (id != idHalfedge);
-
-        if (border_external(mesh, idHalfedge, normal))
-        {
-            borderHalfedgesExternal.push_back(borderHalfedge);
+            continue;
         }
-        else
+
+        if (f.submesh_id() != idSubmesh)
         {
-            borderHalfedgesInternal.push_back(borderHalfedge);
+            std::string nameSurface = f.surface().name();
+
+            id_type idSurface = mesh.get_surface_id(idSubmesh, nameSurface, f.surface().attributes());
+            mesh.move_face(f.id(), idSurface);
         }
-    }
 
-    // Associate holes with faces
-
-    struct BorderFace
-    {
-        math::DimensionReducer<typename M::vector_traits> m_dr;
-        geometry::Polygon<typename M::vector_traits::reduced_traits> m_polygon;
-        typename M::value_type m_area;
-        id_type m_idSubmesh;
-        id_type m_idHalfedgeBorderExternal;
-        std::vector<id_type> m_idHalfedgesBorderInternal;
-
-        bool contains(M& mesh, BorderHalfedge borderHalfedge) const
+        f.set_marked();
+        
+        for (auto& halfedge : f.halfedges())
         {
-            id_type idSubmesh = borderHalfedge.second;
-            assert(idSubmesh != nullid);
-            if (idSubmesh != m_idSubmesh)
+            if (!halfedge.partner().face().marked())
             {
-                return false;
+                idsFace.push(halfedge.partner().face_id());
             }
-
-            // Single point check is sufficient
-            auto position = m_dr.reduce(mesh.halfedge(borderHalfedge.first).attributes().position());
-            return geometry::intersects(position, m_polygon);
-        };
-    };
-
-    std::map<id_type, BorderFace> borderFaces; // probably could be unordered_map ...
-
-    if (borderHalfedgesExternal.size() == 1)
-    {
-        BorderHalfedge borderHalfedgeExternal = borderHalfedgesExternal.front();
-        id_type idHalfedgeFace = borderHalfedgeExternal.first;
-        BorderFace& borderFace = borderFaces[idHalfedgeFace];
-        borderFace.m_idSubmesh = borderHalfedgeExternal.second;
-        borderFace.m_idHalfedgeBorderExternal = idHalfedgeFace;
-
-        std::vector<id_type> idHalfedgesBorderInternal;
-        for (const auto& borderHalfedgeInternal : borderHalfedgesInternal)
-        {
-            assert(borderHalfedgeInternal.second == borderHalfedgeExternal.second); // should be true ...
-            idHalfedgesBorderInternal.push_back(borderHalfedgeInternal.first);
-        }
-        borderFaces[idHalfedgeFace].m_idHalfedgesBorderInternal = idHalfedgesBorderInternal;
-    }
-    else
-    {
-        for (BorderHalfedge borderHalfedge : borderHalfedgesExternal)
-        {
-            id_type idHalfedgeFace = borderHalfedge.first;
-            BorderFace& borderFace = borderFaces[idHalfedgeFace];
-            borderFace.m_idSubmesh = borderHalfedge.second;
-            borderFace.m_idHalfedgeBorderExternal = idHalfedgeFace;
-            borderFace.m_dr.init(normal);
-            borderFace.m_polygon = create_border_polygon(mesh, idHalfedgeFace, borderFace.m_dr);
-            assert(borderFace.m_polygon.vertex_count() > 0);
-            borderFace.m_area = borderFace.m_polygon.area();
-            assert(borderFace.m_area > M::traits_type::val(0));
-        }
-
-        // Associate each hole with its enclosing face
-        for (BorderHalfedge borderHalfedgeInternal : borderHalfedgesInternal)
-        {
-            id_type idHalfedgeHole  = borderHalfedgeInternal.first;
-            id_type idHalfedgeFaceMin = nullid;
-            typename M::value_type areaMin = M::traits_type::val(0);
-
-            for (BorderHalfedge borderHalfedgeExternal : borderHalfedgesExternal)
-            {
-                id_type idHalfedgeFace  = borderHalfedgeExternal.first;
-                const auto& borderFace = borderFaces[idHalfedgeFace];
-                if (borderFace.contains(mesh, borderHalfedgeInternal))
-                {
-                    typename M::value_type area = borderFace.m_area;
-                    if (idHalfedgeFaceMin == nullid || area < areaMin)
-                    {
-                        idHalfedgeFaceMin = idHalfedgeFace;
-                        areaMin = area;
-                    }
-                }
-            }
-
-            assert(idHalfedgeFaceMin != nullid);
-            borderFaces[idHalfedgeFaceMin].m_idHalfedgesBorderInternal.push_back(idHalfedgeHole);
-        }
-    }
-
-    // Create faces and holes for this split face and reassign submesh
-
-//    std::map<std::string, size_t> submeshInstances;
-
-    for (const auto& value : borderFaces)
-    {
-        const BorderFace& borderFace = value.second;
-        id_type idSubmeshOrig = borderFace.m_idSubmesh;
-
-        id_type idSurface = nullid;
-        if (mesh.contains_surface(idSubmeshOrig, nameSurface))
-        {
-            idSurface = mesh.surface_id(idSubmeshOrig, nameSurface);
-        }
-        else
-        {
-            idSurface = mesh.create_surface(idSubmeshOrig, nameSurface, {normal});
-        }
-
-        create_border_with_holes_face(mesh, borderFace.m_idHalfedgeBorderExternal, borderFace.m_idHalfedgesBorderInternal, normal, idSurface);
-
-        if constexpr (M::vertex_attributes_type::contains(geometry::AttributesFlags::Texcoord0))
-        {
-            calculate_surface_texcoords(mesh, idSurface);
-        }
-/*
-        // Create a separate submesh for this side of the split
-        // handle the possibility that submesh is not singly connected (instances) ...
-
-        auto& surface = mesh.surface(idSurface);
-
-        id_type idSubmesh = nullid;
-        if (mesh.contains_submesh(nameSubmesh))
-        {
-            idSubmesh = mesh.submesh_id(nameSubmesh);
-        }
-        else
-        {
-            idSubmesh = mesh.create_submesh(nameSubmesh);
-        }
-
-        // Move all connected surfaces and faces to the new submesh
-        set_submesh_connected(surface.faces().front(), idSubmesh);
-*/
-    }
-
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename F>
-void quetzal::brep::set_submesh_connected(F& face, id_type idSubmesh)
-{
-    face.mesh().reset();
-    set_submesh_connected_face(face, idSubmesh);
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename F>
-void quetzal::brep::set_submesh_connected_face(F& face, id_type idSubmesh)
-{
-    auto& mesh = face.mesh();
-    std::string nameSurface = face.surface().name();
-
-    id_type idSurface = nullid;
-    if (mesh.contains_surface(idSubmesh, nameSurface))
-    {
-        idSurface = mesh.surface_id(idSubmesh, nameSurface);
-    }
-    else
-    {
-        idSurface = mesh.create_surface(idSubmesh, nameSurface, face.surface().attributes());
-    }
-
-    id_type idFace = face.id();
-
-    auto& surfaceOrig = face.surface();
-    surfaceOrig.unlink_face(idFace);
-    if (surfaceOrig.empty())
-    {
-        mesh.remove_surface(surfaceOrig.id());
-    }
-
-    mesh.surface(idSurface).link_face(idFace);
-
-    auto& submeshOrig = face.submesh();
-    submeshOrig.unlink_face(idFace);
-    if (submeshOrig.empty())
-    {
-        mesh.remove_submesh(submeshOrig.id());
-    }
-
-    mesh.submesh(idSubmesh).link_face(idFace);
-
-    face.set_marked();
-
-    for (auto& halfedge : face.halfedges())
-    {
-        if (!halfedge.face().marked())
-        {
-            set_submesh_connected_face(halfedge.face(), idSubmesh);
         }
     }
 

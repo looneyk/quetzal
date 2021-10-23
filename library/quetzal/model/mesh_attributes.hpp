@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 
 #include "quetzal/brep/Mesh.hpp"
-#include "quetzal/brep/mesh_geometry.hpp"
+#include "quetzal/brep/mesh_util.hpp"
 #include "quetzal/brep/triangulation.hpp"
 #include "quetzal/common/id.hpp"
 #include "quetzal/math/Matrix.hpp"
@@ -47,10 +47,10 @@ namespace quetzal::model
 
     // Applies matrix to positions and transpose inverse matrix to normals
     template<typename M>
-    void transform(M& mesh, const math::Matrix<typename M::value_type>& matrix);
+    void transform(M& m, const math::Matrix<typename M::value_type>& matrix);
 
     template<typename M>
-    void transform(M& mesh, const math::Matrix<typename M::value_type>& matrixPosition, const math::Matrix<typename M::value_type>& matrixNormal);
+    void transform(M& m, const math::Matrix<typename M::value_type>& matrixPosition, const math::Matrix<typename M::value_type>& matrixNormal);
 
     template<typename M>
     void transform(M& m, std::function<void(typename M::vertex_attributes_type&)> fav, std::function<void(typename M::face_attributes_type&)> faf = [](typename M::face_attributes_type&) -> void {});
@@ -158,7 +158,6 @@ typename Traits::vector_type quetzal::model::surface_vertex_normal(const brep::V
     id_type idSurface = vertex.halfedge().face().surface_id();
 
     typename Traits::point_type position = vertex.attributes().position();
-
     typename Traits::vector_type normalTotalWeighted;
 
     for (auto& halfedge : vertex.halfedges())
@@ -235,9 +234,9 @@ void quetzal::model::transform_positions(M& m, const math::Matrix<typename M::va
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::model::transform(M& mesh, const math::Matrix<typename M::value_type>& matrix)
+void quetzal::model::transform(M& m, const math::Matrix<typename M::value_type>& matrix)
 {
-    transform(mesh, matrix, transpose(inverse(matrix)));
+    transform(m, matrix, transpose(inverse(matrix)));
     return;
 }
 
@@ -633,9 +632,9 @@ void quetzal::model::apply_triangular_face_texcoords(M& mesh)
     {
         assert(face.halfedge_count() == 3);
 
-        face.halfedge().vertex().attributes().set_texcoord({M::traits_type::val(0), M::traits_type::val(1)});
-        face.halfedge().next().vertex().attributes().set_texcoord({M::traits_type::val(1), M::traits_type::val(1)});
-        face.halfedge().next().next().vertex().attributes().set_texcoord({M::traits_type::val(0.5), M::traits_type::val(0)});
+        face.halfedge().vertex().attributes().set_texcoord({M::val(0), M::val(1)});
+        face.halfedge().next().vertex().attributes().set_texcoord({M::val(1), M::val(1)});
+        face.halfedge().next().next().vertex().attributes().set_texcoord({M::val(0.5), M::val(0)});
     }
 
     return;

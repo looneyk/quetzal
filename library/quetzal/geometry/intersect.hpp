@@ -320,7 +320,7 @@ bool quetzal::geometry::intersects(const Line<Traits>& lineA, const Line<Traits>
     }
     else
     {
-        static_assert(false, "Dimension out of range.");
+        static_assert(false, "Dimension not supported.");
     }
 }
 
@@ -542,7 +542,7 @@ bool quetzal::geometry::intersects(const Segment<Traits>& segment, const Polygon
         assert(inter.locus() == Locus::Segment);
     }
 
-    if (intersects(segment.endpoint(0), polygon) || intersects(segment.endpoint(1), polygon))
+    if (polygon.contains(segment.endpoint(0)) || polygon.contains(segment.endpoint(1)))
     {
         return true;
     }
@@ -763,7 +763,7 @@ quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Po
 template<typename Traits>
 quetzal::geometry::Intersection<Traits> quetzal::geometry::intersection(const Point<Traits>& point, const Polygon<Traits>& polygon)
 {
-    if (intersects(point, polygon))
+    if (polygon.contains(point))
     {
         return Intersection<Traits>(point);
     }
@@ -1399,7 +1399,7 @@ bool quetzal::geometry::intersects_coplanar(const Point<Traits>& point, const Po
     }
     else
     {
-        static_assert(false, "Dimension out of range.");
+        static_assert(false, "Dimension not supported.");
     }
 
     vertices.push_back(vertices[0]);

@@ -1,11 +1,12 @@
-#if !defined(QUETZAL_GEOMETRY_POLYGON_HPP)
-#define QUETZAL_GEOMETRY_POLYGON_HPP
+#if !defined(QUETZAL_GEOMETRY_CLOSEDCURVE_HPP)
+#define QUETZAL_GEOMETRY_CLOSEDCURVE_HPP
 //------------------------------------------------------------------------------
 // geometry
 // Polygon.hpp
 //------------------------------------------------------------------------------
 
 #include "AxisAlignedBoundingBox.hpp"
+#include "Partition.hpp"
 #include "Point.hpp"
 #include "Points.hpp"
 #include "Polyline.hpp"
@@ -21,6 +22,8 @@
 namespace quetzal::geometry
 {
 
+    // ClosedCurve is a polygon with section information
+
     // Polygon is an ordered set of vertices
     // Each sequential pair of vertices defines an edge, with an implied edge between the last and first vertices
     // edge count == vertex count
@@ -28,12 +31,13 @@ namespace quetzal::geometry
     // Results of centroid, area, normal, and plane are only meaningful if the polygon is planar and the vertices are in CCW order
 
     //--------------------------------------------------------------------------
-    template<typename Traits>
+    template<typename Traits> : public Partition<Traits>
     class Polygon
     {
     public:
 
         using traits_type = Traits;
+        using size_type = Traits::size_type;
         using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
@@ -41,12 +45,6 @@ namespace quetzal::geometry
         using vertices_type = Points<Traits>;
         using edge_type = Segment<Traits>;
         using section_type = Polyline<Traits>;
-        using size_type = Traits::size_type;
-
-        // this may be enough to disable plane ...
-        // but requires the ugly plane_type<> ...
-//        template<typename = std::enable_if_t<(Traits::dimension == 3)>>
-//        using plane_type = Plane<Traits> requires (Traits::dimension >= 3);
 
         Polygon() = default;
         explicit Polygon(size_type n);
@@ -85,7 +83,7 @@ namespace quetzal::geometry
         value_type area() const requires (Traits::dimension == 2);
         value_type area(const vector_type& normal) const requires (Traits::dimension == 3);
 
-        // Based on implied CCW winding order around positive z-axis
+        // Based on expressed or implied CCW winding order
         value_type signed_area() const requires (Traits::dimension == 2);
         value_type signed_area(const vector_type& normal) const requires (Traits::dimension == 3);
 
@@ -93,14 +91,9 @@ namespace quetzal::geometry
         vector_type normal() const requires (Traits::dimension == 3);
         Plane<Traits> plane() const requires (Traits::dimension == 3);
 
-        // Returns -1, 0, 1: interior, on, exterior
-        // Exterior is defined by the direction of the normal as defined by the winding order
-        // This is more accurate than contains for points on the polygon edges
-        int compare(const point_type& point) const;
-
-        // Point is in the region defined by the polygon
-        // Results are indeterminate if the point is on an edge
-        bool contains(const point_type& point) const requires (Traits::dimension == 2);
+        // Returns -1, 0, 1: interior, boundary, exterior
+        // Exterior is defined by the winding order
+        int compare(const point_type& point) const override;
 
         virtual void clear();
 
@@ -139,6 +132,7 @@ namespace quetzal::geometry
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Polygon<Traits>::Polygon(size_type n) :
+    Partition<Traits>(),
     m_vertices(n)
 {
 }
@@ -146,6 +140,7 @@ quetzal::geometry::Polygon<Traits>::Polygon(size_type n) :
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Polygon<Traits>::Polygon(std::initializer_list<vertex_type> points) :
+    Partition<Traits>(),
     m_vertices(points)
 {
 }
@@ -154,6 +149,7 @@ quetzal::geometry::Polygon<Traits>::Polygon(std::initializer_list<vertex_type> p
 template<typename Traits>
 template<typename InputIterator>
 quetzal::geometry::Polygon<Traits>::Polygon(InputIterator first, InputIterator last) :
+    Partition<Traits>(),
     m_vertices()
 {
     for (auto i = first; i != last; ++i)
@@ -426,6 +422,8 @@ int quetzal::geometry::Polygon<Traits>::compare(const point_type& point) const
 template<typename Traits>
 bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const requires (Traits::dimension == 2)
 {
+    // integrate these into compare ...
+
     // Return >0: left, ==0: on, <0: right for p2 relative to the line through p0 and p1
     auto left = [](point_type p0, point_type p1, point_type p2) -> int
     {
@@ -569,7 +567,8 @@ template<typename Traits>
 std::ostream& quetzal::geometry::operator<<(std::ostream& os, const Polygon<Traits>& polygon)
 {
     os << polygon.vertices();
+    os << polygon.sections();
     return os;
 }
 
-#endif // QUETZAL_GEOMETRY_POLYGON_HPP
+#endif // QUETZAL_GEOMETRY_CLOSEDCURVE_HPP

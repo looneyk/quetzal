@@ -13,14 +13,14 @@ namespace quetzal::geometry
 {
 
     template<typename T>
-    concept Directional = requires(T t)
+    concept Directional = requires (T t)
     {
         typename T::traits_type;
         { t.direction() } -> std::same_as<math::Vector<typename T::traits_type>>;
     };
 
     template<typename T>
-    concept Planar = requires(T t)
+    concept Planar = requires (T t)
     {
         typename T::traits_type;
         T::traits_type::dimension >= 3;

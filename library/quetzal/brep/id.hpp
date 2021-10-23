@@ -16,7 +16,7 @@ namespace quetzal::brep
     bool good(id_type id, const T& container);
 
     template<typename T>
-    std::string print(id_type id, const T& container);
+    std::string id_string(id_type id, const T& container);
 
 } // namespace quetzal::brep
 
@@ -29,7 +29,7 @@ bool quetzal::brep::good(id_type id, const T& container)
 
 //------------------------------------------------------------------------------
 template<typename T>
-std::string quetzal::brep::print(id_type id, const T& container)
+std::string quetzal::brep::id_string(id_type id, const T& container)
 {
     if (id == nullid)
     {
@@ -37,11 +37,11 @@ std::string quetzal::brep::print(id_type id, const T& container)
     }
     else if (!(id < container.size()))
     {
-        return "out of range";
+        return std::to_string(id) + " out of range";
     }
     else if (container[id].deleted())
     {
-        return "deleted";
+        return std::to_string(id) + " deleted";
     }
 
     return std::to_string(id);

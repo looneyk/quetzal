@@ -27,12 +27,12 @@ namespace quetzal::geometry
     {
     public:
 
+        using size_type = Traits::size_type;
         using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
         using vertex_type = Point<Traits>;
         using vertices_type = Points<Traits>;
-        using size_type = Traits::size_type;
 
         using reference = vertices_type::reference;
         using const_reference = vertices_type::const_reference;

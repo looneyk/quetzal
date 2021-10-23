@@ -5,6 +5,7 @@
 // Line.hpp
 //------------------------------------------------------------------------------
 
+#include "Partition.hpp"
 #include "Point.hpp"
 #include "quetzal/math/Vector.hpp"
 #include "quetzal/math/floating_point.hpp"
@@ -19,7 +20,7 @@ namespace quetzal::geometry
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    class Line
+    class Line : public Partition<Traits>
     {
     public:
 
@@ -45,7 +46,7 @@ namespace quetzal::geometry
 
         point_type point(value_type t) const;
 
-        bool contains(const point_type& point) const;
+        int compare(const point_type& point) const override;
 
         Point<Traits> projection(const Point<Traits>& point) const;
         value_type projection_parameter(const Point<Traits>& point) const;
@@ -72,6 +73,7 @@ namespace quetzal::geometry
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Line<Traits>::Line(const point_type& point, const vector_type& direction) :
+    Partition<Traits>(),
     m_point(point),
     m_direction(direction)
 {
@@ -119,9 +121,9 @@ typename quetzal::geometry::Line<Traits>::point_type quetzal::geometry::Line<Tra
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Line<Traits>::contains(const point_type& point) const
+int quetzal::geometry::Line<Traits>::compare(const point_type& point) const
 {
-    return vector_eq(point, projection(point));
+    return vector_eq(point, projection(point)) ? -1 : 1;
 }
 
 //------------------------------------------------------------------------------

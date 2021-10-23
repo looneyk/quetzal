@@ -2,9 +2,26 @@
 Common mathematical constructs and algorithms
 --------------------------------------------------------------------------------
 
+Consider:
+Vector<3> has 3 components
+Point<3> has 4 components, homogeneous coordinates in 3-space
+a more semantic significance to template parameters
+
+
 math: angles in radians
 geometry: triangles, but no angles
 model: angles in turns
+
+
+need to clearly define what it means for a vector to be less than another
+    this should only be used internally
+strict, all coordinates less
+strict, axis priority order
+loose, any coordinate less, but this would mean that numbers could be both lesser and greater
+
+check that vector min and max don't have a problem
+
+no need for float_lt0 after float_eq0, can use < directly there
 
 
 instead of ulp parameter, a traits class to manage that

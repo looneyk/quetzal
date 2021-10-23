@@ -10,6 +10,7 @@
 #include "Mesh.hpp"
 #include "Submesh.hpp"
 #include "Surface.hpp"
+#include "quetzal/geometry/HalfSpace.hpp"
 #include "quetzal/geometry/Line.hpp"
 #include "quetzal/geometry/Plane.hpp"
 #include "quetzal/geometry/Point.hpp"
@@ -70,6 +71,9 @@ namespace quetzal::brep
     geometry::Plane<typename Traits::vector_traits> to_plane(const Face<Traits>& face);
 
     template<typename Traits>
+    geometry::HalfSpace<typename Traits::vector_traits> to_halfspace(const Face<Traits>& face);
+
+    template<typename Traits>
     geometry::Polygon<typename Traits::vector_traits> to_polygon(const Face<Traits>& face);
 
     template<typename Traits>
@@ -82,7 +86,7 @@ namespace quetzal::brep
 
     // Works with Surface, Submesh, and Mesh
     template<typename S>
-    typename S::traits_type::value_type surface_area(const S& s);
+    typename S::value_type surface_area(const S& s);
 
     template<typename Traits>
     int face_compare(const Face<Traits>& face, const typename Traits::point_type& point);
@@ -92,7 +96,7 @@ namespace quetzal::brep
 
     // Works with Surface, Submesh, and Mesh
     template<typename S>
-    bool surface_contains(const S& s, const typename S::traits_type::point_type& point);
+    bool surface_contains(const S& s, const typename S::point_type& point);
 
     template<typename Traits>
     bool solid_contains(const Submesh<Traits>& submesh, const typename Traits::point_type& point);
@@ -218,11 +222,11 @@ quetzal::geometry::Segment<typename Traits::vector_traits> quetzal::brep::to_seg
 template<typename Traits>
 bool quetzal::brep::planar(const Face<Traits>& face)
 {
-    geometry::Plane<typename Traits::vector_traits> plane = to_plane(face);
+    auto plane = to_plane(face);
 
     for (const auto& halfedge : face.halfedges())
     {
-        if (!intersects(halfedge.attributes().position(), plane))
+        if (!plane.contains(halfedge.attributes().position()))
         {
             return false;
         }
@@ -286,6 +290,13 @@ quetzal::geometry::Plane<typename Traits::vector_traits> quetzal::brep::to_plane
 
 //------------------------------------------------------------------------------
 template<typename Traits>
+quetzal::geometry::HalfSpace<typename Traits::vector_traits> quetzal::brep::to_halfspace(const Face<Traits>& face)
+{
+    return geometry::HalfSpace<typename Traits::vector_traits>({face.halfedge().attributes().position(), face.attributes().normal()});
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
 quetzal::geometry::Polygon<typename Traits::vector_traits> quetzal::brep::to_polygon(const Face<Traits>& face)
 {
     geometry::Polygon<typename Traits::vector_traits> polygon(face.halfedge_count());
@@ -340,9 +351,9 @@ typename Traits::value_type quetzal::brep::face_area(const Face<Traits>& face)
 
 //------------------------------------------------------------------------------
 template<typename S>
-typename S::traits_type::value_type quetzal::brep::surface_area(const S& s)
+typename S::value_type quetzal::brep::surface_area(const S& s)
 {
-    typename S::traits_type::value_type area = S::traits_type::val(0);
+    typename S::value_type area = S::val(0);
 
     for (const auto& face : s.faces())
     {
@@ -365,7 +376,7 @@ int quetzal::brep::face_compare(const Face<Traits>& face, const typename Traits:
         return geometry::triangle_compare(halfedge.prev().attributes().position(), halfedge.attributes().position(), halfedge.next().attributes().position(), point);
     }
 
-    if (!to_plane(face).contains(point))
+    if (!to_polygon(face).planar() || !to_plane(face).contains(point))
     {
         return 1;
     }
@@ -378,27 +389,12 @@ int quetzal::brep::face_compare(const Face<Traits>& face, const typename Traits:
 template<typename Traits>
 bool quetzal::brep::face_contains(const Face<Traits>& face, const typename Traits::point_type& point)
 {
-    assert(!face.deleted());
-    assert(face.halfedge_count() >= 3);
-
-    if (face.halfedge_count() == 3)
-    {
-        const auto& halfedge = face.halfedge();
-        return geometry::triangle_contains(halfedge.prev().attributes().position(), halfedge.attributes().position(), halfedge.next().attributes().position(), point);
-    }
-
-    if (!to_plane(face).contains(point))
-    {
-        return false;
-    }
-
-    math::DimensionReducer<typename Traits::vector_traits> dr(face.attributes().normal());
-    return to_polygon(face, dr).contains(dr.reduce(point));
+    return face_compare(face, point) <= 0;
 }
 
 //------------------------------------------------------------------------------
 template<typename S>
-bool quetzal::brep::surface_contains(const S& s, const typename S::traits_type::point_type& point)
+bool quetzal::brep::surface_contains(const S& s, const typename S::point_type& point)
 {
     for (const auto& face : s.faces())
     {
@@ -510,7 +506,7 @@ bool quetzal::brep::solid_contains(const Mesh<Traits>& mesh, const typename Trai
 /* reactivate if needed ...
 //------------------------------------------------------------------------------
 template<typename S>
-quetzal::id_type quetzal::brep::face_containing_point(const S& s, const typename S::traits_type::point_type& point)
+quetzal::id_type quetzal::brep::face_containing_point(const S& s, const typename S::point_type& point)
 {
     for (const auto& face : s.faces())
     {

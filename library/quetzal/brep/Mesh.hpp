@@ -40,45 +40,45 @@ namespace quetzal::brep
     public:
 
         using traits_type = Traits;
-        using vector_traits = traits_type::vector_traits;
+        using vector_traits = Traits::vector_traits;
 
-        using vertex_attributes_type = traits_type::vertex_attributes_type;
-        using face_attributes_type = traits_type::face_attributes_type;
-        using surface_attributes_type = traits_type::surface_attributes_type;
-        using submesh_attributes_type = traits_type::submesh_attributes_type;
-        using value_type = traits_type::value_type;
-        using point_type = traits_type::point_type;
-        using vector_type = traits_type::vector_type;
-        using halfedge_type = Halfedge<traits_type>;
+        using size_type = Traits::size_type;
+        using value_type = Traits::value_type;
+        using vector_type = Traits::vector_type;
+        using point_type = Traits::point_type;
+        using vertex_attributes_type = Traits::vertex_attributes_type;
+        using face_attributes_type = Traits::face_attributes_type;
+        using surface_attributes_type = Traits::surface_attributes_type;
+        using submesh_attributes_type = Traits::submesh_attributes_type;
+        using halfedge_type = Halfedge<Traits>;
         using halfedge_store_type = std::vector<halfedge_type>;
-        using halfedges_type = Elements<Mesh<traits_type>, halfedge_type, id_type>;
-        using vertex_type = Vertex<traits_type>;
+        using halfedges_type = Elements<Mesh<Traits>, halfedge_type, id_type>;
+        using vertex_type = Vertex<Traits>;
         using vertex_store_type = std::vector<vertex_type>;
-        using vertices_type = Elements<Mesh<traits_type>, vertex_type, id_type>;
-        using face_type = Face<traits_type>;
+        using vertices_type = Elements<Mesh<Traits>, vertex_type, id_type>;
+        using face_type = Face<Traits>;
         using face_store_type = std::vector<face_type>;
-        using faces_type = Elements<Mesh<traits_type>, face_type, id_type>;
-        using surface_type = Surface<traits_type>;
+        using faces_type = Elements<Mesh<Traits>, face_type, id_type>;
+        using surface_type = Surface<Traits>;
         using surface_store_type = std::vector<surface_type>;
-        using surfaces_type = Elements<Mesh<traits_type>, surface_type, id_type>;
-        using submesh_type = Submesh<traits_type>;
+        using surfaces_type = Elements<Mesh<Traits>, surface_type, id_type>;
+        using submesh_type = Submesh<Traits>;
         using submesh_store_type = std::vector<submesh_type>;
-        using submeshes_type = Elements<Mesh<traits_type>, submesh_type, id_type>;
+        using submeshes_type = Elements<Mesh<Traits>, submesh_type, id_type>;
         using index_type = std::map<std::string, id_type>;
-        using size_type = traits_type::size_type;
 
         // Use from Traits only? ...
         template<typename U>
         static constexpr value_type val(const U& u)
         {
-            return traits_type::val(u);
+            return Traits::val(u);
         }
 
         using face_deleter_type = std::function<void(face_type&)>;
 
         explicit Mesh(const std::string& name = "");
         Mesh(const Mesh& other);
-        Mesh(Mesh&& other);
+        Mesh(Mesh&& other) noexcept;
         ~Mesh() = default;
 
         Mesh& operator=(Mesh other);
@@ -129,9 +129,10 @@ namespace quetzal::brep
 
         id_type create_face(id_type idSurface, id_type idHalfedge, const face_attributes_type& attributes = {});
 
-        void detach_face(id_type idFace); // Detach face from any connected surface and/or submesh, does not delete face
-        void remove_face(id_type idFace); // Delete face leaving halfedges and vertices
-        void delete_face(id_type idFace); // Delete all face components leaving an open area with border edges
+        void unlink_face(id_type idFace); // Unlink face from its surface and submesh, delete them if empty
+        void delete_face(id_type idFace); // Delete face resulting in an open area with border edges
+
+        void move_face(id_type idFace, id_type idSurface);
 
         id_type surface_id(id_type idSubmesh, const std::string& name) const;
 
@@ -154,23 +155,22 @@ namespace quetzal::brep
         index_type& surface_index(); // debug, logging, ...
 
         bool contains_surface(id_type idSubmesh, const std::string& name) const;
+        id_type get_surface_id(id_type idSubmesh, const std::string& name, const surface_attributes_type& attributes = {}, const Properties& properties = {}); // Return existing id if found or new id if created
         id_type create_surface(id_type idSubmesh, const std::string& name, const surface_attributes_type& attributes = {}, const Properties& properties = {});
-        void detach_surface(id_type idSurface); // Detach faces from surface, detach surface from submesh, does not delete surface
-        void remove_surface(id_type idSurface); // Detach faces from surface and delete empty surface
-        void delete_surface(id_type idSurface); // Delete surface and all its faces
+        void unlink_surface(id_type idSurface); // Unlink surface and all its faces from its submesh (needs work, could be used in move_surface?) ...
+        void delete_surface(id_type idSurface); // Delete surface and its faces
         void rename_surface(id_type idSurface, const std::string& replacement);
-        void move_surface(id_type idSurface, const std::string& destination);
+        void move_surface(id_type idSurfaceFrom, id_type idSubmeshTo, const std::string& nameSurfaceTo);
+        void move_surface(id_type idSurfaceFrom, const std::string& destination); // destination can be submesh name or extended name
 
         // name and destination are extended surface names
         id_type surface_id(const std::string& name) const;
         const surface_type& surface(const std::string& name) const;
         surface_type& surface(const std::string& name);
         bool contains_surface(const std::string& name) const;
-        void remove_surface(const std::string& name);
         // destination can have a single component, in which case this performs a move between submeshes and surface name does not change
         void move_surface(const std::string& name, const std::string& destination);
 
-        void remove_surfaces();
         void rename_surfaces(std::function<std::string(const std::string&)> renamer);
 
         id_type submesh_id(const std::string& name) const;
@@ -194,15 +194,11 @@ namespace quetzal::brep
         index_type& submesh_index(); // debug, logging, ...
 
         bool contains_submesh(const std::string& name) const;
+        id_type get_submesh_id(const std::string& name, const submesh_attributes_type& attributes = {}, const Properties& properties = {}); // Return existing id if found or new id if created
         id_type create_submesh(const std::string& name, const submesh_attributes_type& attributes = {}, const Properties& properties = {});
-        void detach_submesh(id_type idSubmesh); // Detach faces and surfaces from submesh, does not delete submesh
-        void remove_submesh(id_type idSubmesh); // Detach faces from submesh and delete empty submesh and surfaces
-        void delete_submesh(id_type idSubmesh); // Delete submesh and all its faces and surfaces
+        void delete_submesh(id_type idSubmesh); // Delete submesh and its surfaces and faces
         void rename_submesh(id_type idSubmesh, const std::string& replacement);
 
-        void remove_submesh(const std::string& name);
-
-        void remove_submeshes();
         void rename_submeshes(std::function<std::string(const std::string&)> renamer);
 
         // Manage surface face inclusion
@@ -227,18 +223,12 @@ namespace quetzal::brep
         void link_face_submesh(id_type idFace, id_type idSubmesh);
         void link_surface_submesh(id_type idSurface, id_type idSubmesh);
 
-        // should these have remove or detach semantics? currently remove, but detach seems a more appropriate complement to link ...
-        void unlink_face(id_type idFace);
-        void unlink_surface(id_type idSurface);
-        void unlink_submesh(id_type idSubmesh);
-
         void append(const Mesh& mesh);
         void pack();
 
         bool empty() const;
         void clear(); // Clears contents, but does not change id or name
 
-        bool unmarked() const;
         void reset() const override; // Flags
 
         void reassign_mesh();
@@ -254,7 +244,7 @@ namespace quetzal::brep
 
     private:
 
-        std::string extended_surface_name(id_type idSubmesh, const std::string& name) const;
+        std::string surface_extended_name(id_type idSubmesh, const std::string& name) const;
         std::array<std::string, 2> split_surface_name(const std::string& name);
 
         id_type m_id;
@@ -401,7 +391,7 @@ quetzal::brep::Mesh<Traits>::Mesh(const Mesh& other) :
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::brep::Mesh<Traits>::Mesh(Mesh&& other) :
+quetzal::brep::Mesh<Traits>::Mesh(Mesh&& other) noexcept :
     Flags(other),
     m_id(other.m_id),
     m_name(std::move(other.m_name)),
@@ -442,10 +432,8 @@ quetzal::brep::Mesh<Traits>& quetzal::brep::Mesh<Traits>::operator=(Mesh&& other
     m_vertex_store = std::move(other.m_vertex_store);
     m_face_store = std::move(other.m_face_store);
     m_surface_store = std::move(other.m_surface_store);
-    m_surfaces = std::move(other.m_surfaces);
     m_surface_index = std::move(other.m_surface_index);
     m_submesh_store = std::move(other.m_submesh_store);
-    m_submeshes = std::move(other.m_submeshes);
     m_submesh_index = std::move(other.m_submesh_index);
     m_properties = std::move(other.m_properties);
 
@@ -736,52 +724,33 @@ quetzal::id_type quetzal::brep::Mesh<Traits>::create_face(id_type idSurface, id_
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::brep::Mesh<Traits>::detach_face(id_type idFace)
+void quetzal::brep::Mesh<Traits>::unlink_face(id_type idFace)
 {
     face_type& f = face(idFace);
+    id_type idSurface = f.surface_id();
+    id_type idSubmesh = f.submesh_id();
 
-    if (f.surface_id() != nullid)
+    if (idSubmesh != nullid)
+    {
+        f.submesh().unlink_face(idFace);
+    }
+
+    if (idSurface != nullid)
     {
         surface_type& s = f.surface();
-        s.remove_face(idFace); // unlink ...
+        s.unlink_face(idFace);
 
         if (s.empty())
         {
-            if (s.submesh_id() != nullid)
-            {
-                m_surface_index.erase(s.extended_name());
-                s.submesh().unlink_surface(s.id());
-            }
-
-            s.set_deleted();
+            delete_surface(idSurface);
         }
-
-        f.set_surface_id(nullid);
     }
 
-    if (f.submesh_id() != nullid)
+    if (idSubmesh != nullid && submesh(idSubmesh).empty() && !submesh(idSubmesh).deleted())
     {
-        submesh_type& o = f.submesh();
-        o.remove_face(idFace); // unlink ...
-
-        if (o.empty())
-        {
-            m_submesh_index.erase(o.name());
-            o.set_deleted();
-        }
-
-        f.set_submesh_id(nullid);
+        delete_submesh(idSubmesh);
     }
 
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::remove_face(id_type idFace)
-{
-    detach_face(idFace);
-    face(idFace).set_deleted();
     return;
 }
 
@@ -789,8 +758,9 @@ void quetzal::brep::Mesh<Traits>::remove_face(id_type idFace)
 template<typename Traits>
 void quetzal::brep::Mesh<Traits>::delete_face(id_type idFace)
 {
-    face_type& f = face(idFace);
+    unlink_face(idFace);
 
+    face_type& f = face(idFace);
     for (halfedge_type& halfedge : f.halfedges())
     {
         if (!halfedge.border())
@@ -802,7 +772,54 @@ void quetzal::brep::Mesh<Traits>::delete_face(id_type idFace)
         halfedge.set_deleted();
     }
 
-    remove_face(idFace);
+    f.set_deleted();
+    return;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+void quetzal::brep::Mesh<Traits>::move_face(id_type idFace, id_type idSurface)
+{
+    auto& f = face(idFace);
+    id_type idSurfaceOrig = f.surface_id();
+    id_type idSubmeshOrig = f.submesh_id();
+    id_type idSubmesh = surface(idSurface).submesh_id();
+    assert(idSurfaceOrig == nullid || idSubmeshOrig == f.surface().submesh_id());
+
+    if (idSurface == idSurfaceOrig)
+    {
+        return;
+    }
+
+    if (idSubmeshOrig != nullid)
+    {
+        submesh(idSubmeshOrig).unlink_face(idFace);
+    }
+
+    if (idSurfaceOrig != nullid)
+    {
+        surface(idSurfaceOrig).unlink_face(idFace);
+        if (surface(idSurfaceOrig).empty())
+        {
+            delete_surface(idSurfaceOrig);
+        }
+    }
+
+    if (idSubmeshOrig != nullid && submesh(idSubmeshOrig).empty() && !submesh(idSubmeshOrig).deleted() && idSubmesh != idSubmeshOrig)
+    {
+        delete_submesh(idSubmeshOrig);
+    }
+
+    if (idSurface != nullid)
+    {
+        surface(idSurface).link_face(idFace);
+    }
+
+    if (idSubmesh != nullid)
+    {
+        submesh(idSubmesh).link_face(idFace);
+    }
+
     return;
 }
 
@@ -810,7 +827,7 @@ void quetzal::brep::Mesh<Traits>::delete_face(id_type idFace)
 template<typename Traits>
 quetzal::id_type quetzal::brep::Mesh<Traits>::surface_id(id_type idSubmesh, const std::string& name) const
 {
-    auto i = m_surface_index.find(extended_surface_name(idSubmesh, name));
+    auto i = m_surface_index.find(surface_extended_name(idSubmesh, name));
     if (i != m_surface_index.end())
     {
         assert(submesh(idSubmesh).contains_surface(name));
@@ -827,7 +844,7 @@ const typename quetzal::brep::Mesh<Traits>::surface_type& quetzal::brep::Mesh<Tr
 {
     assert(contains_surface(idSubmesh, name));
 
-    id_type idSurface = m_surface_index[extended_surface_name(idSubmesh, name)];
+    id_type idSurface = m_surface_index[surface_extended_name(idSubmesh, name)];
     return surface(idSurface);
 }
 
@@ -837,7 +854,7 @@ typename quetzal::brep::Mesh<Traits>::surface_type& quetzal::brep::Mesh<Traits>:
 {
     assert(contains_surface(idSubmesh, name));
 
-    id_type idSurface = m_surface_index[extended_surface_name(idSubmesh, name)];
+    id_type idSurface = m_surface_index[surface_extended_name(idSubmesh, name)];
     return surface(idSurface);
 }
 
@@ -936,8 +953,20 @@ typename quetzal::brep::Mesh<Traits>::index_type& quetzal::brep::Mesh<Traits>::s
 template<typename Traits>
 bool quetzal::brep::Mesh<Traits>::contains_surface(id_type idSubmesh, const std::string& name) const
 {
-    assert(submesh(idSubmesh).contains_surface(name) == m_surface_index.contains(extended_surface_name(idSubmesh, name)));
-    return m_surface_index.contains(extended_surface_name(idSubmesh, name));
+    assert(submesh(idSubmesh).contains_surface(name) == m_surface_index.contains(surface_extended_name(idSubmesh, name)));
+    return m_surface_index.contains(surface_extended_name(idSubmesh, name));
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+quetzal::id_type quetzal::brep::Mesh<Traits>::get_surface_id(id_type idSubmesh, const std::string& name, const surface_attributes_type& attributes, const Properties& properties)
+{
+    if (contains_surface(idSubmesh, name))
+    {
+        return surface_id(idSubmesh, name);
+    }
+
+    return create_surface(idSubmesh, name, attributes, properties);
 }
 
 //------------------------------------------------------------------------------
@@ -961,38 +990,39 @@ quetzal::id_type quetzal::brep::Mesh<Traits>::create_surface(id_type idSubmesh, 
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::brep::Mesh<Traits>::detach_surface(id_type idSurface)
+void quetzal::brep::Mesh<Traits>::unlink_surface(id_type idSurface)
 {
-    surface_type& s = surface(idSurface);
-    assert(m_surface_index.contains(s.extended_name()));
-    m_surface_index.erase(s.extended_name());
+    assert(false); // this needs work ...
 
-    for (auto& face : s.faces())
+    auto& s = surface(idSurface);
+
+    for (auto& f : s.faces())
     {
-        face.set_surface_id(nullid);
+        assert(f.surface_id() == idSurface);
+        f.set_surface_id(nullid);
+//        m_face_ids.erase(f.id()); // ...
+// unlink ...
     }
 
     if (s.submesh_id() != nullid)
     {
-        s.submesh().remove_surface(idSurface);
+        Submesh& o = submesh(s.submesh_id());
+        o.surface_ids().erase(idSurface);
 
-        if (s.submesh().empty())
+        for (id_type idFace : s.face_ids())
         {
-            m_submesh_index.erase(s.submesh().name());
-            s.submesh().set_deleted();
+            o.face_ids().erase(idFace);
+        }
+
+        if (o.empty())
+        {
+            m_submesh_index.erase(o.name());
+            o.set_deleted();
         }
     }
 
+//    assert(s.empty());
     s.clear();
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::remove_surface(id_type idSurface)
-{
-    detach_surface(idSurface);
-    surface(idSurface).set_deleted();
     return;
 }
 
@@ -1001,13 +1031,26 @@ template<typename Traits>
 void quetzal::brep::Mesh<Traits>::delete_surface(id_type idSurface)
 {
     surface_type& s = surface(idSurface);
-    for (id_type idFace : s.face_ids())
+    id_type idSubmesh = s.submesh_id();
+
+    m_surface_index.erase(s.extended_name());
+
+    for (auto i = s.face_ids().begin(); i != s.face_ids().end(); )
     {
-        face(idFace).set_surface_id(nullid); // This ensures that face_ids is not modified (invalidating iterator) and that an empty surface will not be removed behind our backs
-        delete_face(idFace);
+        delete_face(*i++);
     }
 
-    remove_surface(idSurface);
+    if (idSubmesh != nullid)
+    {
+        s.submesh().unlink_surface(idSurface);
+        if (submesh(idSubmesh).empty())
+        {
+            delete_submesh(idSubmesh);
+        }
+    }
+
+    assert(s.empty());
+    s.set_deleted();
     return;
 }
 
@@ -1043,17 +1086,82 @@ void quetzal::brep::Mesh<Traits>::rename_surface(id_type idSurface, const std::s
     }
 
     s.submesh().rename_surface(idSurface, replacement);
-    m_surface_index[extended_surface_name(s.submesh_id(), replacement)] = s.id();
+    m_surface_index[surface_extended_name(s.submesh_id(), replacement)] = s.id();
     return;
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::brep::Mesh<Traits>::move_surface(id_type idSurface, const std::string& destination)
+void quetzal::brep::Mesh<Traits>::move_surface(id_type idSurfaceFrom, id_type idSubmeshTo, const std::string& nameSurfaceTo)
 {
-    id_type idSurfaceFrom = idSurface;
     surface_type& surfaceFrom = surface(idSurfaceFrom);
     id_type idSubmeshFrom = surfaceFrom.submesh_id();
+
+    if (idSubmeshTo == idSubmeshFrom)
+    {
+        if (nameSurfaceTo != surfaceFrom.name())
+        {
+            rename_surface(idSurfaceFrom, nameSurfaceTo);
+        }
+
+        return;
+    }
+
+    auto& submeshFrom = submesh(idSubmeshFrom);
+    auto& submeshTo = submesh(idSubmeshTo);
+
+    id_type idSurfaceTo = surface_id(idSubmeshTo, nameSurfaceTo);
+    if (idSurfaceTo == nullid)
+    {
+        // Move surface to target submesh
+
+        m_surface_index.erase(surfaceFrom.extended_name());
+        submeshFrom.unlink_surface(idSurfaceFrom);
+
+        for (id_type idFace : surfaceFrom.face_ids())
+        {
+            submeshFrom.unlink_face(idFace);
+            submeshTo.link_face(idFace);
+        }
+
+        surfaceFrom.set_name(nameSurfaceTo);
+        submeshTo.link_surface(idSurfaceFrom);
+        m_surface_index[surfaceFrom.extended_name()] = idSurfaceFrom;
+
+        if (submeshFrom.empty())
+        {
+            delete_submesh(idSubmeshFrom);
+        }
+    }
+    else
+    {
+        // Move surface faces to target surface
+
+        surface_type& surfaceTo = surface(idSurfaceTo);
+
+        for (auto i = surfaceFrom.face_ids().begin(); i != surfaceFrom.face_ids().end(); )
+        {
+            id_type idFace = *i++;
+
+            surfaceFrom.unlink_face(idFace);
+            surfaceTo.link_face(idFace);
+
+            submeshFrom.unlink_face(idFace);
+            submeshTo.link_face(idFace);
+        }
+
+        assert(surfaceFrom.empty());
+        delete_surface(idSurfaceFrom);
+    }
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+void quetzal::brep::Mesh<Traits>::move_surface(id_type idSurfaceFrom, const std::string& destination)
+{
+    surface_type& surfaceFrom = surface(idSurfaceFrom);
 
     auto [nameSubmeshTo, nameSurfaceTo] = split_surface_name(destination);
     assert(!nameSubmeshTo.empty());
@@ -1065,63 +1173,10 @@ void quetzal::brep::Mesh<Traits>::move_surface(id_type idSurface, const std::str
     id_type idSubmeshTo = submesh_id(nameSubmeshTo);
     if (idSubmeshTo == nullid)
     {
-        idSubmeshTo = create_submesh(nameSubmeshTo, submesh(idSubmeshFrom).attributes(), submesh(idSubmeshFrom).properties());
-    }
-    else if (idSubmeshTo == idSubmeshFrom)
-    {
-        rename_surface(idSurfaceFrom, nameSurfaceTo);
-        return;
+        idSubmeshTo = create_submesh(nameSubmeshTo, surfaceFrom.submesh().attributes());
     }
 
-    assert(idSubmeshTo != idSubmeshFrom);
-    m_surface_index.erase(surfaceFrom.extended_name());
-
-    submesh_type& submeshFrom = surfaceFrom.submesh();
-    for (id_type idFace : surfaceFrom.face_ids())
-    {
-        submeshFrom.unlink_face(idFace);
-    }
-
-    id_type idSurfaceTo = surface_id(idSubmeshTo, nameSurfaceTo);
-    if (idSurfaceTo == nullid)
-    {
-        // Move the surface itself from one submesh to the other
-
-        submeshFrom.unlink_surface(idSurfaceFrom);
-        surfaceFrom.set_name(nameSurfaceTo);
-        submesh(idSubmeshTo).link_surface(idSurfaceFrom);
-
-        for (id_type idFace : surfaceFrom.face_ids())
-        {
-            submesh(idSubmeshTo).link_face(idFace);
-        }
-
-        idSurfaceTo = idSurfaceFrom;
-    }
-    else
-    {
-        // Move the surface contents from one surface to the other
-
-        for (id_type idFace : surfaceFrom.face_ids())
-        {
-            surface(idSurfaceTo).link_face(idFace);
-            submesh(idSubmeshTo).link_face(idFace);
-        }
-
-        submesh(idSubmeshFrom).unlink_surface(idSurfaceFrom);
-        surfaceFrom.clear();
-        surfaceFrom.set_deleted();
-    }
-
-    m_surface_index[surface(idSurfaceTo).extended_name()] = idSurfaceTo;
-
-    if (submeshFrom.empty())
-    {
-        m_submesh_index.erase(submeshFrom.name());
-        submeshFrom.clear();
-        submeshFrom.set_deleted();
-    }
-
+    move_surface(idSurfaceFrom, idSubmeshTo, nameSurfaceTo);
     return;
 }
 
@@ -1163,41 +1218,10 @@ bool quetzal::brep::Mesh<Traits>::contains_surface(const std::string& name) cons
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::brep::Mesh<Traits>::remove_surface(const std::string& name)
-{
-    assert(contains_surface(name));
-    remove_surface(surface_id(name));
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
 void quetzal::brep::Mesh<Traits>::move_surface(const std::string& name, const std::string& destination)
 {
     assert(contains_surface(name));
     move_surface(surface_id(name), destination);
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::remove_surfaces()
-{
-    for (face_type& face : m_face_store)
-    {
-        face.set_surface_id(nullid);
-    }
-
-    for (submesh_type& submesh : m_submeshes)
-    {
-        submesh.surface_index().clear();
-        submesh.surface_ids().clear();
-
-        // for each surface, for each face, unlink it from submesh ...
-    }
-
-    m_surface_index.clear();
-    m_surface_store.clear();
     return;
 }
 
@@ -1348,6 +1372,18 @@ bool quetzal::brep::Mesh<Traits>::contains_submesh(const std::string& name) cons
 
 //------------------------------------------------------------------------------
 template<typename Traits>
+quetzal::id_type quetzal::brep::Mesh<Traits>::get_submesh_id(const std::string& name, const submesh_attributes_type& attributes, const Properties& properties)
+{
+    if (contains_submesh(name))
+    {
+        return submesh_id(name);
+    }
+
+    return create_submesh(name, attributes, properties);
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
 quetzal::id_type quetzal::brep::Mesh<Traits>::create_submesh(const std::string& name, const submesh_attributes_type& attributes, const Properties& properties)
 {
     assert(!contains_submesh(name));
@@ -1361,47 +1397,23 @@ quetzal::id_type quetzal::brep::Mesh<Traits>::create_submesh(const std::string& 
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::brep::Mesh<Traits>::detach_submesh(id_type idSubmesh)
-{
-    submesh_type& o = submesh(idSubmesh);
-    for (auto& face : o.faces())
-    {
-        face.set_submesh_id(nullid);
-    }
-
-    for (auto& surface : o.surfaces())
-    {
-        m_surface_index.erase(surface.extended_name());
-        surface.set_submesh_id(nullid);
-        m_surface_index[surface.extended_name()] = surface.id();
-    }
-
-    m_submesh_index.erase(o.name());
-    o.clear();
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::remove_submesh(id_type idSubmesh)
-{
-    detach_submesh(idSubmesh);
-    submesh(idSubmesh).set_deleted();
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
 void quetzal::brep::Mesh<Traits>::delete_submesh(id_type idSubmesh)
 {
     submesh_type& o = submesh(idSubmesh);
-    for (id_type idFace : o.face_ids())
+    m_submesh_index.erase(o.name());
+
+    for (auto i = o.surface_ids().begin(); i != o.surface_ids().end(); )
     {
-        face(idFace).set_submesh_id(nullid); // This ensures that face_ids is not modified (invalidating iterator) and that an empty submesh will not be removed behind our backs
-        delete_face(idFace);
+        delete_surface(*i++);
     }
 
-    remove_submesh(idSubmesh);
+    for (auto i = o.face_ids().begin(); i != o.face_ids().end(); )
+    {
+        delete_face(*i++);
+    }
+
+    assert(o.empty());
+    o.set_deleted();
     return;
 }
 
@@ -1470,34 +1482,6 @@ void quetzal::brep::Mesh<Traits>::rename_submesh(id_type idSubmesh, const std::s
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::brep::Mesh<Traits>::remove_submesh(const std::string& name)
-{
-    assert(contains_submesh(name));
-    remove_submesh(submesh_id(name));
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::remove_submeshes()
-{
-    for (face_type& face : m_face_store)
-    {
-        face.set_submesh_id(nullid);
-    }
-
-    for (surface_type& surface : m_surfaces)
-    {
-        surface.set_submesh_id(nullid);
-    }
-
-    m_submesh_store.clear();
-    m_submesh_index.clear();
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
 void quetzal::brep::Mesh<Traits>::rename_submeshes(std::function<std::string(const std::string&)> renamer)
 {
     for (auto& submesh : m_submeshes)
@@ -1515,15 +1499,7 @@ void quetzal::brep::Mesh<Traits>::add_surface_face(id_type idSubmesh, const std:
 {
     assert(!face(idFace).deleted());
 
-    id_type idSurface = nullid;
-    if (contains_surface(idSubmesh, name))
-    {
-        idSurface = surface_id(idSubmesh, name);
-    }
-    else
-    {
-        idSurface = create_surface(idSubmesh, name, face(idFace).attributes());
-    }
+    id_type idSurface = get_surface_id(idSubmesh, name, face(idFace).attributes());
 
     if (face(idFace).surface_id() != idSurface)
     {
@@ -1532,10 +1508,10 @@ void quetzal::brep::Mesh<Traits>::add_surface_face(id_type idSubmesh, const std:
             surface_type& s = face(idFace).surface();
             assert(!s.deleted());
 
-            s.remove_face(idFace);
+            s.unlink_face(idFace);
             if (s.empty())
             {
-                remove_surface(s.id());
+                delete_surface(s.id());
             }
         }
 
@@ -1560,24 +1536,25 @@ void quetzal::brep::Mesh<Traits>::add_submesh_surface(const std::string& name, i
     if (surface(idSurface).submesh_id() != nullid)
     {
         submesh_type& o = surface(idSurface).submesh();
-        o.remove_surface(idSurface);
+        if (o.name() == name)
+        {
+            return;
+        }
+
+        // remove surface faces? ...
+
+        o.unlink_surface(idSurface);
         if (o.empty())
         {
-            remove_submesh(o.name());
+            delete_submesh(o.id());
         }
     }
 
-    id_type idSubmesh = nullid;
-    if (contains_submesh(name))
-    {
-        idSubmesh = submesh_id(name);
-    }
-    else
-    {
-        idSubmesh = create_submesh(name);
-    }
-
+    id_type idSubmesh = get_submesh_id(name);
     submesh(idSubmesh).link_surface(idSurface);
+
+    // link any surface faces to submesh ...
+
     return;
 }
 
@@ -1712,108 +1689,6 @@ void quetzal::brep::Mesh<Traits>::link_surface_submesh(id_type idSurface, id_typ
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::brep::Mesh<Traits>::unlink_face(id_type idFace)
-{
-    Face& f = face(idFace);
-
-    if (f.surface_id() != nullid)
-    {
-        Surface& s = surface(f.surface_id());
-        s.face_ids().erase(idFace);
-
-        if (s.empty())
-        {
-            m_surface_index.erase(s.extended_name());
-            s.set_deleted();
-        }
-    }
-
-    if (f.submesh_id() != nullid)
-    {
-        Submesh& o = submesh(f.submesh_id());
-        o.face_ids().erase(idFace);
-
-        if (f.surface_id() != nullid)
-        {
-            o.surface_ids().erase(f.surface_id());
-        }
-
-        if (o.empty())
-        {
-            m_submesh_index.erase(o.name());
-            o.set_deleted();
-        }
-    }
-
-    f.set_deleted();
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::unlink_surface(id_type idSurface)
-{
-    Surface& s = surface(idSurface);
-
-    for (Face& f : s.faces())
-    {
-        assert(f.surface_id() == idSurface);
-        f.set_surface_id(nullid);
-    }
-
-    if (s.submesh_id() != nullid)
-    {
-        Submesh& o = submesh(s.submesh_id());
-        o.surface_ids().erase(idSurface);
-
-        for (id_type idFace : s.face_ids())
-        {
-            o.face_ids().erase(idFace);
-        }
-
-        if (o.empty())
-        {
-            m_submesh_index.erase(o.name());
-            o.set_deleted();
-        }
-    }
-
-    s.clear();
-    s.set_deleted(); // ? ...
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::brep::Mesh<Traits>::unlink_submesh(id_type idSubmesh)
-{
-    Submesh& o = submesh(idSubmesh);
-
-    for (Surface& s : o.surfaces())
-    {
-        assert(s.submesh_id() == idSubmesh);
-        s.clear();
-        s.set_deleted();
-    }
-
-    for (Face& f : o.faces())
-    {
-        assert(f.submesh_id() == idSubmesh);
-        assert(f.surface_id() == nullid || f.surface().submesh_id() == idSubmesh);
-
-//        f.clear() // ...
-        f.set_surface_id(nullid);
-        f.set_submesh_id(nullid);
-        f.set_deleted();
-    }
-
-    o.clear();
-    o.set_deleted(); // ? ...
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
 void quetzal::brep::Mesh<Traits>::append(const Mesh& mesh)
 {
     if (empty())
@@ -1851,7 +1726,6 @@ void quetzal::brep::Mesh<Traits>::append(const Mesh& mesh)
         assert(!name.empty());
 
         id_type idSubmesh = surfaceOrig.submesh_id() == nullid ? nullid : submesh_id(surfaceOrig.submesh().name());
-
         if (!contains_surface(idSubmesh, name))
         {
             create_surface(idSubmesh, name, surfaceOrig.attributes(), surfaceOrig.properties());
@@ -1886,7 +1760,6 @@ void quetzal::brep::Mesh<Traits>::append(const Mesh& mesh)
         id_type idSubmesh = sOther.submesh_id() == nullid ? nullid : submesh_id(sOther.submesh().name());
 
         Surface<Traits>& s = surface(surface_id(idSubmesh, sOther.name()));
-
         if (s.id() > ns)
         {
             s.set_submesh_id(idSubmesh);
@@ -1907,17 +1780,8 @@ void quetzal::brep::Mesh<Traits>::append(const Mesh& mesh)
             id_type idSurface = surface_id(o.id(), mesh.surface(idSurfaceOther).name());
             if (!o.contains_surface(idSurface))
             {
-                o.add_surface(idSurface);
+                o.link_surface(idSurface);
             }
-            if (idSurface > ns) // ...
-{
-assert(surface(idSurface).submesh_id() != nullid);
-//            if (surface(idSurface).submesh_id() == nullid)
-            {
-                surface(idSurface).set_submesh_id(o.id());
-            }
-}
-//            o.link_surface(idSurface);
         }
 
         for (id_type idFaceOther : oOther.face_ids())
@@ -2129,58 +1993,6 @@ void quetzal::brep::Mesh<Traits>::clear()
     return;
 }
 
-//--------------------------------------------------------------------------
-template<typename Traits>
-bool quetzal::brep::Mesh<Traits>::unmarked() const
-{
-    if (marked())
-    {
-        return false;
-    }
-
-    for (halfedge_type& halfedge : m_halfedges)
-    {
-        if (halfedge.marked())
-        {
-            return false;
-        }
-    }
-
-    for (vertex_type& vertex : m_vertices)
-    {
-        if (vertex.marked())
-        {
-            return false;
-        }
-    }
-
-    for (face_type& face : m_faces)
-    {
-        if (face.marked())
-        {
-            return false;
-        }
-    }
-
-    for (surface_type& surface : m_surfaces)
-    {
-        if (surface.marked())
-        {
-            return false;
-        }
-    }
-
-    for (submesh_type& submesh : m_submeshes)
-    {
-        if (submesh.marked())
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 //------------------------------------------------------------------------------
 template<typename Traits>
 void quetzal::brep::Mesh<Traits>::reset() const
@@ -2372,7 +2184,7 @@ void quetzal::brep::swap(Mesh<Traits>& lhs, Mesh<Traits>& rhs)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-std::string quetzal::brep::Mesh<Traits>::extended_surface_name(id_type idSubmesh, const std::string& name) const
+std::string quetzal::brep::Mesh<Traits>::surface_extended_name(id_type idSubmesh, const std::string& name) const
 {
     return (idSubmesh != nullid ? submesh(idSubmesh).name() : "") + "/" + name;
 }

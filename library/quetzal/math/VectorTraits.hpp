@@ -106,6 +106,7 @@ namespace quetzal::math
         template<size_t I = N - 1> requires (I < N)
         static bool equals(const rep_type& lhs, const rep_type& rhs);
 
+        // Short-circuit || operation on components starting with highest dimension
         template<size_t I = N - 1> requires (I < N)
         static bool less(const rep_type& lhs, const rep_type& rhs);
 

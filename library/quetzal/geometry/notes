@@ -2,6 +2,41 @@
 Common geometry constructs and algorithms
 --------------------------------------------------------------------------------
 
+https://en.wikipedia.org/wiki/DE-9IM
+https://gdal.org/
+https://postgis.net/docs/reference.html
+06-103r4_Implementation_Specification_for_Geographic_Information_-_Simple_feature_access_-_Part_1_Common_Architecture_v1.2.1.pdf
+
+equals (anotherGeometry: Geometry): boolean - This geometric object is "spatially equal" to anotherGeometry.
+disjoint (anotherGeometry: Geometry): boolean - This geometric object is "spatially disjoint" from anotherGeometry.
+intersects (anotherGeometry: Geometry): boolean - This geometric object "spatially intersects" anotherGeometry.
+touches (anotherGeometry: Geometry): boolean - This geometric object "spatially touches" anotherGeometry.
+crosses (anotherGeometry: Geometry): boolean - This geometric object "spatially crosses’ anotherGeometry.
+within (anotherGeometry: Geometry): boolean - This geometric object is "spatially within" anotherGeometry.
+contains (anotherGeometry: Geometry): boolean - This geometric object "spatially contains" anotherGeometry.
+overlaps (anotherGeometry: Geometry): boolean - This geometric object "spatially overlaps" anotherGeometry.
+relate (anotherGeometry: Geometry, intersectionPatternMatrix: String): boolean - This geometric object is spatially related to anotherGeometry by testing for intersections between the interior, boundary and exterior of the two geometric objects as specified by the values in the intersectionPatternMatrix.
+    excluding exterior (this) intersect exterior (another).
+
+ST_Contains - Returns true if and only if no points of B lie in the exterior of A, and at least one point of the interior of B lies in the interior of A.
+ST_ContainsProperly - Returns true if B intersects the interior of A but not the boundary (or exterior). A does not contain properly itself, but does contain itself.
+ST_Covers - Returns true if no point in B is outside A
+ST_CoveredBy - Returns true if no point in A is outside B
+ST_Crosses - Returns true if two geometries have some, but not all, interior points in common.
+ST_LineCrossingDirection - Returns a number indicating the crossing behavior of two LineStrings.
+ST_Disjoint - Returns true if two geometries do not spatially intersect (they have no point in common).
+ST_Equals - Returns true if two geometries include the same set of points in space.
+ST_Intersects - Returns true if two geometries spatially intersect (have at least one point in common).
+ST_OrderingEquals - Returns true if two geometries represent the same geometry and have points in the same directional order.
+ST_Overlaps - Returns true if two geometries intersect and have the same dimension, but are not completely contained by each other.
+ST_Relate - Tests if two geometries have a topological relationship matching a given Intersection Matrix pattern, or computes their Intersection Matrix
+ST_RelateMatch - Tests if a DE-9IM Intersection Matrix matches an Intersection Matrix pattern
+ST_Touches - Returns true if two geometries have at least one point in common, but their interiors do not intersect.
+ST_Within - Returns true if geometry A is completely inside geometry B
+
+contains = covers && !touches?
+
+
 http://geomalgorithms.com/a07-_distance.html
 https://math.stackexchange.com/questions/2386768/3d-intersection-of-a-line-and-a-line-segment
 
@@ -43,12 +78,57 @@ can be used to generalize linear intersects as long as the point selection proce
 get rid of intersects_coplanar, or at least reduce it to a 2D reducer to polygon contains/compare
 consider the compare_internal
 compare is a 3-way comparison
-contains is point in the region defined by the polygon, edge inclusion is undefined
+contains is no longer ambiguous with respect to boundary
+use partition functionality rather than intersects when practical
 
 point in poly
 http://geomalgorithms.com/a03-_inclusion.html
 
+*see if I can come up with a few relationship primitives that others can be built on
+parallel, point compare, closest point, ...
 
+
+allow for unbounded objects to define sub-spaces
+half-space (plane), paraboloid, hyperboloid (two distinct areas), ...
+half-plane (line)
+half-line (ray)
+
+spatial relations (Relation, PointRelation, PointProximity, ...)
+do intersections using this model?
+change Intersection to Geometry?
+
+Box
+ClosedCurve
+
+Box/Sphere vs. AxisAllignedBoundingBox/BoundingSphere?
+base classes?
+aabb is box and bounding volume
+
+BoundingVolume includes point set, should that be separated out
+
+interior, boundary, exterior, contains -> contains, touches, disjoint, covers
+former good enough for now, extracted into Partition interface
+
+replace plane with halfspace where it makes sense
+look for where intersection can be replaced by contains, check that the algorithms match
+intersects is "at least partially contains", trivial with points
+
+Plane has either interior or exterior, infinite so no boundary
+Instead, HalfSpace should use current plane partition semantics
+clip takes half space (or any 3D Partition?)
+give Partition an outward vector function? only meaningful for 2..3D objects in 3+D
+
+
+transformations
+Primitive base class with transform function for geometric objects
+
+merge partition into that too?
+spheres are problematic (non-uniform scaling)
+    spheres are instances of elipsoids with arbitrary axes?
+single transform function template that calls the object's specific transform? like begin(...) vs. .begin()
+
+
+polygon is a closed curve ...
 polygon has a list of vertices that define its edges
 a polygon is then made up of a series of connected sections
 bSurfacesDistinct can then be applied to these sections
@@ -59,17 +139,10 @@ polygon with holes
 polygon with sections
 polygon with holes and sections
 
-
 use views for segments of a polygon?
 still doesn't help with circularity
 
-
-Polygon has operators for matrix multiplication
-would simply transform member functions be cleaner? (is multiplication going too far applying it this way?)
-wait for application, semantics of transformation of linear objects is a bit sketchy
-
-
-a polygon is a closed curve ...
+what about a polygon that takes an Attribute parameter instead of Traits for its vertex type?
 
 
 aabb extent is not defined well, used differently from direct3d11, and not consistent with other usages
@@ -81,8 +154,6 @@ normals in attributes should use rotational lerp
 intersection/contains failing
 required very high ulp
 work on accuracy
-
-point <=> polygon: interior, border, exterior, but only makes sense for planar
 
 
 closest_point_parameters
@@ -106,7 +177,7 @@ or just deal with the segment.line() direction vector issue
 *remove unit assertion from line, check only when use of direction vector requires it to be unit
 
 **Linear (line, ray, segment, halfedge), Planar (plane, polygon, face) interfaces
-common linear base instead of line functions
+common linear base instead of line functions?
 templates instead of Line parameters in intersection, ...
 declares common point() and vector() (planar normal())
 
@@ -122,7 +193,7 @@ ray
 open_ray
 
 
-PolygonWithHoles should have Polygon base class
+PolygonWithHoles, Polygon base class?
 then single functions with Polygon ...
 
 load_polygon needs to be able to handle any number of position values
@@ -144,15 +215,9 @@ clear must be done manually
 polygon can be loaded from points or polygon xml file
 polygon with holes can only be loaded from polygon xml file
 
-PolygonWithHoles base class Polygon?
 
-
-*In Attributes, change Flags to something more descriptive?
-originally Property; Attribute?
-AttributeFlags
-AttributeType, but then AttributeType::type? just Attribute::Type
+Attributes
 component, semantic, ...
-type is fine for attribute, but need plural for flags()
 
 I don't like how aliases have to be duplicated in each Attributes subclass
 I don't like how Flags has to be external to Attributes, but ridiculous to have to qualify it if not

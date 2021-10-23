@@ -15,9 +15,37 @@ r1 = 1.1 is probably as far as I'd want to go due to spike height
 **calculations for 3D printed models should use double
 
 
-change body_0 to body0? 
-(using body as a surface name is a bit weird)
-look at current usage and naming convention and standardize
+dot notation for new surfaces created (from another surface) during attach with holes, ...
+use .0 (blender uses .000 and unreal uses 0)
+a fixed length digit string implies limitation or requires diversion beyond that, so no
+/ submesh/surface separator (parent/child relationship) from brep
+    extended_name
+    required in Surface, used in Mesh
+_ surface series separator (items in a series, body_0, bSurfacesDistinct)
+    series_suffix
+    model primitive usage
+. instance separator (instances of an item)
+    instance_suffix
+    application usage
+should this surface name construction/scheme be centralized? where?
+
+
+extrusion does not need extentZ unless ends can be left off, same with cylinder
+    if ends left off, should return halfedge ranges of distinct sides/ends
+    just closing it off automatically encodes that in the mesh
+    *decide finally on whether all primtives are always produced as closed meshes, and whether that applies to all meshes in general, open only allowed during construction
+extrusion should have bSurfacesDistinct to control normal generation
+    would be nice to have that encoded in polygon, sections
+polygonwithholes is a polygon, polygon would then need to have virtual, ...
+polygonwithholes probably doesn't need area, ...; different use case
+
+
+primitive flags instead of separate boolean fields?
+then they can be ored and the semantic values make them more readable
+currently orientation (bVertex, but could then handle both face and edge), bSurfacesDistinct, and bLinear
+
+bSmooth
+indicate whether all faces should be created as part of a single/whole/complete surface or in separate/independent/distinct surfaces
 
 
 more Extent auxiliary classes for closed/banded?

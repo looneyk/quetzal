@@ -6,14 +6,8 @@
 //------------------------------------------------------------------------------
 
 #include "mesh_geometry.hpp"
-#include "mesh_util.hpp"
 #include "mesh_texcoord.hpp"
 #include "quetzal/common/string_util.hpp"
-#include "quetzal/math/DimensionReducer.hpp"
-#include "quetzal/geometry/Line.hpp"
-#include "quetzal/geometry/Plane.hpp"
-#include "quetzal/geometry/Polygon.hpp"
-#include "quetzal/geometry/intersect.hpp"
 #include <map>
 
 namespace quetzal::brep
@@ -144,7 +138,8 @@ void quetzal::brep::attach(M& mesh, id_type idFaceA, id_type idFaceB, bool bSurf
     assert(!faceB.deleted());
 
     // Apply face A normal to transferred vertices
-    auto normal = faceA.attributes().normal();
+    typename M::face_attributes_type af = faceA.attributes();
+    auto normal = af.normal();
 
     // Fix face id's and normals
     for (auto& halfedge : faceB.halfedges())
@@ -168,7 +163,7 @@ void quetzal::brep::attach(M& mesh, id_type idFaceA, id_type idFaceB, bool bSurf
 
     for (const auto& hole : faceB.holes())
     {
-        id_type idFace = mesh.create_face(idSurface, hole.halfedge_id(), {normal});
+        id_type idFace = mesh.create_face(idSurface, hole.halfedge_id(), af);
         auto& face = mesh.face(idFace);
 
         for (auto& halfedge : face.halfedges())
@@ -198,7 +193,9 @@ void quetzal::brep::attach(M& mesh, id_type idFaceA, id_type idFaceB, bool bSurf
         }
     }
 
-    mesh.remove_face(idFaceB);
+    // All of faceB's halfedges and vertices have been repurposed
+    mesh.unlink_face(idFaceB);
+    faceB.set_deleted();
     return;
 }
 

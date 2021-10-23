@@ -5,6 +5,7 @@
 // Sphere.hpp
 //------------------------------------------------------------------------------
 
+#include "Partition.hpp"
 #include "Point.hpp"
 #include <iostream>
 
@@ -13,7 +14,7 @@ namespace quetzal::geometry
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    class Sphere
+    class Sphere : public Partition<Traits>
     {
     public:
 
@@ -35,8 +36,8 @@ namespace quetzal::geometry
 
         point_type point(value_type azimuth, value_type elevation) const;
 
-        // Closed interval test
-        bool contains(const point_type& point);
+        // Returns -1, 0, 1: interior, boundary, exterior
+        int compare(const point_type& point) const override;
 
     private:
 
@@ -52,6 +53,7 @@ namespace quetzal::geometry
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Sphere<Traits>::Sphere(const point_type& center, const value_type& radius) :
+    Partition<Traits>(),
     m_center(center),
     m_radius(radius)
 {
@@ -96,9 +98,17 @@ typename quetzal::geometry::Sphere<Traits>::point_type quetzal::geometry::Sphere
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Sphere<Traits>::contains(const point_type& point)
+int quetzal::geometry::Sphere<Traits>::compare(const point_type& point)
 {
-    return float_le((point - m_center).norm_squared(), m_radius * m_radius);
+    value_type d2 = (point - m_center).norm_squared();
+    value_type r2 = m_radius * m_radius;
+
+    if (float_eq(d2, r2))
+    {
+        return 0;
+    }
+
+    return d2 < r2 ? -1 : 1; // d2 <=> r2 ...
 }
 
 //------------------------------------------------------------------------------

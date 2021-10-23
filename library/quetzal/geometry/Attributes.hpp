@@ -92,6 +92,7 @@ namespace quetzal::geometry
         static bool validate_bitangent(const vector_type& bitangent, std::string& error);
     };
 
+    // requires A and B are Attributes with position ...
     template<typename A, typename B>
     bool coincident(const A& a, const B& b);
 
@@ -107,6 +108,7 @@ namespace quetzal::geometry
         using typename Attributes<Traits>::texcoord_type;
         using typename Attributes<Traits>::matrix_type;
         using typename Attributes<Traits>::transform_texcoord_type;
+        using Attributes<Traits>::transform_texcoord_null;
 
         Position() = default;
         Position(const point_type& position);
@@ -152,6 +154,7 @@ namespace quetzal::geometry
         using typename Attributes<Traits>::texcoord_type;
         using typename Attributes<Traits>::matrix_type;
         using typename Attributes<Traits>::transform_texcoord_type;
+        using Attributes<Traits>::transform_texcoord_null;
 
         PositionNormal() = default;
         PositionNormal(const point_type& position, const vector_type& normal);
@@ -202,6 +205,7 @@ namespace quetzal::geometry
         using typename Attributes<Traits>::texcoord_type;
         using typename Attributes<Traits>::matrix_type;
         using typename Attributes<Traits>::transform_texcoord_type;
+        using Attributes<Traits>::transform_texcoord_null;
 
         PositionNormalTexture() = default;
         PositionNormalTexture(const point_type& position, const vector_type& normal, const texcoord_type& texcoord);
@@ -257,6 +261,7 @@ namespace quetzal::geometry
         using typename Attributes<Traits>::texcoord_type;
         using typename Attributes<Traits>::matrix_type;
         using typename Attributes<Traits>::transform_texcoord_type;
+        using Attributes<Traits>::transform_texcoord_null;
 
         PositionNormalTextureTangent() = default;
         PositionNormalTextureTangent(const point_type& position, const vector_type& normal, const texcoord_type& texcoord, const vector_type& tangent);
@@ -317,6 +322,7 @@ namespace quetzal::geometry
         using typename Attributes<Traits>::texcoord_type;
         using typename Attributes<Traits>::matrix_type;
         using typename Attributes<Traits>::transform_texcoord_type;
+        using Attributes<Traits>::transform_texcoord_null;
 
         Normal() = default;
         Normal(const vector_type& normal);
@@ -362,6 +368,7 @@ namespace quetzal::geometry
         using typename Attributes<Traits>::texcoord_type;
         using typename Attributes<Traits>::matrix_type;
         using typename Attributes<Traits>::transform_texcoord_type;
+        using Attributes<Traits>::transform_texcoord_null;
 
         NormalTangent() = default;
         NormalTangent(const vector_type& normal, const vector_type& tangent);

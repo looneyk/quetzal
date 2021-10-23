@@ -5,6 +5,7 @@
 // Circle.hpp
 //------------------------------------------------------------------------------
 
+#include "Partition.hpp"
 #include "Point.hpp"
 #include <iostream>
 
@@ -13,7 +14,7 @@ namespace quetzal::geometry
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    class Circle
+    class Circle : public Partition<Traits>
     {
     public:
 
@@ -21,26 +22,28 @@ namespace quetzal::geometry
         using point_type = Point<Traits>;
 
         Circle() = default;
-        Circle(const point_type& point, const value_type& radius);
+        Circle(const point_type& center, const value_type& radius);
         Circle(const Circle&) = default;
+        Circle(Circle&&) = default;
         ~Circle() = default;
 
         Circle& operator=(const Circle&) = default;
+        Circle& operator=(Circle&&) = default;
 
-        point_type point() const;
-        void set_point(const point_type& point);
+        point_type center() const;
+        void set_center(const point_type& center);
 
         value_type radius() const;
         void set_radius(const value_type& radius);
 
-        point_type point(value_type r, value_type phi) const;
+        point_type point(value_type phi) const;
 
-        // Closed interval test
-        bool contains(const point_type& point);
+        // Returns -1, 0, 1: interior, boundary, exterior
+        virtual int compare(const point_type& point) const = 0;
 
     private:
 
-        point_type m_point;
+        point_type m_center;
         value_type m_radius;
     };
 
@@ -51,24 +54,25 @@ namespace quetzal::geometry
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::geometry::Circle<Traits>::Circle(const point_type& point, const value_type& radius) :
-    m_point(point),
+quetzal::geometry::Circle<Traits>::Circle(const point_type& center, const value_type& radius) :
+    Partition<Traits>(),
+    m_center(center),
     m_radius(radius)
 {
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::geometry::Circle<Traits>::point_type quetzal::geometry::Circle<Traits>::point() const
+typename quetzal::geometry::Circle<Traits>::point_type quetzal::geometry::Circle<Traits>::center() const
 {
-    return m_point;
+    return m_center;
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-void quetzal::geometry::Circle<Traits>::set_point(const point_type& point)
+void quetzal::geometry::Circle<Traits>::set_center(const point_type& center)
 {
-    m_point = point;
+    m_center = center;
     return;
 }
 
@@ -89,36 +93,42 @@ void quetzal::geometry::Circle<Traits>::set_radius(const value_type& radius)
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-typename quetzal::geometry::Circle<Traits>::point_type quetzal::geometry::Circle<Traits>::point(value_type r, value_type phi) const
+typename quetzal::geometry::Circle<Traits>::point_type quetzal::geometry::Circle<Traits>::point(value_type phi) const
 {
-    assert(float_le(abs(r), m_radius));
-
     if constexpr (Traits::dimension == 3)
     {
-        return {r * cos(phi), r * sin(phi), value_type(0)};
+        return {m_radius * cos(phi), m_radius * sin(phi), value_type(0)};
     }
     else if constexpr (Traits::dimension == 2)
     {
-        return {r * cos(phi), r * sin(phi)};
+        return {m_radius * cos(phi), m_radius * sin(phi)};
     }
     else
     {
-        static_assert(false, "Dimension out of range.");
+        static_assert(false, "Dimension not supported.");
     }
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Circle<Traits>::contains(const point_type& point)
+int quetzal::geometry::Circle<Traits>::compare(const point_type& point)
 {
-    return float_le((point - m_point).norm_squared(), m_radius * m_radius);
+    value_type d2 = (point - m_center).norm_squared();
+    value_type r2 = m_radius * m_radius;
+
+    if (float_eq(d2, r2))
+    {
+        return 0;
+    }
+
+    return d2 < r2 ? -1 : 1; // d2 <=> r2 ...
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
 std::ostream& quetzal::geometry::operator<<(std::ostream& os, const Circle<Traits>& circle)
 {
-    os << "[" << circle.point() << "], " << circle.radius();
+    os << "[" << circle.center() << "], " << circle.radius();
     return os;
 }
 

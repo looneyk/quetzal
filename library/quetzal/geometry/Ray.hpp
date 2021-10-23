@@ -5,6 +5,7 @@
 // Ray.hpp
 //------------------------------------------------------------------------------
 
+#include "Partition.hpp"
 #include "Point.hpp"
 #include "quetzal/math/Vector.hpp"
 #include "quetzal/math/floating_point.hpp"
@@ -19,7 +20,7 @@ namespace quetzal::geometry
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    class Ray
+    class Ray : public Partition<Traits>
     {
     public:
 
@@ -46,7 +47,7 @@ namespace quetzal::geometry
 
         point_type point(value_type t) const;
 
-        bool contains(const point_type& point) const;
+        int compare(const point_type& point) const override;
 
         Point<Traits> projection(const Point<Traits>& point) const;
         value_type projection_parameter(const Point<Traits>& point) const;
@@ -65,6 +66,7 @@ namespace quetzal::geometry
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Ray<Traits>::Ray(const point_type& point, const vector_type& direction) :
+    Partition<Traits>(),
     m_endpoint(point),
     m_direction(direction)
 {
@@ -120,10 +122,15 @@ typename quetzal::geometry::Ray<Traits>::point_type quetzal::geometry::Ray<Trait
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Ray<Traits>::contains(const point_type& point) const
+int quetzal::geometry::Ray<Traits>::compare(const point_type& point) const
 {
+    if (vector_eq(point, m_endpoint))
+    {
+        return 0;
+    }
+
     value_type t = dot(point - m_endpoint, m_direction);
-    return math::float_ge0(t) && vector_eq(point, this->point(t));
+    return math::float_ge0(t) && vector_eq(point, this->point(t)) ? -1 : 1;
 }
 
 //------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ namespace quetzal::geometry
     typename V::value_type triangle_area(const V& a, const V& b, const V& c);
 
     template<typename V> requires (V::dimension == 3)
-    typename V::value_type triangle_area(const V& a, const V& b, const V& c, const V& normal);
+    typename V::value_type triangle_area(const V& a, const V& b, const V& c);
 
     // Based on implied winding around positive z-axis
     template<typename V> requires (V::dimension == 2)
@@ -82,7 +82,14 @@ int quetzal::geometry::triangle_compare(const V& a, const V& b, const V& c, cons
     }
     else if constexpr (V::dimension == 3)
     {
-        math::DimensionReducer<typename V::traits_type> dr(normalize(cross(b - a, c - a)));
+        V normal = normalize(cross(b - a, c - a));
+        Plane<typename V::traits_type> plane(a, normal);
+        if (!plane.contains(point))
+        {
+            return 1;
+        }
+
+        math::DimensionReducer<typename V::traits_type> dr(normal);
         return internal::triangle_region_contains(dr.reduce(a), dr.reduce(b), dr.reduce(c), dr.reduce(point)) ? -1 : 1;
     }
 }
@@ -91,27 +98,7 @@ int quetzal::geometry::triangle_compare(const V& a, const V& b, const V& c, cons
 template<typename V>
 bool quetzal::geometry::triangle_contains(const V& a, const V& b, const V& c, const V& point)
 {
-    if (triangle_degenerate(a, b, c))
-    {
-        return false;
-    }
-
-    if constexpr (V::dimension == 2)
-    {
-        return internal::triangle_region_contains(a, b, c, point);
-    }
-    else if constexpr (V::dimension == 3)
-    {
-        V normal = normalize(cross(b - a, c - a));
-        Plane<typename V::traits_type> plane(a, normal);
-        if (!plane.contains(point))
-        {
-            return false;
-        }
-
-        math::DimensionReducer<typename V::traits_type> dr(normal);
-        return internal::triangle_region_contains(dr.reduce(a), dr.reduce(b), dr.reduce(c), dr.reduce(point));
-    }
+    return triangle_compare(a, b, c, point) <= 0;
 }
 
 //------------------------------------------------------------------------------
@@ -151,7 +138,7 @@ typename V::value_type quetzal::geometry::triangle_area(const V& a, const V& b, 
 
 //------------------------------------------------------------------------------
 template<typename V> requires (V::dimension == 3)
-typename V::value_type quetzal::geometry::triangle_area(const V& a, const V& b, const V& c, const V& normal)
+typename V::value_type quetzal::geometry::triangle_area(const V& a, const V& b, const V& c)
 {
     return cross(b - a, c - a).norm() / typename V::value_type(2);
 }

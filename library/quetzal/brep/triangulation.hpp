@@ -10,8 +10,7 @@
 #include "mesh_util.hpp"
 #include "quetzal/math/DimensionReducer.hpp"
 #include "quetzal/triangulation/triangulation.hpp"
-
-#include <iostream> // ...
+#include <cassert>
 
 namespace quetzal::brep
 {
@@ -33,7 +32,7 @@ namespace quetzal::brep
 
     // Delaunay triangulation of all faces in a surface
     template<typename M>
-    void triangulate_surface(M& mesh, id_type idSSurface);
+    void triangulate_surface(M& mesh, id_type idSurface);
 
     // Uses only existing vertex positions
     // Simplification that only works when it is known that the polygon is convex
@@ -207,11 +206,11 @@ void quetzal::brep::triangulate_face_cdt(M& mesh, id_type idFace)
     // Delete original face leaving its halfedges, vertices, and surface
     if (idSubmesh != nullid)
     {
-        mesh.submesh(idSubmesh).remove_face(idFace);
+        mesh.submesh(idSubmesh).unlink_face(idFace);
     }
     if (idSurface != nullid)
     {
-        mesh.surface(idSurface).remove_face(idFace);
+        mesh.surface(idSurface).unlink_face(idFace);
     }
     mesh.face(idFace).set_deleted();
 
@@ -292,7 +291,7 @@ void quetzal::brep::triangulate_face_cdt(M& mesh, id_type idFace)
 
 //------------------------------------------------------------------------------
 template<typename M>
-void quetzal::brep::triangulate_surface(M& mesh, id_type idSSurface)
+void quetzal::brep::triangulate_surface(M& mesh, id_type idSurface)
 {
     // triangulate_surface ...
     // add surface border as constrained edges
@@ -448,7 +447,9 @@ void quetzal::brep::triangulate_face_central_vertex(M& mesh, id_type idFace, con
         idHalfedge = idHalfedgeNext;
     }
 
-    mesh.remove_face(idFace);
+    // All of original face's halfedges and vertices have been repurposed
+    mesh.unlink_face(idFace);
+    mesh.face(idFace).set_deleted();
     return;
 }
 

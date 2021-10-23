@@ -7,6 +7,7 @@
 
 #include "mesh_attributes.hpp"
 #include "quetzal/brep/mesh_geometry.hpp"
+#include "quetzal/brep/mesh_texcoord.hpp"
 #include "quetzal/geometry/OrientedPoint.hpp"
 #include "quetzal/geometry/OrientedPolygon.hpp"
 #include "quetzal/geometry/Polygon.hpp"
@@ -2423,7 +2424,7 @@ quetzal::model::vertices_attributes_type<M> quetzal::model::vertices_attributes(
     size_type nAzimuth = polygon.edge_count();
     vertices_attributes_type<M> avs(nAzimuth + 1);
 
-    auto center = polygon.center();
+    auto center = polygon.centroid();
 
     for (size_type i = 0; i < nAzimuth; ++i)
     {
@@ -2446,7 +2447,7 @@ quetzal::model::vertices_attributes_type<M> quetzal::model::vertices_attributes(
     size_type nAzimuth = polygon.edge_count();
     vertices_attributes_type<M> avs(nAzimuth + 1);
 
-    auto center = polygon.center();
+    auto center = polygon.centroid();
     center.set_z(z);
 
     for (size_type i = 0; i < nAzimuth; ++i)

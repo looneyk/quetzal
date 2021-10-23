@@ -12,7 +12,6 @@
 #include "mesh_geometry.hpp"
 #include "mesh_util.hpp"
 #include "mesh_inversion.hpp"
-#include "quetzal/geometry/Plane.hpp"
 #include "quetzal/geometry/intersect.hpp"
 #include <algorithm>
 #include <array>
@@ -56,21 +55,13 @@ namespace quetzal::brep
 
     // A && !B || !A && B
     template<typename Traits>
-    id_type boolean_exclusive_or(Mesh<Traits>& mesh, id_type idSubmeshA, id_type idSubmeshB, const std::string& name);
+    id_type boolean_symmetric_difference(Mesh<Traits>& mesh, id_type idSubmeshA, id_type idSubmeshB, const std::string& name);
 
     // Create a new or use an existing submesh with name for the result
     // Surface names in the result will typically consist of some from each original submesh
     // Returns submesh id of the result
     template<typename Traits>
     id_type boolean_operation(Mesh<Traits>& mesh, id_type idSubmeshA, id_type idSubmeshB, const std::string& name, connect_function_type<Traits> connect, disjoint_function_type<Traits> disjoint, inclusion_function_type<Traits> inclusion);
-
-    // planar boolean operations ...
-
-//    template<typename Traits>
-//    id_type clip(Mesh<Traits>& mesh, const geometry::Plane<typename Traits::vector_traits>& plane, const std::string& nameSurface = "clip");
-
-//    template<typename Traits>
-//    id_type split(Mesh<Traits>& mesh, const geometry::Plane<typename Traits::vector_traits>& plane, const std::string& nameSurface0 = "split0", const std::string& nameSurface1 = "split1");
 
     // Implementation functions
 
@@ -215,7 +206,7 @@ quetzal::id_type quetzal::brep::boolean_difference(Mesh<Traits>& mesh, id_type i
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-quetzal::id_type quetzal::brep::boolean_exclusive_or(Mesh<Traits>& mesh, id_type idSubmeshA, id_type idSubmeshB, const std::string& name)
+quetzal::id_type quetzal::brep::boolean_symmetric_difference(Mesh<Traits>& mesh, id_type idSubmeshA, id_type idSubmeshB, const std::string& name)
 {
     connect_function_type<Traits> connect = [](Mesh<Traits>& mesh, id_type idHalfedgeInteriorA, id_type idHalfedgeExteriorA, id_type idHalfedgeInteriorB, id_type idHalfedgeExteriorB) -> void
     {
@@ -393,7 +384,7 @@ void quetzal::brep::halfedge_intersection(Mesh<Traits>& mesh, const Submesh<Trai
     // this is a start, but also need to handle face - face intersections at only one point ...
     if (vector_eq(point, halfedge.attributes().position()))
     {
-        bool bExterior = to_plane(mesh.face(idFace)).exterior(halfedge.next().attributes().position());
+        bool bExterior = to_halfspace(mesh.face(idFace)).exterior(halfedge.next().attributes().position());
         if (bExterior)
         {
             intersections.emplace(idFace, halfedge.id());
@@ -403,7 +394,7 @@ void quetzal::brep::halfedge_intersection(Mesh<Traits>& mesh, const Submesh<Trai
     }
     else if (vector_eq(point, halfedge.next().attributes().position()))
     {
-        bool bExterior = to_plane(mesh.face(idFace)).exterior(halfedge.attributes().position());
+        bool bExterior = to_halfspace(mesh.face(idFace)).exterior(halfedge.attributes().position());
         if (bExterior)
         {
             intersections.emplace(idFace, halfedge.partner_id());
@@ -465,7 +456,7 @@ void quetzal::brep::split_intersection(Mesh<Traits>& mesh, id_type idFaceA, id_t
 
     // Add intersections for exterior halfedges directed away from face
     const auto& halfedgeB = mesh.halfedge(idHalfedgeB);
-    bool bExterior = to_plane(mesh.face(idFaceA)).exterior(halfedgeB.attributes().position());
+    bool bExterior = to_halfspace(mesh.face(idFaceA)).exterior(halfedgeB.attributes().position());
     intersections.emplace(idFaceA, bExterior ? halfedgeB.partner_id() : halfedgeB.next_id());
     return;
 }

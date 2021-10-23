@@ -378,11 +378,11 @@ bool quetzal::math::MatrixTraits<T, M, N>::float_zero(const rep_type& rep, int u
 {
     if constexpr (I == 0)
     {
-        return quetzal::math::vector_eq0(get_row<0>(rep), ulp);
+        return vector_eq0(get_row<0>(rep), ulp);
     }
     else
     {
-        return quetzal::math::vector_eq0(get_row<I>(rep), ulp) && float_zero<I - 1>(rep, ulp);
+        return vector_eq0(get_row<I>(rep), ulp) && float_zero<I - 1>(rep, ulp);
     }
 }
 
@@ -393,11 +393,11 @@ bool quetzal::math::MatrixTraits<T, M, N>::float_equals(const rep_type& lhs, con
 {
     if constexpr (I == 0)
     {
-        return quetzal::math::vector_eq(get_row<0>(lhs), get_row<0>(rhs), ulp);
+        return vector_eq(get_row<0>(lhs), get_row<0>(rhs), ulp);
     }
     else
     {
-        return quetzal::math::vector_eq(get_row<I>(lhs), ge_rowt<I>(rhs), ulp) && float_equals<I - 1>(lhs, rhs, ulp);
+        return vector_eq(get_row<I>(lhs), ge_rowt<I>(rhs), ulp) && float_equals<I - 1>(lhs, rhs, ulp);
     }
 }
 

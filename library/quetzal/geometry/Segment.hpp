@@ -5,6 +5,7 @@
 // Segment.hpp
 //------------------------------------------------------------------------------
 
+#include "Partition.hpp"
 #include "Point.hpp"
 #include "quetzal/math/Vector.hpp"
 #include "quetzal/math/floating_point.hpp"
@@ -18,16 +19,16 @@ namespace quetzal::geometry
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    class Segment
+    class Segment : public Partition<Traits>
     {
     public:
 
         using traits_type = Traits;
+        using size_type = Traits::size_type;
         using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
         using points_type = std::array<point_type, 2>;
-        using size_type = Traits::size_type;
 
         Segment() = default;
         Segment(const points_type& points);
@@ -50,7 +51,7 @@ namespace quetzal::geometry
 
         point_type point(value_type t) const;
 
-        bool contains(const point_type& point) const;
+        int compare(const point_type& point) const override;
 
         Point<Traits> projection(const Point<Traits>& point) const;
         value_type projection_parameter(const Point<Traits>& point) const;
@@ -72,6 +73,7 @@ namespace quetzal::geometry
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Segment<Traits>::Segment(const points_type& points) :
+    Partition<Traits>(),
     m_endpoints(points),
     m_bDirection(false),
     m_direction()
@@ -160,10 +162,15 @@ typename quetzal::geometry::Segment<Traits>::point_type quetzal::geometry::Segme
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Segment<Traits>::contains(const point_type& point) const
+int quetzal::geometry::Segment<Traits>::compare(const point_type& point) const
 {
-    value_type t = dot(point - m_endpoints[0], vector()) / vector().norm_squared();
-    return math::float_clamped01(t) && vector_eq(point, this->point(t));
+    if (vector_eq(point, m_endpoints[0]) || vector_eq(point, m_endpoints[1]))
+    {
+        return 0;
+    }
+
+    value_type t = projection_parameter(point);
+    return math::float_clamped01(t) && vector_eq(point, this->point(t)) ? -1 : 1;
 }
 
 //------------------------------------------------------------------------------

@@ -18,28 +18,31 @@ namespace quetzal::geometry
     {
     public:
 
-        using value_type = Traits::value_type;
         using point_type = Point<Traits>;
 
         Box() = default;
         Box(const point_type& pointLower, const point_type& pointUpper);
         Box(const Box&) = default;
+        Box(Box&&) = default;
         ~Box() = default;
 
         Box& operator=(const Box&) = default;
+        Box& operator=(Box&&) = default;
 
         point_type lower() const;
         point_type upper() const;
 
-        void set_lower(const point_type& point) const;
-        void set_upper(const point_type& point) const;
+        void set_lower(const point_type& point);
+        void set_upper(const point_type& point);
         void set_bounds(const point_type& pointLower, const point_type& pointUpper);
 
-        // Closed interval test
-        bool contains(const point_type& point);
+        bool contains(const point_type& point) const; // interior || boundary
+
+        void print(std::ostream& os) const override;
 
     private:
 
+        bool ordered() const;
         void order();
 
         point_type m_pointLower;
@@ -106,7 +109,7 @@ bool quetzal::geometry::Box<Traits>::contains(const point_type& point)
 
     for (size_t i = 0; i < Traits::dimension; ++i)
     {
-        if constexpr (std::is_floating_point_v<value_type>)
+        if constexpr (std::is_floating_point_v<Traits::value_type>)
         {
             if (float_lt(point[i], m_pointLower[i]) || float_gt(point[i], m_pointUpper[i]))
             {
@@ -119,6 +122,29 @@ bool quetzal::geometry::Box<Traits>::contains(const point_type& point)
             {
                 return false;
             }
+        }
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+void quetzal::geometry::Box<Traits>::print(std::ostream& os) const
+{
+    os << "[" << m_pointLower << "] .. [" << m_pointUpper << "]";
+    return;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+bool quetzal::geometry::Box<Traits>::ordered()
+{
+    for (size_t i = 0; i < Traits::dimension; ++i)
+    {
+        if (m_pointLower[i] > m_pointUpper[i])
+        {
+            return false;
         }
     }
 

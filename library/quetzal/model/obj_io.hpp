@@ -79,14 +79,7 @@ void quetzal::model::read_obj(M& mesh, const std::filesystem::path& pathname)
             idSubmesh = mesh.create_submesh(wavefront_obj::ObjectNameDefault);
         }
 
-        if (!mesh.contains_surface(idSubmesh, name))
-        {
-            idSurface = mesh.create_surface(idSubmesh, name);
-        }
-        else
-        {
-            idSurface = mesh.surface_id(idSubmesh, name);
-        }
+        idSurface = mesh.get_surface_id(idSubmesh, name);
 
         if (mesh.surface(idSurface).empty() && !material.empty())
         {

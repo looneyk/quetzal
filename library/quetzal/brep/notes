@@ -2,19 +2,32 @@
 Implementation of mesh using a halfedge data structure
 --------------------------------------------------------------------------------
 
-dot notation for new surfaces created (from another surface) during attach with holes, ...
-use .0 (blender uses .000 and unreal uses 0)
-a fixed length digit string implies limitation or requires diversion beyond that, so no
+add_face could also go, delete or replace with insert_face
+
+split_face
+if halfspace were to provide a closing polygon, then boolean operations could be used to sew everything together
+clip - intersection
+split - similar to symmetric difference, but A - B | A - ~B, partition operation with a pair of halfspaces
+halfspace planes - infinite polygons, treat intersection same as polygon inclusion, don't think polygon vertices are needed there
+
+
+rename_surface should do just that, should assert and not move surface contents to existing surface
+what about:
+transfer_surface, checks for operation
+    rename_surface
+    move_surface
+    merge_surface
+
+
+when:
+    for (auto& face : surface.faces())
+set Elements flag and use it to prevent modification to m_face_ids
+no destructor, so can't tell when done
+
+
 / submesh/surface separator (parent/child relationship)
     extended_name
     required in Surface, used in Mesh
-_ surface series separator (items in a series, body_0, bSurfacesDistinct)
-    series_suffix
-    model primitive usage
-. instance separator (instances of an item)
-    instance_suffix
-    application usage
-should this surface name construction/scheme be centralized? where?
 
 
 get rid of non-const seams/perimeters accessors?
@@ -260,15 +273,6 @@ get all apps working again
 
 good: dev_20200613 and as updated with dev_20200619
 good: dev_20200703 with unchanged libraries from 20200627, before and after iterator merging
-
-
-primitive flags instead of separate boolean fields?
-then they can be ored and the semantic values make them more readable
-currently only orientation (bVertex, but could then handle both face and edge), SurfacesDistinct, and Linear
-
-still don't like either term, bSmooth or bAngular
-indicate whether all faces should be created as part of a single/whole/complete surface or in separate/independent/distinct surfaces
-for now start with bSurfacesDistinct
 
 
 use create_h_v in connect, not directly
@@ -540,6 +544,11 @@ detach_face/surface/submesh disconnects the element, but does not delete it
 remove_face/surface/submesh deletes the element and any containing elements if that results in them being empty
 delete_face/surface/submesh does a remove and in addition deletes all contained elements
 
+none of the three deals with disconnecting the face, setting partners to null
+from the naming, seems like detach should do this, but detach just handles submesh and surface
+
+more consistency in naming in each and across the three, Mesh, Submesh, Surface
+
 
 wherever surface/submesh deleted is checked, if !deleted, then assert !empty
 
@@ -554,6 +563,7 @@ compare the current add_xxx functions in mesh to their link counterparts
 
 vertex, halfedge, face, surface, submesh order
 or halfedge, vertex, face, ...
+former matches dimensionality, but latter give more importance to halfedge, the core data structure here
 
 
 mesh.append prefix not implemented

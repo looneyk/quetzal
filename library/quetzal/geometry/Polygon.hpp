@@ -6,8 +6,8 @@
 //------------------------------------------------------------------------------
 
 #include "AxisAlignedBoundingBox.hpp"
+#include "Partition.hpp"
 #include "Point.hpp"
-#include "Points.hpp"
 #include "Plane.hpp"
 #include "Segment.hpp"
 #include "triangle_util.hpp"
@@ -30,23 +30,19 @@ namespace quetzal::geometry
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    class Polygon
+    class Polygon : public Partition<Traits>
     {
     public:
 
         using traits_type = Traits;
+        using size_type = Traits::size_type;
         using value_type = Traits::value_type;
         using vector_type = math::Vector<Traits>;
         using point_type = Point<Traits>;
         using vertex_type = Point<Traits>;
-        using vertices_type = Points<Traits>;
+        using vertices_type = std::vector<vertex_type>;
         using edge_type = Segment<Traits>;
-        using size_type = Traits::size_type;
-
-        // this may be enough to disable plane ...
-        // but requires the ugly plane_type<> ...
-//        template<typename = std::enable_if_t<(Traits::dimension == 3)>>
-//        using plane_type = Plane<Traits> requires (Traits::dimension >= 3);
+        using matrix_type = math::Matrix<value_type, Traits::dimension + 1, Traits::dimension + 1>;
 
         Polygon() = default;
         explicit Polygon(size_type n);
@@ -89,17 +85,19 @@ namespace quetzal::geometry
         vector_type normal() const requires (Traits::dimension == 3);
         Plane<Traits> plane() const requires (Traits::dimension == 3);
 
-        // Returns -1, 0, 1: interior, on, exterior
-        // Exterior is defined by the direction of the normal as defined by the winding order
-        // This is more accurate than contains for points on the polygon edges
-        int compare(const point_type& point) const;
+        void transform(const matrix_type& matrix);
 
-        // Point is in the region defined by the polygon
-        // Results are indeterminate if the point is on a polygon edge
-        bool contains(const point_type& point) const requires (Traits::dimension == 2);
-        bool contains(const point_type& point) const requires (Traits::dimension == 3);
+        // Returns -1, 0, 1: interior, boundary, exterior
+        // Exterior is defined by the winding order
+        int compare(const point_type& point) const override;
 
         virtual void clear();
+
+        // Point is in the region defined by the polygon
+        // Results are indeterminate if the point is on an edge
+        // integrate these into compare ...
+        bool contains_(const point_type& point) const requires (Traits::dimension == 2);
+        bool contains_(const point_type& point) const requires (Traits::dimension == 3);
 
     private:
 
@@ -108,24 +106,6 @@ namespace quetzal::geometry
 
     template<typename Traits>
     Polygon<Traits> lerp(const Polygon<Traits>& a, const Polygon<Traits>& b, typename Traits::value_type t);
-
-    template<typename Traits>
-    Polygon<Traits>& operator*=(Polygon<Traits>& lhs, const math::Matrix<typename Traits::value_type, Traits::dimension, Traits::dimension>& rhs);
-
-    template<typename Traits>
-    Polygon<Traits>& operator*=(Polygon<Traits>& lhs, const math::Matrix<typename Traits::value_type, Traits::dimension + 1, Traits::dimension + 1>& rhs);
-
-    template<typename Traits>
-    Polygon<Traits> operator*(const math::Matrix<typename Traits::value_type, Traits::dimension, Traits::dimension>& lhs, const Polygon<Traits>& rhs);
-
-    template<typename Traits>
-    Polygon<Traits> operator*(const Polygon<Traits>& lhs, const math::Matrix<typename Traits::value_type, Traits::dimension, Traits::dimension>& rhs);
-
-    template<typename Traits>
-    Polygon<typename Traits::reduced_type> operator*(const math::Matrix<typename Traits::value_type, Traits::dimension, Traits::dimension>& lhs, const Polygon<typename Traits::reduced_type>& rhs);
-
-    template<typename Traits>
-    Polygon<Traits> operator*(const Polygon<Traits>& lhs, const math::Matrix<typename Traits::value_type, Traits::dimension + 1, Traits::dimension + 1>& rhs);
 
     template<typename Traits>
     std::ostream& operator<<(std::ostream& os, const Polygon<Traits>& polygon);
@@ -142,6 +122,7 @@ quetzal::geometry::Polygon<Traits>::Polygon(size_type n) :
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Polygon<Traits>::Polygon(std::initializer_list<vertex_type> points) :
+    Partition<Traits>(),
     m_vertices(points)
 {
 }
@@ -150,6 +131,7 @@ quetzal::geometry::Polygon<Traits>::Polygon(std::initializer_list<vertex_type> p
 template<typename Traits>
 template<typename InputIterator>
 quetzal::geometry::Polygon<Traits>::Polygon(InputIterator first, InputIterator last) :
+    Partition<Traits>(),
     m_vertices()
 {
     for (auto i = first; i != last; ++i)
@@ -360,6 +342,18 @@ quetzal::geometry::Plane<Traits> quetzal::geometry::Polygon<Traits>::plane() con
 
 //------------------------------------------------------------------------------
 template<typename Traits>
+void quetzal::geometry::Polygon<Traits>::transform(const matrix_type& matrix)
+{
+    for (auto& vertex : m_vertices)
+    {
+        vertex *= matrix;
+    }
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
 int quetzal::geometry::Polygon<Traits>::compare(const point_type& point) const
 {
     for (size_t i = 0; i < edge_count(); ++i)
@@ -371,12 +365,20 @@ int quetzal::geometry::Polygon<Traits>::compare(const point_type& point) const
         }
     }
 
-    return contains(point) ? -1 : 1;
+    return contains_(point) ? -1 : 1;
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const requires (Traits::dimension == 2)
+void quetzal::geometry::Polygon<Traits>::clear()
+{
+    m_vertices.clear();
+    return;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+bool quetzal::geometry::Polygon<Traits>::contains_(const point_type& point) const requires (Traits::dimension == 2)
 {
     // Return >0: left, ==0: on, <0: right for p2 relative to the line through p0 and p1
     auto left = [](point_type p0, point_type p1, point_type p2) -> int
@@ -413,9 +415,9 @@ bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const
 
 //------------------------------------------------------------------------------
 template<typename Traits>
-bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const requires (Traits::dimension == 3)
+bool quetzal::geometry::Polygon<Traits>::contains_(const point_type& point) const requires (Traits::dimension == 3)
 {
-    if (!plane().contains(point)) // polygon.planar() test, assert? ...
+    if (!planar() || !plane().contains(point))
     {
         return false;
     }
@@ -425,15 +427,7 @@ bool quetzal::geometry::Polygon<Traits>::contains(const point_type& point) const
     Polygon<typename Traits::reduced_traits> polygon;
     std::transform(m_vertices.begin(), m_vertices.end(), std::back_inserter(polygon.vertices()), [&](const math::Vector<Traits>& v) -> math::Vector<Traits::reduced_traits> { return dr.reduce(v); });
 
-    return polygon.contains(dr.reduce(point));
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-void quetzal::geometry::Polygon<Traits>::clear()
-{
-    m_vertices.clear();
-    return;
+    return polygon.contains_(dr.reduce(point));
 }
 
 //------------------------------------------------------------------------------
@@ -448,86 +442,6 @@ quetzal::geometry::Polygon<Traits> quetzal::geometry::lerp(const Polygon<Traits>
     for (size_t i = 0; i < n; ++i)
     {
         polygon.vertex(i) = lerp(a.vertex(i), b.vertex(i), t);
-    }
-
-    return polygon;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-quetzal::geometry::Polygon<Traits>& quetzal::geometry::operator*=(Polygon<Traits>& lhs, const math::Matrix<typename Traits::value_type, Traits::dimension, Traits::dimension>& rhs)
-{
-    for (size_t i = 0; i < lhs.vertex_count(); ++i)
-    {
-        lhs.vertex(i) *= rhs;
-    }
-
-    return lhs;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-quetzal::geometry::Polygon<Traits>& quetzal::geometry::operator*=(Polygon<Traits>& lhs, const math::Matrix<typename Traits::value_type, Traits::dimension + 1, Traits::dimension + 1>& rhs)
-{
-    for (size_t i = 0; i < lhs.vertex_count(); ++i)
-    {
-        lhs.vertex(i) *= rhs;
-    }
-
-    return lhs;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-quetzal::geometry::Polygon<Traits> quetzal::geometry::operator*(const math::Matrix<typename Traits::value_type, Traits::dimension, Traits::dimension>& lhs, const Polygon<Traits>& rhs)
-{
-    Polygon<Traits> polygon(rhs.vertex_count());
-
-    for (size_t i = 0; i < rhs.vertex_count(); ++i)
-    {
-        polygon.vertex(i) = lhs * rhs.vertex(i);
-    }
-
-    return polygon;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-quetzal::geometry::Polygon<Traits> quetzal::geometry::operator*(const Polygon<Traits>& lhs, const math::Matrix<typename Traits::value_type, Traits::dimension, Traits::dimension>& rhs)
-{
-    Polygon<Traits> polygon(lhs.vertex_count());
-
-    for (size_t i = 0; i < lhs.vertex_count(); ++i)
-    {
-        polygon.vertex(i) = lhs.vertex(i) * rhs;
-    }
-
-    return polygon;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-quetzal::geometry::Polygon<typename Traits::reduced_type> quetzal::geometry::operator*(const math::Matrix<typename Traits::value_type, Traits::dimension, Traits::dimension>& lhs, const Polygon<typename Traits::reduced_type>& rhs)
-{
-    Polygon<typename Traits::reduced_type> polygon(rhs.vertex_count());
-
-    for (size_t i = 0; i < rhs.vertex_count(); ++i)
-    {
-        polygon.vertex(i) = lhs * rhs.vertex(i);
-    }
-
-    return polygon;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-quetzal::geometry::Polygon<Traits> quetzal::geometry::operator*(const Polygon<Traits>& lhs, const math::Matrix<typename Traits::value_type, Traits::dimension + 1, Traits::dimension + 1>& rhs)
-{
-    Polygon<Traits> polygon(lhs.vertex_count());
-
-    for (size_t i = 0; i < lhs.vertex_count(); ++i)
-    {
-        polygon.vertex(i) = lhs.vertex(i) * rhs;
     }
 
     return polygon;

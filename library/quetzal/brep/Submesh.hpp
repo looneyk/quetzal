@@ -29,9 +29,10 @@ namespace quetzal::brep
 
         using traits_type = Traits;
         using mesh_type = M;
-        using value_type = traits_type::value_type;
-        using point_type = traits_type::point_type;
-        using vector_type = mesh_type::vector_type;
+        using size_type = Traits::size_type;
+        using value_type = Traits::value_type;
+        using vector_type = Traits::vector_type;
+        using point_type = Traits::point_type;
         using vertex_type = mesh_type::vertex_type;
         using face_type = mesh_type::face_type;
         using face_ids_type = std::set<id_type>;
@@ -41,7 +42,6 @@ namespace quetzal::brep
         using surfaces_type = Elements<mesh_type, surface_type, surface_ids_type::iterator>;
         using index_type = mesh_type::index_type;
         using attributes_type = mesh_type::submesh_attributes_type;
-        using size_type = traits_type::size_type;
 
         Submesh();
         Submesh(mesh_type& mesh, id_type id, const std::string& name, const attributes_type& attributes, const Properties& properties = {});
@@ -70,9 +70,8 @@ namespace quetzal::brep
 
         bool contains_face(id_type idFace) const;
         void add_face(id_type idFace); // add face to list
-        void remove_face(id_type idFace); // remove face from list
-        void link_face(id_type idFace); // add face to list and set face submesh
-        void unlink_face(id_type idFace); // remove face from list and clear face submesh
+        void link_face(id_type idFace); // add face to list and set face submesh id
+        void unlink_face(id_type idFace); // remove face from list and clear face submesh id
 
         size_type surface_count() const;
 
@@ -100,11 +99,8 @@ namespace quetzal::brep
         bool contains_surface(const std::string& name) const;
         bool contains_surface(id_type idSurface) const;
         void add_surface(id_type idSurface); // add surface to list
-        void remove_surface(id_type idSurface); // remove surface from list
-        void link_surface(id_type idSurface); // add surface to list and set surface submesh
-        void unlink_surface(id_type idSurface); // remove surface from list and clear surface submesh
-
-        void remove_surfaces();
+        void link_surface(id_type idSurface); // add surface to list and set surface submesh id
+        void unlink_surface(id_type idSurface); // remove surface and surface faces from list and clear surface and face submesh ids
 
         // renames only references in this submesh, not those in mesh
         void rename_surface(id_type idSurface, const std::string& replacement);
@@ -121,7 +117,6 @@ namespace quetzal::brep
         bool empty() const;
         void clear(); // Clears contents, but does not change id or name
 
-        bool unmarked() const;
         void reset() const override; // Flags
 
         // Internal use, only by Mesh
@@ -293,15 +288,6 @@ void quetzal::brep::Submesh<Traits, M>::add_face(id_type idFace)
 
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
-void quetzal::brep::Submesh<Traits, M>::remove_face(id_type idFace)
-{
-    assert(m_face_ids.contains(idFace));
-    m_face_ids.erase(idFace);
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
 void quetzal::brep::Submesh<Traits, M>::link_face(id_type idFace)
 {
     assert(m_pmesh != nullptr);
@@ -315,7 +301,10 @@ template<typename Traits, typename M>
 void quetzal::brep::Submesh<Traits, M>::unlink_face(id_type idFace)
 {
     assert(m_pmesh != nullptr);
-    remove_face(idFace);
+    assert(idFace != nullid);
+    assert(m_face_ids.contains(idFace));
+
+    m_face_ids.erase(idFace);
     m_pmesh->face(idFace).set_submesh_id(nullid);
     return;
 }
@@ -447,7 +436,6 @@ bool quetzal::brep::Submesh<Traits, M>::contains_surface(const std::string& name
 template<typename Traits, typename M>
 bool quetzal::brep::Submesh<Traits, M>::contains_surface(id_type idSurface) const
 {
-    assert(m_pmesh != nullptr);
     return m_surface_ids.contains(idSurface);
 }
 
@@ -456,26 +444,11 @@ template<typename Traits, typename M>
 void quetzal::brep::Submesh<Traits, M>::add_surface(id_type idSurface)
 {
     assert(idSurface != nullid);
-
     assert(!m_surface_ids.contains(idSurface));
-    assert(!m_surface_index.contains(m_pmesh->surface(idSurface).name()));
+    assert(!m_surface_index.contains(surface(idSurface).name()));
 
     m_surface_ids.insert(idSurface);
-    m_surface_index[m_pmesh->surface(idSurface).name()] = idSurface;
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-void quetzal::brep::Submesh<Traits, M>::remove_surface(id_type idSurface)
-{
-    assert(m_pmesh != nullptr);
-    assert(idSurface != nullid);
-    assert(m_surface_ids.contains(idSurface));
-    assert(m_surface_index.contains(m_pmesh->surface(idSurface).name()));
-
-    m_surface_ids.erase(idSurface);
-    m_surface_index.erase(m_pmesh->surface(idSurface).name());
+    m_surface_index[surface(idSurface).name()] = idSurface;
     return;
 }
 
@@ -483,9 +456,8 @@ void quetzal::brep::Submesh<Traits, M>::remove_surface(id_type idSurface)
 template<typename Traits, typename M>
 void quetzal::brep::Submesh<Traits, M>::link_surface(id_type idSurface)
 {
-    assert(m_pmesh != nullptr);
     add_surface(idSurface);
-    m_pmesh->surface(idSurface).set_submesh_id(m_id);
+    surface(idSurface).set_submesh_id(m_id);
     return;
 }
 
@@ -493,26 +465,13 @@ void quetzal::brep::Submesh<Traits, M>::link_surface(id_type idSurface)
 template<typename Traits, typename M>
 void quetzal::brep::Submesh<Traits, M>::unlink_surface(id_type idSurface)
 {
-    assert(m_pmesh != nullptr);
-    remove_surface(idSurface);
-    m_pmesh->surface(idSurface).set_submesh_id(nullid);
-    return;
-}
+    assert(m_surface_ids.contains(idSurface));
+    assert(m_surface_index.contains(surface(idSurface).name()));
 
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-void quetzal::brep::Submesh<Traits, M>::remove_surfaces()
-{
-    for (auto& surface : m_surfaces)
-    {
-        for (auto& face : surface.faces())
-        {
-            face.set_surface_id(nullid);
-        }
-    }
+    m_surface_ids.erase(idSurface);
+    m_surface_index.erase(surface(idSurface).name());
 
-    m_surface_index.clear();
-    m_surface_ids.clear();
+    surface(idSurface).set_submesh_id(nullid);
     return;
 }
 
@@ -592,9 +551,7 @@ void quetzal::brep::Submesh<Traits, M>::append(const Submesh& submesh)
 template<typename Traits, typename M>
 bool quetzal::brep::Submesh<Traits, M>::empty() const
 {
-    assert(m_pmesh != nullptr);
     assert(m_surface_ids.empty() && m_face_ids.empty() || !m_surface_ids.empty() && !m_face_ids.empty());
-
     return m_surface_ids.empty();
 }
 
@@ -608,42 +565,10 @@ void quetzal::brep::Submesh<Traits, M>::clear()
     return;
 }
 
-//--------------------------------------------------------------------------
-template<typename Traits, typename M>
-bool quetzal::brep::Submesh<Traits, M>::unmarked() const
-{
-    assert(m_pmesh != nullptr);
-
-    if (marked())
-    {
-        return false;
-    }
-
-    for (const auto& surface : m_surfaces)
-    {
-        if (surface.marked())
-        {
-            return false;
-        }
-    }
-
-    for (const auto& face : m_faces)
-    {
-        if (face.marked())
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
 void quetzal::brep::Submesh<Traits, M>::reset() const
 {
-    assert(m_pmesh != nullptr);
-
     for (auto& face : m_faces)
     {
         face.reset();

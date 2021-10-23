@@ -12,7 +12,6 @@
 #include "SurfaceName.hpp"
 #include "quetzal/brep/Submesh.hpp"
 #include "quetzal/brep/mesh_inversion.hpp"
-#include "quetzal/brep/mesh_geometry.hpp"
 #include "quetzal/brep/mesh_util.hpp"
 #include "quetzal/brep/validation.hpp"
 #include "quetzal/geometry/OrientedPolygon.hpp"
@@ -1105,7 +1104,6 @@ void quetzal::model::create_cylinder(M& mesh, const std::string& name, size_type
 
         M mm;
         create_cylinder(mm, name, nz, zLower, zUpper, polygon, {});
-        brep::invert(mm);
         m.append(mm);
 
         assert(m.halfedge(idHalfedgeHolesLower[i]).border());
@@ -2444,7 +2442,7 @@ void quetzal::model::create_icosahedron(M& mesh, const std::string& name, value_
 
     const std::vector<texcoord_type> texcoords =
     {
-        {T(0.5), T(1) - sqrt(T(3)) / T(2)},
+        {T(0.5), T(0)},
         {T(0), T(1)},
         {T(1), T(1)}
     };
@@ -2588,44 +2586,45 @@ void quetzal::model::create_geodesic_sphere(M& mesh, const std::string& name, va
     assert(radius > T(0));
     assert(nSubdivisions > 0);
 
-    M m;
-
     // Approximate a sphere by tessellating an icosahedron
 
+    M m;
     create_icosahedron(m, name, radius, bVertex, bSmooth);
-
-    if (nSubdivisions > 1)
+    if (nSubdivisions == 1)
     {
-        auto nFacesOrig = m.face_count();
-        for (size_t i = 0; i < nFacesOrig; ++i)
+        mesh.append(m);
+        return;
+    }
+
+    auto nFacesOrig = m.face_count();
+    for (size_t i = 0; i < nFacesOrig; ++i)
+    {
+        // Split all unmarked edges
+        id_type idHalfedge0 = m.face(i).halfedge_id();
+        id_type idHalfedge = idHalfedge0;
+        do
         {
-            // Split all unmarked edges
-            id_type idHalfedge0 = m.face(i).halfedge_id();
-            id_type idHalfedge = idHalfedge0;
-            do
+            id_type idHalfedgeNext = m.halfedge(idHalfedge).next_id();
+
+            // Split unmarked edge
+            if (!m.halfedge(idHalfedge).marked())
             {
-                id_type idHalfedgeNext = m.halfedge(idHalfedge).next_id();
+                split_edge(m, idHalfedge, nSubdivisions);
 
-                // Split unmarked edge
-                if (!m.halfedge(idHalfedge).marked())
+                // Mark partners of this edge's segments so that adjacent face edges will not be split
+                id_type idHalfedgeEdge = idHalfedge;
+                for (int j = 0; j < nSubdivisions; ++j)
                 {
-                    split_edge(m, idHalfedge, nSubdivisions);
-
-                    // Mark partners of this edge's segments so that adjacent face edges will not be split
-                    id_type idHalfedgeEdge = idHalfedge;
-                    for (int j = 0; j < nSubdivisions; ++j)
-                    {
-                        m.halfedge(idHalfedgeEdge).partner().set_marked();
-                        idHalfedgeEdge = m.halfedge(idHalfedgeEdge).next_id();
-                    }
+                    m.halfedge(idHalfedgeEdge).partner().set_marked();
+                    idHalfedgeEdge = m.halfedge(idHalfedgeEdge).next_id();
                 }
+            }
 
-                idHalfedge = idHalfedgeNext;
-            } while (idHalfedge != idHalfedge0);
+            idHalfedge = idHalfedgeNext;
+        } while (idHalfedge != idHalfedge0);
 
-            // Recursively triangulate by row
-            triangulate_rows(m, m.face(i).halfedge_id(), nSubdivisions);
-        }
+        // Recursively triangulate by row
+        triangulate_rows(m, m.face(i).halfedge_id(), nSubdivisions);
     }
 
     project_vertices(m.vertices().begin(), m.vertices().end(), radius);
@@ -2633,12 +2632,7 @@ void quetzal::model::create_geodesic_sphere(M& mesh, const std::string& name, va
     if (bSmooth)
     {
         calculate_spherical_normals(m);
-        // spherical texture coordinates, with smooth icosahedron, splits should produce mostly correct texture coordinates ...
-        m.remove_surfaces();
-        for (auto& face : m.faces())
-        {
-            m.add_surface_face(face.submesh_id(), SurfaceName::Body, face.id());
-        }
+        // spherical texture coordinates, with smooth icosahedron to start, splits should produce mostly correct texture coordinates ...
     }
     else
     {
@@ -2667,6 +2661,7 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
 
     size_type nAzimuth = polygon.edge_count();
     assert(nAzimuth > 2);
+    size_type nz = 1; // needs work before nz > 1 can be supported ...
 
     std::vector<typename M::vertex_attributes_type> avs0 = vertices_attributes<M>(polygon, T(1));
 
@@ -2757,7 +2752,7 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
 
     size_type nAzimuth = polygons.polygon().edge_count();
     assert(nAzimuth > 2);
-    size_type nz = 1;
+    size_type nz = 1; // needs work before nz > 1 can be supported ...
 
     std::vector<typename M::vertex_attributes_type> avs0 = vertices_attributes<M>(polygons.polygon(), T(1));
 
@@ -2769,45 +2764,51 @@ void quetzal::model::create_extrusion(M& mesh, const std::string& name, const ge
     id_type idSubmesh = m.create_submesh(name);
     id_type idSurface0 = mesh.surface_count();
 
-    auto tsProto0 = texture_span<T>(0, 1, false, false);
-    auto tsProto1 = texture_span<T>(1, 1, false, false);
-
-    id_type idSurface = m.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(idSurface0));
-    create_band(m, avs0, avs1, tsProto0, tsProto1, true, idSurface, false);
-
     id_type idHalfedgeLower = 0;
-    assert(m.halfedge(idHalfedgeLower).border());
-    id_type idHalfedgeUpper = m.halfedge_store_count() - 2 * nAzimuth;
-    assert(m.halfedge(idHalfedgeUpper).border());
-
+    id_type idHalfedgeUpper = 0;
     std::vector<id_type> idHalfedgeHolesLower(polygons.hole_count());
     std::vector<id_type> idHalfedgeHolesUpper(polygons.hole_count());
-    for (size_t i = 0; i < polygons.hole_count(); ++i)
+
+    for (size_t i = 0; i < nz; ++i)
     {
-        const auto& polygon = polygons.hole(i);
+        auto tsProto0 = texture_span<T>(0, 1, false, false);
+        auto tsProto1 = texture_span<T>(1, 1, false, false);
 
-        avs0 = vertices_attributes<M>(polygon, T(1));
+        id_type idSurface = m.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(idSurface0));
+        create_band(m, avs0, avs1, tsProto0, tsProto1, true, idSurface, false);
+idHalfedgeUpper = m.halfedge_store_count() - 2 * nAzimuth; // after last layer ...
 
-        polygon1.clear();
-        std::transform(polygon.vertices().begin(), polygon.vertices().end(), std::back_inserter(polygon1.vertices()), [displacement](const point_type& point) -> point_type { return point + displacement; });
-        avs1 = vertices_attributes<M>(polygon1, T(0));
+        for (size_t j = 0; j < polygons.hole_count(); ++j)
+        {
+            const auto& polygon = polygons.hole(j);
 
-        idHalfedgeHolesLower[i] = m.halfedge_store_count();
+            avs0 = vertices_attributes<M>(polygon, T(1));
 
-        M mm;
-        // Careful, reusing variables here to prevent warning ...
-        idSubmesh = mm.create_submesh(name);
-        idSurface = mm.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(idSurface0 + 1 + i));
-        create_band(mm, avs0, avs1, tsProto0, tsProto1, true, idSurface, false);
-        brep::invert(mm);
-        m.append(mm);
+            polygon1.clear();
+            std::transform(polygon.vertices().begin(), polygon.vertices().end(), std::back_inserter(polygon1.vertices()), [displacement](const point_type& point) -> point_type { return point + displacement; });
+            avs1 = vertices_attributes<M>(polygon1, T(0));
 
-        assert(m.halfedge(idHalfedgeHolesLower[i]).border());
-        idHalfedgeHolesUpper[i] = m.halfedge_store_count() - 2 * polygon.edge_count();
-        assert(m.halfedge(idHalfedgeHolesUpper[i]).border());
+            idHalfedgeHolesLower[j] = m.halfedge_store_count();
+
+            M mm;
+            // Careful, reusing variables here to prevent warning ...
+            idSubmesh = mm.create_submesh(name);
+            idSurface = mm.create_surface(idSubmesh, SurfaceName::BodySection + "_" + to_string(idSurface0 + 1 + j));
+            create_band(mm, avs0, avs1, tsProto0, tsProto1, true, idSurface, false);
+            m.append(mm);
+
+            assert(m.halfedge(idHalfedgeHolesLower[j]).border());
+            idHalfedgeHolesUpper[j] = m.halfedge_store_count() - 2 * polygon.edge_count();
+            assert(m.halfedge(idHalfedgeHolesUpper[j]).border());
+        }
+
+//        idHalfedgeUpper = m.halfedge_store_count() - 2 * nAzimuth; // after last layer ...
     }
 
-    // make sure that the orientation of holes is correct due to the reversed winding order ...
+    assert(m.halfedge(idHalfedgeLower).border());
+    assert(m.halfedge(idHalfedgeUpper).border());
+
+    // for nz > 1, mesh per hole, keep track of border halfedges, then invert, create_border_with_holes_face
 
 // seal_cylinder here needs to use create_border_with_holes_face ...
 //    seal_cylinder(m, nAzimuth, nz, false, false, false, {}, extentZ, idSubmesh, -normal, normal);

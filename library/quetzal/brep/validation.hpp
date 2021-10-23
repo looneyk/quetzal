@@ -106,6 +106,9 @@ namespace quetzal::brep
     template<typename M>
     void dump(const M& mesh);
 
+    template<typename M>
+    void mesh_info(const M& mesh);
+
     // Functions to validate mesh geometry
     // model/attributes_validation.hpp? ...
 
@@ -183,31 +186,31 @@ bool quetzal::brep::check_halfedge(const M& mesh, const typename M::halfedge_typ
     }
     else if (!good(halfedge.partner_id(), mesh.halfedge_store()))
     {
-        oss << "  Bad partner " << print(halfedge.partner_id(), mesh.halfedge_store()) << std::endl;
+        oss << "  Bad partner " << id_string(halfedge.partner_id(), mesh.halfedge_store()) << std::endl;
         bOK = false;
     }
 
     if (!good(halfedge.next_id(), mesh.halfedge_store()))
     {
-        oss << "  Bad next " << print(halfedge.next_id(), mesh.halfedge_store()) << std::endl;
+        oss << "  Bad next " << id_string(halfedge.next_id(), mesh.halfedge_store()) << std::endl;
         bOK = false;
     }
 
     if (!good(halfedge.prev_id(), mesh.halfedge_store()))
     {
-        oss << "  Bad prev " << print(halfedge.prev_id(), mesh.halfedge_store()) << std::endl;
+        oss << "  Bad prev " << id_string(halfedge.prev_id(), mesh.halfedge_store()) << std::endl;
         bOK = false;
     }
 
     if (!good(halfedge.vertex_id(), mesh.vertex_store()))
     {
-        oss << "  Bad vertex " << print(halfedge.vertex_id(), mesh.vertex_store()) << std::endl;
+        oss << "  Bad vertex " << id_string(halfedge.vertex_id(), mesh.vertex_store()) << std::endl;
         bOK = false;
     }
 
     if (!good(halfedge.face_id(), mesh.face_store()))
     {
-        oss << "  Bad face " << print(halfedge.face_id(), mesh.face_store()) << std::endl;
+        oss << "  Bad face " << id_string(halfedge.face_id(), mesh.face_store()) << std::endl;
         bOK = false;
     }
 
@@ -320,7 +323,7 @@ bool quetzal::brep::check_vertex(const M& mesh, const typename M::vertex_type& v
 
     if (!good(vertex.halfedge_id(), mesh.halfedge_store()))
     {
-        std::cout << "  Bad halfedge " << print(vertex.halfedge_id(), mesh.halfedge_store()) << std::endl;
+        std::cout << "  Bad halfedge " << id_string(vertex.halfedge_id(), mesh.halfedge_store()) << std::endl;
         bOK = false;
     }
 
@@ -430,7 +433,7 @@ bool quetzal::brep::check_face(const M& mesh, const typename M::face_type& face)
 
     if (!good(face.halfedge_id(), mesh.halfedge_store()))
     {
-        std::cout << "  Bad halfedge " << print(face.halfedge_id(), mesh.halfedge_store()) << std::endl;
+        std::cout << "  Bad halfedge " << id_string(face.halfedge_id(), mesh.halfedge_store()) << std::endl;
         bOK = false;
     }
 
@@ -1726,6 +1729,28 @@ void quetzal::brep::dump(const M& mesh)
     }
 
     check_submeshes(mesh);
+
+    return;
+}
+
+//------------------------------------------------------------------------------
+template<typename M>
+void quetzal::brep::mesh_info(const M& mesh)
+{
+    std::cout << "halfedges   " << mesh.halfedge_count() << "/" << mesh.halfedge_store_count() << std::endl;
+    std::cout << "vertices    " << mesh.vertex_count() << "/" << mesh.vertex_store_count() << std::endl;
+    std::cout << "faces       " << mesh.face_count() << "/" << mesh.face_store_count() << std::endl;
+    std::cout << "surfaces    " << mesh.surface_count() << "/" << mesh.surface_store_count() << ", " << mesh.surface_index_count() << " i" << std::endl;
+    std::cout << "submeshes   " << mesh.submesh_count() << "/" << mesh.submesh_store_count() << ", " << mesh.submesh_index_count() << " i" << std::endl;
+
+    for (const auto& o : mesh.submeshes())
+    {
+        std::cout << std::setw(4) << std::right << o.id() << " " << std::setw(14) << std::left << o.name() << " " << o.surface_count() << " s, " << o.surface_index_count() << " i, " << o.face_count() << " f" << std::endl;
+        for (const auto& s : o.surfaces())
+        {
+            std::cout << std::setw(8) << std::right << s.id() << " " << std::setw(14) << std::left << s.name() << " " << s.face_count() << " f" << std::endl;
+        }
+    }
 
     return;
 }

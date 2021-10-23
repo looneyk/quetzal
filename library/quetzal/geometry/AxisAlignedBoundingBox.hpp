@@ -6,8 +6,10 @@
 //------------------------------------------------------------------------------
 
 #include "BoundingVolume.hpp"
+#include "quetzal/math/Vector.hpp"
 #include "quetzal/math/floating_point.hpp"
 #include <iostream>
+#include <cassert>
 
 namespace quetzal::geometry
 {
@@ -18,7 +20,8 @@ namespace quetzal::geometry
     {
     public:
 
-        using point_type = Point<Traits>;
+        using typename BoundingVolume<Traits>::value_type;
+        using typename BoundingVolume<Traits>::point_type;
         using vector_type = math::Vector<Traits>;
 
         AxisAlignedBoundingBox();
@@ -43,13 +46,15 @@ namespace quetzal::geometry
         void insert(const point_type& point) override;
         void insert(std::span<point_type> points) override;
 
-        // Returns -1, 0, 1: interior, on the surface of, exterior
+        // Returns -1, 0, 1: interior, boundary, exterior
         int compare(const point_type& point) const override;
 
         void print(std::ostream& os) const override;
 
     private:
 
+        bool disjoint() const;
+        bool ordered() const;
         void order();
 
 //        std::array<point_type, 2> m_points; // 0 - min, 1 - max ...
@@ -72,6 +77,7 @@ quetzal::geometry::AxisAlignedBoundingBox<Traits>::AxisAlignedBoundingBox(const 
     m_pointLower(pointLower),
     m_pointUpper(pointUpper)
 {
+    order();
 }
 
 //------------------------------------------------------------------------------
@@ -144,6 +150,8 @@ void quetzal::geometry::AxisAlignedBoundingBox<Traits>::clear()
 template<typename Traits>
 void quetzal::geometry::AxisAlignedBoundingBox<Traits>::insert(const point_type& point)
 {
+    assert(ordered());
+
     m_pointLower = min(m_pointLower, point);
     m_pointUpper = max(m_pointUpper, point);
     return;
@@ -153,6 +161,8 @@ void quetzal::geometry::AxisAlignedBoundingBox<Traits>::insert(const point_type&
 template<typename Traits>
 void quetzal::geometry::AxisAlignedBoundingBox<Traits>::insert(std::span<point_type> points)
 {
+    assert(ordered());
+
     for (const auto& point : points)
     {
         insert(point);
@@ -165,6 +175,8 @@ void quetzal::geometry::AxisAlignedBoundingBox<Traits>::insert(std::span<point_t
 template<typename Traits>
 int quetzal::geometry::AxisAlignedBoundingBox<Traits>::compare(const point_type& point) const
 {
+    assert(ordered());
+
     int result = -1;
 
     for (size_t i = 0; i < Traits::dimension; ++i)
@@ -208,8 +220,40 @@ void quetzal::geometry::AxisAlignedBoundingBox<Traits>::print(std::ostream& os) 
 
 //------------------------------------------------------------------------------
 template<typename Traits>
+bool quetzal::geometry::AxisAlignedBoundingBox<Traits>::disjoint() const
+{
+    return m_pointLower == point_type::max() && m_pointUpper == point_type::min();
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
+bool quetzal::geometry::AxisAlignedBoundingBox<Traits>::ordered() const
+{
+    if (disjoint())
+    {
+        return true;
+    }
+
+    for (size_t i = 0; i < Traits::dimension; ++i)
+    {
+        if (m_pointLower[i] > m_pointUpper[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//------------------------------------------------------------------------------
+template<typename Traits>
 void quetzal::geometry::AxisAlignedBoundingBox<Traits>::order()
 {
+    if (disjoint())
+    {
+        return;
+    }
+
     for (size_t i = 0; i < Traits::dimension; ++i)
     {
         if (m_pointLower[i] > m_pointUpper[i])

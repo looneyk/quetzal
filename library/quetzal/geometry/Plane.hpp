@@ -5,6 +5,7 @@
 // Plane.hpp
 //------------------------------------------------------------------------------
 
+#include "Partition.hpp"
 #include "Point.hpp"
 #include "quetzal/math/Vector.hpp"
 #include <iostream>
@@ -17,9 +18,11 @@ namespace quetzal::geometry
 
     //--------------------------------------------------------------------------
     template<typename Traits>
-    class Plane
+    class Plane : public Partition<Traits>
     {
     public:
+
+        static_assert(Traits::dimension >= 3); // can this be done above at class level? usage in Polygon ...
 
         using traits_type = Traits;
         using vector_type = math::Vector<Traits>;
@@ -40,14 +43,9 @@ namespace quetzal::geometry
         vector_type normal() const requires (Traits::dimension >= 3);
         void set_normal(const vector_type& normal) requires (Traits::dimension >= 3);
 
-        // Returns -1, 0, 1: interior, on, exterior
+        // Returns -1, 0, 1: interior, boundary, exterior
         // Exterior is defined by the direction of the normal
-        int compare(const point_type& point) const;
-
-        // Point is on, below, or above the plane respectively
-        bool contains(const point_type& point) const;
-        bool interior(const point_type& point) const;
-        bool exterior(const point_type& point) const;
+        int compare(const point_type& point) const override;
 
     private:
 
@@ -63,6 +61,7 @@ namespace quetzal::geometry
 //------------------------------------------------------------------------------
 template<typename Traits>
 quetzal::geometry::Plane<Traits>::Plane(const point_type& point, const vector_type& normal) requires (Traits::dimension >= 3) :
+    Partition<Traits>(),
     m_point(point),
     m_normal(normal)
 {
@@ -106,34 +105,13 @@ int quetzal::geometry::Plane<Traits>::compare(const point_type& point) const
 {
     if constexpr(Traits::dimension == 2)
     {
-        return 0;
+        return -1;
     }
-    if constexpr(Traits::dimension >= 3)
+    else if constexpr(Traits::dimension >= 3)
     {
         auto d = dot(m_normal, (point - m_point));
-        return math::float_eq0(d) ? 0 : (d < Traits::val(0) ? -1 : 1);
+        return math::float_eq0(d) ? -1 : 1;
     }
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-bool quetzal::geometry::Plane<Traits>::contains(const point_type& point) const
-{
-    return compare(point) == 0;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-bool quetzal::geometry::Plane<Traits>::interior(const point_type& point) const
-{
-    return compare(point) < 0;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits>
-bool quetzal::geometry::Plane<Traits>::exterior(const point_type& point) const
-{
-    return compare(point) > 0;
 }
 
 //------------------------------------------------------------------------------

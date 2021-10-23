@@ -59,8 +59,7 @@ void quetzal::model::read_stl(M& mesh, const std::filesystem::path& pathname)
         assert(idSubmesh == nullid);
         assert(idSurface == nullid);
         assert(idFace == nullid);
-
-        idSubmesh = mesh.contains_submesh(name) ? mesh.submesh(name).id() : mesh.create_submesh(name);
+        idSubmesh = mesh.get_submesh_id(name);
         return;
     };
 
@@ -69,7 +68,7 @@ void quetzal::model::read_stl(M& mesh, const std::filesystem::path& pathname)
         assert(idSubmesh != nullid);
         assert(idSurface == nullid);
         assert(idFace == nullid);
-        idSurface = mesh.contains_surface(idSubmesh, name) ? mesh.surface_id(idSubmesh, name) : mesh.create_surface(idSubmesh, name);
+        idSurface = mesh.get_surface_id(idSubmesh, name);
         return;
     };
 

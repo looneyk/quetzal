@@ -167,9 +167,12 @@
   <ItemGroup>
     <ClInclude Include="Attributes.hpp" />
     <ClInclude Include="AxisAlignedBoundingBox.hpp" />
+    <ClInclude Include="BoundingSphere.hpp" />
     <ClInclude Include="BoundingVolume.hpp" />
     <ClInclude Include="Box.hpp" />
     <ClInclude Include="distance.hpp" />
+    <ClInclude Include="HalfPlane.hpp" />
+    <ClInclude Include="HalfSpace.hpp" />
     <ClInclude Include="intersect.hpp" />
     <ClInclude Include="Intersection.hpp" />
     <ClInclude Include="Line.hpp" />

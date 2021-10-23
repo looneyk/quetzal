@@ -34,8 +34,8 @@ namespace quetzal::brep
 
         using traits_type = Traits;
         using mesh_type = M;
-        using attributes_type = mesh_type::surface_attributes_type;
-        using vector_type = mesh_type::vector_type;
+        using size_type = Traits::size_type;
+        using vector_type = Traits::vector_type;
         using vertex_type = mesh_type::vertex_type;
         using face_type = mesh_type::face_type;
         using face_ids_type = std::set<id_type>;
@@ -44,7 +44,7 @@ namespace quetzal::brep
         using perimeter_type = Perimeter<Traits, M>;
         using perimeters_type = std::vector<perimeter_type>;
         using submesh_type = mesh_type::submesh_type;
-        using size_type = Traits::size_type;
+        using attributes_type = mesh_type::surface_attributes_type;
 
         Surface();
         Surface(mesh_type& mesh, id_type id, const std::string& name, id_type idSubmesh, const attributes_type& attributes, const Properties& properties = {});
@@ -95,12 +95,10 @@ namespace quetzal::brep
         bool empty() const;
         void clear(); // Clears contents, but does not change id or name
 
-        bool unmarked() const;
         void reset() const override; // Flags
 
         bool contains_face(id_type idFace) const;
         void add_face(id_type idFace); // add face to list
-        void remove_face(id_type idFace); // remove face from list
         void link_face(id_type idFace); // add face to list and set face surface
         void unlink_face(id_type idFace); // remove face from list and clear face surface
 
@@ -393,36 +391,6 @@ void quetzal::brep::Surface<Traits, M>::clear()
     return;
 }
 
-//--------------------------------------------------------------------------
-template<typename Traits, typename M>
-bool quetzal::brep::Surface<Traits, M>::unmarked() const
-{
-    assert(m_pmesh != nullptr);
-
-    if (marked())
-    {
-        return false;
-    }
-
-    for (const auto& face : m_faces)
-    {
-        if (face.marked())
-        {
-            return false;
-        }
-    }
-
-    for (const auto& perimeter : m_perimeters)
-    {
-        if (perimeter.marked())
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 //------------------------------------------------------------------------------
 template<typename Traits, typename M>
 void quetzal::brep::Surface<Traits, M>::reset() const
@@ -455,18 +423,9 @@ bool quetzal::brep::Surface<Traits, M>::contains_face(id_type idFace) const
 template<typename Traits, typename M>
 void quetzal::brep::Surface<Traits, M>::add_face(id_type idFace)
 {
+    assert(idFace != nullid);
     assert(!m_face_ids.contains(idFace));
     m_face_ids.insert(idFace);
-    set_regenerate_perimeters();
-    return;
-}
-
-//------------------------------------------------------------------------------
-template<typename Traits, typename M>
-void quetzal::brep::Surface<Traits, M>::remove_face(id_type idFace)
-{
-    assert(m_face_ids.contains(idFace));
-    m_face_ids.erase(idFace);
     set_regenerate_perimeters();
     return;
 }
@@ -486,8 +445,13 @@ template<typename Traits, typename M>
 void quetzal::brep::Surface<Traits, M>::unlink_face(id_type idFace)
 {
     assert(m_pmesh != nullptr);
-    remove_face(idFace);
+    assert(idFace != nullid);
+    assert(m_face_ids.contains(idFace));
+
+    m_face_ids.erase(idFace);
     m_pmesh->face(idFace).set_surface_id(nullid);
+
+    set_regenerate_perimeters();
     return;
 }
 

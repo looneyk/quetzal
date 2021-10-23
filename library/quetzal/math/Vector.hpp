@@ -666,7 +666,7 @@ bool quetzal::math::operator==(const Vector<Traits>& lhs, const Vector<Traits>& 
 template<typename Traits>
 bool quetzal::math::operator!=(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
 {
-    return !operator==(lhs, rhs);
+    return !(lhs == rhs);
 }
 
 //------------------------------------------------------------------------------
@@ -680,14 +680,14 @@ bool quetzal::math::operator<(const Vector<Traits>& lhs, const Vector<Traits>& r
 template<typename Traits>
 bool quetzal::math::operator<=(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
 {
-    return lhs < rhs || lhs == rhs;
+    return !(rhs < lhs);
 }
 
 //------------------------------------------------------------------------------
 template<typename Traits>
 bool quetzal::math::operator>(const Vector<Traits>& lhs, const Vector<Traits>& rhs)
 {
-    return !(lhs <= rhs);
+    return rhs < lhs;
 }
 
 //------------------------------------------------------------------------------

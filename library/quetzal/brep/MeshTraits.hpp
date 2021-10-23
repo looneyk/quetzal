@@ -27,10 +27,10 @@ namespace quetzal::brep
         using surface_attributes_type = S;
         using submesh_attributes_type = O;
 
+        using size_type = size_t;
         using value_type = Traits::value_type;
         using vector_type = math::Vector<vector_traits>;
         using point_type = math::Vector<vector_traits>;
-        using size_type = size_t;
 
         static constexpr size_t dimension = vector_traits::dimension;
 
